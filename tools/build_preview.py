@@ -223,27 +223,73 @@ def write_bundle(records, stories, stats):
         encoding="utf-8", newline="\n")
 
 
+DOMAINS = {
+    "main": "https://www.chenhua.net",
+    "photo": "https://photo.chenhua.net",
+    "paint": "https://paint.chenhua.net",
+}
+ROUTE_META = {
+    "today": ("%s", "以图为史，记录人间的大事与小事。"),  # root uses cfg.title / cfg.sub
+    "gallery": ("影像 · %s", "按年代与主题浏览尘画已收录的影像档案。"),
+    "stories": ("专题 · %s", "以影像串联的专题叙事。"),
+    "search": ("搜索 · %s", "搜标题、地点、作者、主题与年代。"),
+    "about": ("关于 · %s", "尘画的采集、复核与策展方式。"),
+    "rights": ("授权 · %s", "U1–U5 使用性质、署名与商用边界。"),
+}
+
+
 def write_site(site, cfg, records, stories, stats, build_id):
     out = DIST / site
     out.mkdir(parents=True, exist_ok=True)
-    html = """<!doctype html>
+    brand = cfg.get("brand") or "尘画"
+    domain = DOMAINS[site]
+    routes = ["today", "gallery"]
+    if cfg.get("stories") is not False:
+        routes.append("stories")
+    routes += ["search", "about", "rights"]
+    cfg_json = json.dumps(cfg, ensure_ascii=False).replace("</", "<\\/")
+    for route in routes:
+        root = route == "today"
+        title_tpl, desc_tpl = ROUTE_META[route]
+        title = cfg["title"] if root else (title_tpl % brand)
+        desc = (cfg.get("sub") or "") if root else desc_tpl
+        canonical = domain + "/" + ("" if root else route + "/")
+        prefix = "../" if root else "../../"
+        noscript = "".join(
+            '<a href="%s">%s</a>' % (
+                (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
+                {"today": "今日", "gallery": "影像", "stories": "专题",
+                 "search": "搜索", "about": "关于", "rights": "授权"}[r])
+            for r in routes)
+        html = """<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0c0b">
 <title>%s</title>
-<link rel="stylesheet" href="../assets/app.css?v=%s">
+<meta name="description" content="%s">
+<link rel="canonical" href="%s">
+<meta property="og:type" content="website">
+<meta property="og:title" content="%s">
+<meta property="og:description" content="%s">
+<meta property="og:url" content="%s">
+<link rel="stylesheet" href="%sassets/app.css?v=%s">
 </head>
 <body>
 <div id="app" aria-live="polite"></div>
+<noscript><nav class="noscript">%s</nav></noscript>
 <script>window.SITE_CONFIG = %s;</script>
-<script src="../data/bundle.js?v=%s"></script>
-<script src="../assets/app.js?v=%s"></script>
+<script src="%sdata/bundle.js?v=%s"></script>
+<script src="%sassets/app.js?v=%s"></script>
 </body>
 </html>
-""" % (cfg["title"], build_id, json.dumps(cfg, ensure_ascii=False), build_id, build_id)
-    (out / "index.html").write_text(html, encoding="utf-8", newline="\n")
+""" % (title, desc, canonical, title, desc, canonical,
+       prefix, build_id, noscript, cfg_json,
+       prefix, build_id, prefix, build_id)
+        folder = out if root else out / route
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
 
 
 def write_gallery_assets():
@@ -291,7 +337,14 @@ def write_galleries(build_id):
   <div class="g-masonry" id="gMasonry"></div>
   <div class="g-more"><button id="gMore" type="button">加载更多</button></div>
 </main>
-<footer class="g-foot">尘画 · 以图为史 · 非商业开放档案</footer>
+<footer class="g-foot">
+  <nav>
+    <a href="../../dist/main/">尘画主站</a>
+    <a href="../../dist/photo/">摄影</a>
+    <a href="../../dist/paint/">绘画</a>
+  </nav>
+  <p>尘画 · 以图为史 · 非商业开放档案</p>
+</footer>
 <script>window.GALLERY_CONFIG = %s;</script>
 <script src="gallery.js?v=%s"></script>
 </body>
@@ -300,6 +353,8 @@ def write_galleries(build_id):
             "century": century,
             "photoBase": "../../dist/photo/",
             "paintBase": "../../dist/paint/",
+            "photoStaticBase": "../../dist/photo/photo/",
+            "paintStaticBase": "../../dist/paint/painting/",
             "mainBase": "../../dist/main/",
             "preview": True,
         }, ensure_ascii=False), build_id)
@@ -331,26 +386,52 @@ def main():
     for name in ("app.css", "app.js"):
         shutil.copy2(CORE / "assets" / name, DIST / "assets" / name)
 
+    base = {
+        "main": "/next/dist/main/", "photo": "/next/dist/photo/",
+        "paint": "/next/dist/paint/",
+    }
+    main_nav = [
+        {"label": "今日", "route": "today", "icon": "today"},
+        {"label": "影像", "route": "gallery", "icon": "gallery"},
+        {"label": "专题", "route": "stories", "icon": "stories"},
+        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
+        {"label": "摄影", "href": base["photo"], "icon": "photo", "kind": "cross", "sub": "photo"},
+        {"label": "绘画", "href": base["paint"], "icon": "paint", "kind": "cross", "sub": "paint"},
+    ]
+    photo_nav = [
+        {"label": "今日", "route": "today", "icon": "today"},
+        {"label": "影像", "route": "gallery", "icon": "gallery"},
+        {"label": "专题", "route": "stories", "icon": "stories"},
+        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
+        {"label": "绘画", "href": base["paint"], "icon": "paint", "kind": "cross", "sub": "paint"},
+        {"label": "主站", "href": base["main"], "icon": "home", "kind": "cross", "sub": "www"},
+    ]
+    paint_nav = [
+        {"label": "今日", "route": "today", "icon": "today"},
+        {"label": "影像", "route": "gallery", "icon": "gallery"},
+        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
+        {"label": "摄影", "href": base["photo"], "icon": "photo", "kind": "cross", "sub": "photo"},
+        {"label": "主站", "href": base["main"], "icon": "home", "kind": "cross", "sub": "www"},
+    ]
+    common = {"home": base["main"], "photoBase": base["photo"],
+              "paintBase": base["paint"]}
     main_cfg = {
         "site": "main", "title": "尘画 · 以图为史", "brand": "尘画",
         "sub": "以图为史 · 记录人间的大事与小事",
         "collections": ["photos", "paintings", "links"],
-        "home": "/next/dist/main/", "photoBase": "/next/dist/photo/",
-        "paintBase": "/next/dist/paint/",
+        "base": base["main"], "nav": main_nav, **common,
     }
     photo_cfg = {
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画",
         "sub": "摄影 · 影像档案",
         "collections": ["photos", "links"],
-        "home": "/next/dist/main/", "photoBase": "/next/dist/photo/",
-        "paintBase": "/next/dist/paint/",
+        "base": base["photo"], "nav": photo_nav, **common,
     }
     paint_cfg = {
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画",
         "sub": "绘画与版画",
         "collections": ["paintings"], "stories": False,
-        "home": "/next/dist/main/", "photoBase": "/next/dist/photo/",
-        "paintBase": "/next/dist/paint/",
+        "base": base["paint"], "nav": paint_nav, **common,
     }
     write_bundle(records, stories, stats)
     write_site("main", main_cfg, records, stories, stats, build_id)

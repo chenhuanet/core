@@ -48,6 +48,9 @@ img{display:block;max-width:100%}
 .g-more button:hover{border-color:#5a5040;color:var(--text)}
 .g-foot{border-top:1px solid var(--line);padding:18px;text-align:center;
   font-size:10px;color:var(--dim);letter-spacing:.12em}
+.g-foot nav{display:flex;justify-content:center;gap:16px;margin-bottom:7px;flex-wrap:wrap}
+.g-foot a{color:var(--muted)}
+.g-foot a:hover{color:var(--accent)}
 .g-empty{padding:60px 0;text-align:center;color:var(--dim);font-family:var(--serif);letter-spacing:.1em}
 @media(min-width:700px){
   .g-masonry{columns:3}

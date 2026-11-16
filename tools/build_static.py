@@ -70,10 +70,13 @@ def gallery_href(r):
 
 def nav_for(kind):
     if kind == "photo":
-        return [("摄影", "../"), ("主站", "../../main/"), ("绘画", "../../paint/")]
+        return [("摄影", "../"), ("影像轴", "../gallery/"), ("专题", "../stories/"),
+                ("主站", "../../main/"), ("绘画", "../../paint/")]
     if kind == "paint":
-        return [("绘画", "../"), ("主站", "../../main/"), ("摄影", "../../photo/")]
-    return [("主站", "../"), ("摄影", "../../photo/"), ("绘画", "../../paint/")]
+        return [("绘画", "../"), ("影像轴", "../gallery/"),
+                ("主站", "../../main/"), ("摄影", "../../photo/")]
+    return [("主站", "../"), ("影像轴", "../gallery/"), ("专题", "../stories/"),
+            ("摄影", "../../photo/"), ("绘画", "../../paint/")]
 
 
 def head(title, desc, url, image, kind, extra_ld=""):
@@ -106,10 +109,14 @@ def head(title, desc, url, image, kind, extra_ld=""):
        BUILD_ID, BUILD_ID, extra_ld, nav)
 
 
-def foot():
-    return """<footer class="s-foot">尘画 · 以图为史 · 非商业开放档案</footer>
+def foot(kind="main"):
+    nav = "".join('<a href="%s">%s</a>' % (h, esc(t)) for t, h in nav_for(kind))
+    return """<footer class="s-foot">
+<nav>%s</nav>
+<p>尘画 · 以图为史 · 非商业开放档案</p>
+</footer>
 </div></body></html>
-"""
+""" % nav
 
 
 def photo_page(r, all_records):
@@ -170,8 +177,7 @@ def photo_page(r, all_records):
         links.append('<a class="s-btn" href="%s" target="_blank" rel="noopener">许可原文 ↗</a>' % esc(r["license_url"]))
     if r.get("image_century"):
         links.append('<a class="s-btn" href="%s">图片站 ↗</a>' % esc(gallery_href(r)))
-    app_href = "../#/photo/%s" % r["id"]
-    links.append('<a class="s-btn gold" href="%s">在互动页打开</a>' % esc(app_href))
+    links.append('<a class="s-btn gold" href="%s">返回影像轴</a>' % esc("../gallery/"))
 
     related = [x for x in all_records
                if x["id"] != r["id"] and x.get("topic") == r.get("topic")
@@ -204,7 +210,7 @@ def photo_page(r, all_records):
     html_out += evidence
     html_out += '<div class="s-actions">%s</div>' % "".join(links)
     html_out += rel_html
-    html_out += foot()
+    html_out += foot(kind)
     return html_out
 
 
@@ -247,9 +253,9 @@ def story_page(s, records):
         body += "</div></section>"
     rights = s.get("rights_summary") or ""
     body += '<div class="s-rights"><b>权利摘要</b><span>%s</span></div>' % esc(rights)
-    body += '<div class="s-actions"><a class="s-btn gold" href="../#/story/%s">在互动页打开</a>'
-    body += '<a class="s-btn" href="../../photo/">摄影站</a><a class="s-btn" href="../../paint/">绘画站</a></div>'
-    return head(s.get("title"), desc, url, cover.get("image") if cover else "", "main", ld_json) + hero + body + foot()
+    body += '<div class="s-actions"><a class="s-btn gold" href="../stories/">全部专题</a>'
+    body += '<a class="s-btn" href="../">主站首页</a><a class="s-btn" href="../../photo/">摄影站</a><a class="s-btn" href="../../paint/">绘画站</a></div>'
+    return head(s.get("title"), desc, url, cover.get("image") if cover else "", "main", ld_json) + hero + body + foot("main")
 
 
 def sitemap(site, urls):
@@ -286,9 +292,14 @@ def main():
         (DIST / "main" / "story" / ("%s.html" % s["id"])).write_text(
             story_page(s, records), encoding="utf-8", newline="\n")
 
-    sitemap("photo", [PHOTO_DOMAIN + "/"] + [canonical(r) for r in photos])
-    sitemap("paint", [PAINT_DOMAIN + "/"] + [canonical(r) for r in paints])
-    sitemap("main", [MAIN_DOMAIN + "/"] + ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories])
+    sitemap("photo", [PHOTO_DOMAIN + "/", PHOTO_DOMAIN + "/gallery/",
+                      PHOTO_DOMAIN + "/stories/", PHOTO_DOMAIN + "/about/"] +
+            [canonical(r) for r in photos])
+    sitemap("paint", [PAINT_DOMAIN + "/", PAINT_DOMAIN + "/gallery/",
+                      PAINT_DOMAIN + "/about/"] + [canonical(r) for r in paints])
+    sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/gallery/",
+                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/about/"] +
+            ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories])
     print("静态页完成：照片 %d · 绘画 %d · 专题 %d · sitemap/robots 3 套" % (
         len(photos), len(paints), len(stories)))
 

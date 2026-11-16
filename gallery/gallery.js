@@ -16,8 +16,10 @@
     return CFG.preview ? (item.preview_url || item.url) : item.url;
   }
   function detailOf(item) {
-    var base = item.detail_collection === "paintings" ? (CFG.paintBase || "../../dist/paint/") : (CFG.photoBase || "../../dist/photo/");
-    return base + "?photo=" + encodeURIComponent(item.detail_slug || item.id);
+    var base = item.detail_collection === "paintings"
+      ? (CFG.paintStaticBase || "../../dist/paint/painting/")
+      : (CFG.photoStaticBase || "../../dist/photo/photo/");
+    return base + encodeURIComponent(item.detail_slug || item.id) + ".html";
   }
   function filtered() {
     if (state.filter === "all") return state.items;
