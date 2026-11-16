@@ -624,12 +624,12 @@ def write_galleries(build_id):
 <meta name="description" content="{desc_zh}">
 <title>{title_zh}</title>
 <link rel="alternate" hreflang="zh-CN" href="https://{century}.chenhua.net/">
-<link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/">
+<link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/?lang=en">
 <link rel="stylesheet" href="gallery.css?v={build_id}">
 <script>
-(function(){{try{{var t=localStorage.getItem("chenhua-theme");if(t)document.documentElement.setAttribute("data-theme",t);
-var l=localStorage.getItem("chenhua-lang");if(l){{document.documentElement.setAttribute("data-lang",l);
-document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}}}catch(e){{}}}})();
+(function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");
+document.documentElement.setAttribute("lang","en");}}
+var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){{document.documentElement.setAttribute("data-theme","light");}}}}catch(e){{}}}})();
 </script>
 </head>
 <body data-title-zh="{title_zh}" data-title-en="{title_en}"
