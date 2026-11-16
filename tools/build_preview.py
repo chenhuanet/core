@@ -7,6 +7,7 @@ import shutil
 import sys
 import time
 from collections import Counter
+from html import escape as html_escape
 
 import yaml
 
@@ -19,6 +20,140 @@ CORE = NEXT / "core"
 DIST = NEXT / "dist"
 IMAGES = NEXT / "images"
 PREVIEW_MAP = json.loads((NEXT / "preview-images.json").read_text(encoding="utf-8"))
+
+I18N_DIR = CONTENT / "i18n"
+
+
+def load_i18n(name, default):
+    p = I18N_DIR / name
+    if not p.exists():
+        return default
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print("i18n load failed: %s (%s)" % (p, exc))
+        return default
+
+
+TAXONOMY = load_i18n("taxonomy.en.json", {})
+RECORD_I18N = load_i18n("records.en.json", {})
+STORY_I18N = load_i18n("stories.en.json", {})
+CAPTIONS_I18N = load_i18n("captions.en.json", {})
+UI_I18N = load_i18n("ui.json", {"zh": {}, "en": {}})
+USAGE_EN = TAXONOMY.get("usage", {})
+STORY_TYPE_EN = {"长文": "Long read", "事件": "Event", "专题": "Story",
+                 "摄影": "Photography", "绘画": "Painting"} 
+
+
+def tx(kind, value):
+    if not value:
+        return ""
+    return (TAXONOMY.get(kind) or {}).get(value, value)
+
+
+CREATOR_EN = {
+    "富山県内務部第四課": "Toyama Prefectural Government, Fourth Section",
+    "小川一真": "Ogawa Kazumasa",
+    "望月小太郎": "Mochizuki Kotarō",
+    "大東京写真帖": "Dai Tokyo Shashinchō (Great Tokyo Photograph Album)",
+    "毎日新聞社「日本の肖像」・「毎日グラフ」1950年6月10日号":
+        "Mainichi Shimbun, “Portraits of Japan” / Mainichi Graphic, 10 June 1950 issue",
+    "大英博物馆": "The British Museum",
+    "故宫博物院": "The Palace Museum",
+    "美国国会图书馆": "Library of Congress",
+    "史密森尼 美国艺术博物馆": "Smithsonian American Art Museum",
+    "史密森尼 非裔美国人历史文化馆": "Smithsonian National Museum of African American History and Culture",
+    "史密森尼 国家邮政博物馆": "Smithsonian National Postal Museum",
+    "史密森尼 美国国家历史博物馆": "Smithsonian National Museum of American History",
+}
+
+
+def creator_en(value):
+    v = (value or "").strip()
+    if not v:
+        return "Unknown"
+    if v in CREATOR_EN:
+        return CREATOR_EN[v]
+    if any(k in v for k in ("不详", "佚名", "未知", "未著录")):
+        return "Unknown (not recorded by source)" if "源" in v else "Unknown"
+    if v == "投稿者がスキャン":
+        return "Contributor scan"
+    if "Unknown author" in v:
+        return "Unknown author"
+    return v
+
+
+def _ordinal(n):
+    n = str(n)
+    if n.endswith("11") or n.endswith("12") or n.endswith("13"):
+        return n + "th"
+    return n + {"1": "st", "2": "nd", "3": "rd"}.get(n[-1], "th")
+
+
+def english_date(value):
+    s = str(value or "").strip()
+    if not s:
+        return ""
+    special = {"清宫旧藏": "Qing palace collection"}
+    if s in special:
+        return special[s]
+    s = s.replace("约 ", "ca. ").replace("约", "ca.")
+    s = re.sub(r"(\d{1,2})\s*[–-]\s*(\d{1,2})\s*世纪",
+               lambda m: _ordinal(m.group(1)) + "–" + _ordinal(m.group(2)) + " century", s)
+    s = re.sub(r"(\d{1,2})\s*世纪",
+               lambda m: _ordinal(m.group(1)) + " century", s)
+    s = re.sub(r"(\d{4})\s*[–-]\s*(\d{4})\s*年代", r"\1–\2s", s)
+    s = re.sub(r"(\d{4})\s*年代", r"\1s", s)
+    s = s.replace("年代", "s").replace("年", "")
+    s = re.sub(r"\s+s\b", "s", s)
+    return s.strip()
+
+
+LICENSE_EN = {
+    "No known copyright restrictions（来源声明，非许可）":
+        "No known copyright restrictions (source statement, not a licence)",
+    "Public Domain (美国政府作品)": "Public Domain (U.S. government work)",
+    "权利保留 · 禁止批量采集": "All rights reserved · bulk harvesting prohibited",
+}
+
+
+def license_en(value):
+    v = str(value or "").strip()
+    if not v:
+        return ""
+    return LICENSE_EN.get(v, v)
+
+
+def note_en_for(r, manual=None):
+    if manual:
+        return manual
+    date = english_date(r.get("date_label") or r.get("year"))
+    region = r.get("region_en") or tx("region", r.get("region"))
+    creator = creator_en(r.get("creator"))
+    source = r.get("source_short_en") or tx("source_short", r.get("source_short"))
+    catalog = (r.get("evidence") or {}).get("catalog_id") or ""
+    ctype = (r.get("content_type_en") or tx("content_type", r.get("content_type")) or "image").lower()
+    medium = (r.get("medium_en") or tx("medium", r.get("medium")) or "").lower()
+    first = ", ".join(x for x in (date, region) if x)
+    if first:
+        first += "."
+    second = creator
+    if source:
+        second += "; source: " + source
+    if catalog:
+        second += ", catalog no. " + str(catalog)
+    if second:
+        second += "."
+    if ctype in ("link",):
+        third = ""
+    elif medium and medium != ctype:
+        article = "an" if ctype[0] in "aeiou" else "a"
+        third = "This is %s %s (%s)." % (article, ctype, medium)
+    else:
+        article = "an" if ctype[0] in "aeiou" else "a"
+        third = "This is %s %s." % (article, ctype)
+    return " ".join(x for x in (first, second, third) if x)
+
 
 
 def read_md(path):
@@ -97,10 +232,13 @@ def load_records():
                 "usage_obligation": u["obligation"],
                 "usage_credit": u["credit"],
                 "usage_color": u["color"],
-                "credit_line": "%s · %s · %s" % (
-                    fm.get("creator") or "作者见源站著录",
-                    fm.get("source_short") or "",
-                    fm.get("license") or ""),
+                "credit_line": " · ".join(
+                    p for i, p in enumerate((fm.get("creator") or "作者见源站著录",
+                                             fm.get("source_short") or "",
+                                             fm.get("license") or ""))
+                    if p and (i == 0 or p != (fm.get("creator") or "作者见源站著录",
+                                               fm.get("source_short") or "",
+                                               fm.get("license") or "")[i - 1])),
                 "note": note,
                 "note_html": md_inline(note),
                 "evidence": fm.get("evidence") if isinstance(fm.get("evidence"), dict) else {},
@@ -116,6 +254,34 @@ def load_records():
                     fm.get("creator"), fm.get("topic"), fm.get("theme"), fm.get("region"),
                     fm.get("medium"), fm.get("source_short"), note] if x).lower(),
             }
+            tr = RECORD_I18N.get(rid, {}) or {}
+            ue = USAGE_EN.get(u["code"], {})
+            rec["title_en"] = tr.get("title") or (fm.get("title") if not re.search(r"[\u4e00-\u9fff]", str(fm.get("title") or "")) else rec["title"])
+            rec["place_en"] = tr.get("place") or tx("place", fm.get("place"))
+            rec["theme_en"] = tx("theme", fm.get("theme"))
+            rec["topic_en"] = tx("topic", fm.get("topic"))
+            rec["region_en"] = tx("region", fm.get("region"))
+            rec["medium_en"] = tx("medium", fm.get("medium"))
+            rec["kind_en"] = tx("kind", fm.get("kind"))
+            rec["era_en"] = tx("era", fm.get("era"))
+            rec["content_type_en"] = tx("content_type", rec["content_type"])
+            rec["source_short_en"] = tx("source_short", fm.get("source_short"))
+            rec["usage_label_en"] = ue.get("label") or u["label"]
+            rec["usage_short_en"] = ue.get("short") or u["short"]
+            rec["usage_desc_en"] = ue.get("desc") or u["desc"]
+            rec["usage_obligation_en"] = ue.get("obligation") or u["obligation"]
+            rec["usage_credit_en"] = ue.get("credit") or u["credit"]
+            rec["note_en"] = tr.get("note") or note_en_for(rec, None)
+            credit_parts = [creator_en(fm.get("creator")), rec["source_short_en"],
+                            license_en(fm.get("license"))]
+            credit_parts = [p for i, p in enumerate(credit_parts)
+                            if p and (i == 0 or p != credit_parts[i - 1])]
+            rec["credit_line_en"] = " · ".join(credit_parts)
+            rec["date_label_en"] = english_date(fm.get("date_label") or fm.get("year"))
+            rec["search_text_en"] = " ".join(str(x) for x in [
+                rec["title_en"], fm.get("year"), fm.get("date_label"), rec["place_en"],
+                fm.get("creator"), rec["topic_en"], rec["theme_en"], rec["region_en"],
+                rec["medium_en"], rec["source_short_en"], rec["note_en"]] if x).lower()
             rows.append(rec)
     rows.sort(key=lambda r: (r["year"] or 0, r["title"]))
     return rows
@@ -178,6 +344,29 @@ def load_story_files(records):
             "count": len(ids),
             "rights_summary": " · ".join("%s %d" % (k, v) for k, v in sorted(usages.items())),
         })
+        s = stories[-1]
+        s["date_label_en"] = english_date(s["date_label"] or s["date"])
+        s["rights_summary_en"] = " · ".join(
+            "%s · %d %s" % (k, v, "image" if v == 1 else "images")
+            for k, v in sorted(usages.items()))
+        tr = STORY_I18N.get(s["id"], {}) or {}
+        s["title_en"] = tr.get("title") or (s["title"] if not re.search(r"[\u4e00-\u9fff]", s["title"]) else s["title"])
+        s["subtitle_en"] = tr.get("subtitle") or s["subtitle"]
+        s["intro_en"] = tr.get("intro") or s["intro"]
+        s["type_en"] = tr.get("type_en") or STORY_TYPE_EN.get(s["type"], "Story")
+        s["themes_en"] = tr.get("themes") or [tx("theme", x) for x in s["themes"]]
+        s["place_en"] = tx("place", s["place"])
+        chapter_tr = tr.get("chapters") or {}
+        for idx, ch in enumerate(s["chapters"]):
+            ctr = chapter_tr.get(str(idx)) or {}
+            ch["title_en"] = ctr.get("title") or ch["title"]
+            ch["text_en"] = ctr.get("text") or ch["text"]
+        item_tr = tr.get("captions") or {}
+        for ch in s["chapters"]:
+            for it in ch["items"]:
+                it["caption_en"] = (item_tr.get(it["id"])
+                                    or CAPTIONS_I18N.get(it["caption"])
+                                    or it["caption"])
     return stories
 
 
@@ -247,6 +436,25 @@ ROUTE_META = {
     "about": ("关于 · %s", "尘画，出尘入画，尘归尘，画归画。采集、复核与策展方式。"),
     "rights": ("授权 · %s", "U1–U5 使用性质、署名与商用边界。"),
 }
+ROUTE_META_EN = {
+    "gallery": ("Archive · %s", "Browse the Chenhua archive by era and theme."),
+    "stories": ("Stories · %s", "Events, people, places, craft and long reads."),
+    "timeline": ("Timeline · %s", "Stories arranged by year."),
+    "search": ("Search · %s", "Search titles, places, creators, themes and years."),
+    "about": ("About · %s", "How Chenhua collects, verifies and curates."),
+    "rights": ("Rights · %s", "U1–U5 usage, credit and commercial boundaries."),
+}
+
+
+def write_i18n_assets():
+    assets = DIST / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(UI_I18N, ensure_ascii=False).replace("</", "<\\/")
+    (assets / "i18n.js").write_text("window.CHENHUA_I18N = %s;\n" % payload,
+                                    encoding="utf-8", newline="\n")
+    site_js = CORE / "assets" / "site.js"
+    if site_js.exists():
+        shutil.copy2(site_js, assets / "site.js")
 
 
 def write_site(site, cfg, records, stories, stats, build_id):
@@ -265,6 +473,10 @@ def write_site(site, cfg, records, stories, stats, build_id):
         title_tpl, desc_tpl = ROUTE_META[route]
         title = cfg["title"] if root else (title_tpl % brand)
         desc = cfg.get("desc") if root else desc_tpl
+        title_en_tpl, desc_en_tpl = ROUTE_META_EN.get(route, ("%s", ""))
+        brand_en = cfg.get("brand_en") or "Chenhua"
+        title_en = cfg.get("title_en") if root else (title_en_tpl % brand_en)
+        desc_en = cfg.get("desc_en") if root else desc_en_tpl
         canonical = domain + "/" + ("" if root else route + "/")
         prefix = "../" if root else "../../"
         robots = "noindex,follow" if (route == "search" or (route == "stories" and not has_stories)) else "index,follow"
@@ -273,18 +485,36 @@ def write_site(site, cfg, records, stories, stats, build_id):
             target = "../../main/search/?scope=" + scope
             canonical_target = DOMAINS["main"] + "/search/?scope=" + scope
             redirect = """<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#0d0c0b">
 <title>搜索 · 尘画</title>
 <link rel="canonical" href="%s">
 <meta http-equiv="refresh" content="0;url=%s">
+<style>
+html[data-lang="en"] [data-l="zh"]{display:none}
+html[data-lang="zh"] [data-l="en"]{display:none}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0d0c0b;color:#ebe5da;font:14px/1.8 "PingFang SC","Microsoft YaHei",sans-serif}
+html[data-theme="light"] body{background:#f6f2ea;color:#231f19}
+a{color:#c8a24a}
+html[data-theme="light"] a{color:#8b6520}
+</style>
+<script>
+(function(){try{var t=localStorage.getItem("chenhua-theme");if(t)document.documentElement.setAttribute("data-theme",t);
+var l=localStorage.getItem("chenhua-lang");if(l){document.documentElement.setAttribute("data-lang",l);
+document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}})();
+</script>
 </head>
-<body><p>正在前往尘画统一搜索：<a href="%s">继续</a></p></body>
+<body data-title-zh="搜索 · 尘画" data-title-en="Search · Chenhua">
+<p><span data-l="zh">正在前往尘画统一搜索：<a href="%s">继续</a></span><span data-l="en">Redirecting to Chenhua search: <a href="%s">continue</a></span></p>
+<script src="../../assets/site.js"></script>
+</body>
 </html>
-""" % (canonical_target, target, target)
+""" % (canonical_target, target, target, target)
             folder = out / "search"
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "index.html").write_text(redirect, encoding="utf-8", newline="\n")
@@ -319,7 +549,7 @@ def write_site(site, cfg, records, stories, stats, build_id):
             ld = '<script type="application/ld+json">%s</script>\n' % json.dumps(
                 ld_data, ensure_ascii=False).replace("</", "<\\/")
         html = """<!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -328,6 +558,9 @@ def write_site(site, cfg, records, stories, stats, build_id):
 <meta name="description" content="%s">
 <meta name="robots" content="%s">
 <link rel="canonical" href="%s">
+<link rel="alternate" hreflang="zh-CN" href="%s">
+<link rel="alternate" hreflang="en" href="%s?lang=en">
+<link rel="alternate" hreflang="x-default" href="%s">
 <meta property="og:type" content="website">
 <meta property="og:title" content="%s">
 <meta property="og:description" content="%s">
@@ -335,19 +568,26 @@ def write_site(site, cfg, records, stories, stats, build_id):
 <link rel="dns-prefetch" href="//19century.chenhua.net">
 <link rel="dns-prefetch" href="//20century.chenhua.net">
 <link rel="dns-prefetch" href="//21century.chenhua.net">
+<script>(function(){try{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();</script>
 %s<link rel="stylesheet" href="%sassets/app.css?v=%s">
 </head>
-<body>
+<body data-title-zh="%s" data-title-en="%s" data-desc-zh="%s" data-desc-en="%s">
 <div id="app" aria-live="polite"></div>
 <noscript>%s</noscript>
 <script>window.SITE_CONFIG = %s;</script>
+<script src="%sassets/i18n.js?v=%s"></script>
 <script src="%sdata/bundle.js?v=%s"></script>
 <script src="%sassets/app.js?v=%s"></script>
 </body>
 </html>
-""" % (title, desc, robots, canonical, title, desc, canonical, ld,
-       prefix, build_id, noscript, cfg_json,
-       prefix, build_id, prefix, build_id)
+""" % (html_escape(title, quote=True), html_escape(desc, quote=True), robots, canonical,
+       canonical, canonical, canonical,
+       html_escape(title, quote=True), html_escape(desc, quote=True), canonical, ld,
+       prefix, build_id,
+       html_escape(title, quote=True), html_escape(title_en or title, quote=True),
+       html_escape(desc, quote=True), html_escape(desc_en or desc, quote=True),
+       noscript, cfg_json,
+       prefix, build_id, prefix, build_id, prefix, build_id)
         folder = out if root else out / route
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
@@ -370,56 +610,73 @@ def write_galleries(build_id):
         shutil.copy2(CORE / "gallery" / "gallery.js", folder / "gallery.js")
         title = {"19century": "19th Century", "20century": "20th Century",
                  "21century": "21st Century"}[century]
-        html = """<!doctype html>
-<html lang="zh-CN">
+        title_zh = "%s · 尘画图片索引" % title
+        title_en = "%s · Chenhua Image Index" % title
+        desc_zh = "这是尘画的图片索引页。完整档案、许可与来源见摄影 / 绘画站；本页只做浏览入口。"
+        desc_en = ("An image index for Chenhua. The complete archive, licences and sources "
+                   "are on the Photography and Painting sites; this page is only an entrance.")
+        html = f"""<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0c0b">
-<title>%s · 尘画图片索引</title>
-<link rel="stylesheet" href="gallery.css?v=%s">
+<meta name="description" content="{desc_zh}">
+<title>{title_zh}</title>
+<link rel="alternate" hreflang="zh-CN" href="https://{century}.chenhua.net/">
+<link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/">
+<link rel="stylesheet" href="gallery.css?v={build_id}">
+<script>
+(function(){{try{{var t=localStorage.getItem("chenhua-theme");if(t)document.documentElement.setAttribute("data-theme",t);
+var l=localStorage.getItem("chenhua-lang");if(l){{document.documentElement.setAttribute("data-lang",l);
+document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}}}catch(e){{}}}})();
+</script>
 </head>
-<body>
+<body data-title-zh="{title_zh}" data-title-en="{title_en}"
+      data-desc-zh="{desc_zh}" data-desc-en="{desc_en}">
 <header class="g-head">
-  <div class="g-brand"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en">尘归尘，画归画 · %s</span></div>
+  <div class="g-brand"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画 · {title}</span><span data-l="en">Image as history · {title}</span></span></div>
   <nav class="g-nav">
-    <a href="../../dist/main/">尘画</a>
-    <a href="../../dist/main/stories/">主题</a>
-    <a href="../../dist/main/timeline/">时间线</a>
-    <a href="../../dist/photo/">摄影</a>
-    <a href="../../dist/paint/">绘画</a>
-    <a href="../../dist/main/search/">搜索</a>
-    <a href="https://netcn.org/">导航</a>
+    <a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>
+    <a href="../../dist/main/stories/"><span data-l="zh">主题</span><span data-l="en">Stories</span></a>
+    <a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>
+    <a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>
+    <a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>
+    <a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>
+    <a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>
   </nav>
+  <div class="g-tools">
+    <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中</span></button>
+    <button class="g-tool" type="button" data-themebtn aria-label="切换到浅色">
+      <span class="icon-sun"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></span>
+      <span class="icon-moon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.6A8.4 8.4 0 1 1 9.4 4a6.8 6.8 0 0 0 10.6 10.6z"/></svg></span>
+    </button>
+  </div>
 </header>
 <main class="g-wrap">
   <div class="g-intro">
-    <h1>%s</h1>
-    <p>这是尘画的图片索引页。完整档案、许可与来源见摄影 / 绘画站；本页只做浏览入口。</p>
+    <h1>{title}</h1>
+    <p><span data-l="zh">{desc_zh}</span><span data-l="en">{desc_en}</span></p>
   </div>
   <div class="g-chips" id="gChips"></div>
   <div class="g-count" id="gCount">—</div>
   <div class="g-masonry" id="gMasonry"></div>
-  <div class="g-more"><button id="gMore" type="button">加载更多</button></div>
+  <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
 </main>
 <footer class="g-foot">
   <nav>
-    <a href="../../dist/main/">尘画</a>
-    <a href="../../dist/main/stories/">主题</a>
-    <a href="../../dist/main/timeline/">时间线</a>
-    <a href="../../dist/photo/">摄影</a>
-    <a href="../../dist/paint/">绘画</a>
-    <a href="../../dist/main/search/">搜索</a>
-    <a href="https://netcn.org/">导航</a>
+    <a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>
+    <a href="../../dist/main/stories/"><span data-l="zh">主题</span><span data-l="en">Stories</span></a>
+    <a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>
+    <a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>
+    <a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>
+    <a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>
+    <a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>
   </nav>
-  <p>尘画 · 出尘入画 · 尘归尘，画归画</p>
-  <p><a href="../../dist/main/legal/">法律声明</a> · 影像版权归原作者与收藏机构</p>
+  <p><span data-l="zh">尘画 · 出尘入画 · 尘归尘，画归画</span><span data-l="en">Chenhua · Out of dust, into the image</span></p>
+  <p><a href="../../dist/main/legal/"><span data-l="zh">法律声明</span><span data-l="en">Legal notice</span></a> · <span data-l="zh">影像版权归原作者与收藏机构</span><span data-l="en">Image rights remain with the creators and holding institutions</span></p>
 </footer>
-<script>window.GALLERY_CONFIG = %s;</script>
-<script src="gallery.js?v=%s"></script>
-</body>
-</html>
-""" % (title, build_id, title, title, json.dumps({
+<script>window.GALLERY_CONFIG = {json.dumps({
             "century": century,
             "photoBase": "../../dist/photo/",
             "paintBase": "../../dist/paint/",
@@ -427,7 +684,12 @@ def write_galleries(build_id):
             "paintStaticBase": "../../dist/paint/painting/",
             "mainBase": "../../dist/main/",
             "preview": True,
-        }, ensure_ascii=False), build_id)
+        }, ensure_ascii=False)};</script>
+<script src="../../dist/assets/site.js"></script>
+<script src="gallery.js?v={build_id}"></script>
+</body>
+</html>
+"""
         (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
 
 
@@ -461,37 +723,44 @@ def main():
         "paint": "/next/dist/paint/",
     }
     nav = [
-        {"label": "尘画", "href": base["main"], "icon": "home", "site": "main"},
-        {"label": "主题", "themes": True, "icon": "stories"},
-        {"label": "时间线", "timeline": True, "icon": "timeline", "wideOnly": True},
-        {"label": "摄影", "href": base["photo"], "icon": "photo", "site": "photo"},
-        {"label": "绘画", "href": base["paint"], "icon": "paint", "site": "paint"},
-        {"label": "搜索", "search": True, "icon": "search"},
-        {"label": "导航", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
+        {"label": "尘画", "label_en": "Chenhua", "href": base["main"], "icon": "home", "site": "main"},
+        {"label": "主题", "label_en": "Stories", "themes": True, "icon": "stories"},
+        {"label": "时间线", "label_en": "Timeline", "timeline": True, "icon": "timeline", "wideOnly": True},
+        {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
+        {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
+        {"label": "搜索", "label_en": "Search", "search": True, "icon": "search"},
+        {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],
-              "paintBase": base["paint"], "nav": nav}
+              "paintBase": base["paint"], "nav": nav, "taxonomy": TAXONOMY}
     main_cfg = {
-        "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画",
-        "sub": "尘归尘，画归画",
+        "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Chenhua",
+        "title_en": "Chenhua · Out of dust, into the image",
+        "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画，出尘入画，尘归尘，画归画。以图为史，记录人间的大事与小事。",
+        "desc_en": "Chenhua is an open archive of historical photography and painting, recording the great and small things of the human world through images.",
         "collections": ["photos", "paintings", "links"],
         "base": base["main"], **common,
     }
     photo_cfg = {
-        "site": "photo", "title": "尘画 · 摄影", "brand": "尘画",
-        "sub": "尘归尘，画归画",
+        "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Chenhua",
+        "title_en": "Chenhua · Photography",
+        "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画摄影，出尘入画，尘归尘，画归画。摄影影像开放档案。",
+        "desc_en": "Chenhua Photography: an open archive of photographic images.",
         "collections": ["photos", "links"],
         "base": base["photo"], **common,
     }
     paint_cfg = {
-        "site": "paint", "title": "尘画 · 绘画", "brand": "尘画",
-        "sub": "尘归尘，画归画",
+        "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Chenhua",
+        "title_en": "Chenhua · Painting",
+        "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画绘画，出尘入画，尘归尘，画归画。绘画与版画开放档案。",
+        "desc_en": "Chenhua Painting: an open archive of paintings and prints.",
         "collections": ["paintings"],
         "base": base["paint"], **common,
     }
+    write_i18n_assets()
     write_bundle(records, stories, stats)
     write_site("main", main_cfg, records, stories, stats, build_id)
     write_site("photo", photo_cfg, records, stories, stats, build_id)
