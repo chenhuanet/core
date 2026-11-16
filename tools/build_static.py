@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""为照片、绘画和专题生成静态详情页 + sitemap + robots。
+"""为照片、绘画和主题生成静态详情页 + sitemap + robots。
 
 预览默认用本地图片；设置 CHENHUA_REMOTE=1 时用世纪图片站的正式 URL。
 """
@@ -68,11 +68,22 @@ def gallery_href(r):
     return "../../../images/%s/" % c
 
 
+def brand_href(kind):
+    return "../" if kind == "main" else "../../main/"
+
+
 def nav_for(kind):
-    photo = "../" if kind == "photo" else "../../photo/"
-    paint = "../" if kind == "paint" else "../../paint/"
-    return [("今日", "../"), ("影像", "../gallery/"), ("专题", "../stories/"),
-            ("搜索", "../search/"), ("摄影", photo), ("绘画", paint),
+    if kind == "main":
+        home, themes, timeline = "../", "../stories/", "../timeline/"
+        search, photo, paint = "../search/", "../../photo/", "../../paint/"
+    elif kind == "photo":
+        home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
+        search, photo, paint = "../search/", "../", "../../paint/"
+    else:
+        home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
+        search, photo, paint = "../search/", "../../photo/", "../"
+    return [("尘画", home), ("主题", themes), ("时间线", timeline),
+            ("摄影", photo), ("绘画", paint), ("搜索", search),
             ("导航", "https://netcn.org/")]
 
 
@@ -101,9 +112,9 @@ def head(title, desc, url, image, kind, extra_ld=""):
 </head>
 <body class="static-body">
 <div class="s-shell">
-<header class="s-head"><a class="s-brand" href="../">尘画</a><span class="s-slogan">出尘入画</span><nav>%s</nav></header>
+<header class="s-head"><a class="s-brand" href="%s">尘画</a><span class="s-slogan">出尘入画</span><nav>%s</nav></header>
 """ % (esc(title), esc(desc), esc(url), esc(title), esc(desc), esc(url), og,
-       BUILD_ID, BUILD_ID, extra_ld, nav)
+       BUILD_ID, BUILD_ID, extra_ld, brand_href(kind), nav)
 
 
 def foot(kind="main"):
@@ -322,7 +333,7 @@ def story_page(s, records):
         body += "</div></section>"
     rights = s.get("rights_summary") or ""
     body += '<div class="s-rights"><b>权利摘要</b><span>%s</span></div>' % esc(rights)
-    body += '<div class="s-actions"><a class="s-btn gold" href="../stories/">全部专题</a>'
+    body += '<div class="s-actions"><a class="s-btn gold" href="../stories/">全部主题</a>'
     body += '<a class="s-btn" href="../">主站首页</a><a class="s-btn" href="../../photo/">摄影站</a><a class="s-btn" href="../../paint/">绘画站</a></div>'
     return head(s.get("title"), desc, url, cover.get("image") if cover else "", "main", ld_json) + hero + body + foot("main")
 
@@ -372,10 +383,10 @@ def main():
                       PAINT_DOMAIN + "/about/",
                       PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
     sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/gallery/",
-                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/about/",
-                     MAIN_DOMAIN + "/legal/"] +
+                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/timeline/",
+                     MAIN_DOMAIN + "/about/", MAIN_DOMAIN + "/legal/"] +
             ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories])
-    print("静态页完成：照片 %d · 绘画 %d · 专题 %d · sitemap/robots 3 套" % (
+    print("静态页完成：照片 %d · 绘画 %d · 主题 %d · sitemap/robots 3 套" % (
         len(photos), len(paints), len(stories)))
 
 

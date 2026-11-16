@@ -164,6 +164,7 @@ def load_story_files(records):
             "id": fm["id"],
             "title": fm.get("title") or fm["id"],
             "subtitle": fm.get("subtitle") or "",
+            "type": fm.get("type") or "长文",
             "intro": body.strip(),
             "status": fm.get("status") or "draft",
             "cover": cover,
@@ -205,6 +206,7 @@ def build_stories(rows):
             "title": title,
             "subtitle": sub,
             "intro": intro,
+            "type": "长文",
             "themes": themes,
             "status": "筹备中",
             "cover": items[0]["id"],
@@ -231,7 +233,8 @@ DOMAINS = {
 ROUTE_META = {
     "today": ("%s", "以图为史，记录人间的大事与小事。"),  # root uses cfg.title / cfg.desc
     "gallery": ("影像 · %s", "出尘入画。按年代与主题浏览尘画已收录的影像档案。"),
-    "stories": ("专题 · %s", "出尘入画。以影像串联的专题叙事。"),
+    "stories": ("主题 · %s", "出尘入画。事件、人物、地方、技艺与长文。"),
+    "timeline": ("时间线 · %s", "出尘入画。主题按年代排列。"),
     "search": ("搜索 · %s", "搜标题、地点、作者、主题与年代。"),
     "about": ("关于 · %s", "尘画，出尘入画，尘归尘，画归画。采集、复核与策展方式。"),
     "rights": ("授权 · %s", "U1–U5 使用性质、署名与商用边界。"),
@@ -244,6 +247,8 @@ def write_site(site, cfg, records, stories, stats, build_id):
     brand = cfg.get("brand") or "尘画"
     domain = DOMAINS[site]
     routes = ["today", "gallery", "stories", "search", "about", "rights"]
+    if site == "main":
+        routes.insert(3, "timeline")
     site_ids = {r["id"] for r in records if r["collection"] in cfg["collections"]}
     has_stories = any(site_ids.intersection(s.get("photo_ids") or []) for s in stories)
     cfg_json = json.dumps(cfg, ensure_ascii=False).replace("</", "<\\/")
@@ -258,8 +263,9 @@ def write_site(site, cfg, records, stories, stats, build_id):
         navlinks = "".join(
             '<a href="%s">%s</a>' % (
                 (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
-                {"today": "今日", "gallery": "影像", "stories": "专题",
-                 "search": "搜索", "about": "关于", "rights": "授权"}[r])
+                {"today": "今日", "gallery": "影像", "stories": "主题",
+                 "timeline": "时间线", "search": "搜索",
+                 "about": "关于", "rights": "授权"}[r])
             for r in routes)
         navlinks += ('<a href="%s">摄影</a><a href="%s">绘画</a>'
                      '<a href="https://netcn.org/">导航</a>') % (
@@ -348,12 +354,12 @@ def write_galleries(build_id):
 <header class="g-head">
   <div class="g-brand"><span class="g-cn">尘画</span><span class="g-en">出尘入画 · %s</span></div>
   <nav class="g-nav">
-    <a href="../../dist/main/">今日</a>
-    <a href="../../dist/main/gallery/">影像</a>
-    <a href="../../dist/main/stories/">专题</a>
-    <a href="../../dist/main/search/">搜索</a>
+    <a href="../../dist/main/">尘画</a>
+    <a href="../../dist/main/stories/">主题</a>
+    <a href="../../dist/main/timeline/">时间线</a>
     <a href="../../dist/photo/">摄影</a>
     <a href="../../dist/paint/">绘画</a>
+    <a href="../../dist/main/search/">搜索</a>
     <a href="https://netcn.org/">导航</a>
   </nav>
 </header>
@@ -369,12 +375,12 @@ def write_galleries(build_id):
 </main>
 <footer class="g-foot">
   <nav>
-    <a href="../../dist/main/">今日</a>
-    <a href="../../dist/main/gallery/">影像</a>
-    <a href="../../dist/main/stories/">专题</a>
-    <a href="../../dist/main/search/">搜索</a>
+    <a href="../../dist/main/">尘画</a>
+    <a href="../../dist/main/stories/">主题</a>
+    <a href="../../dist/main/timeline/">时间线</a>
     <a href="../../dist/photo/">摄影</a>
     <a href="../../dist/paint/">绘画</a>
+    <a href="../../dist/main/search/">搜索</a>
     <a href="https://netcn.org/">导航</a>
   </nav>
   <p>尘画 · 出尘入画 · 尘归尘，画归画</p>
@@ -426,13 +432,13 @@ def main():
         "paint": "/next/dist/paint/",
     }
     nav = [
-        {"label": "今日", "route": "today", "icon": "today"},
-        {"label": "影像", "route": "gallery", "icon": "gallery"},
-        {"label": "专题", "route": "stories", "icon": "stories"},
+        {"label": "尘画", "href": base["main"], "icon": "home", "site": "main"},
+        {"label": "主题", "themes": True, "icon": "stories"},
+        {"label": "时间线", "timeline": True, "icon": "timeline", "wideOnly": True},
+        {"label": "摄影", "href": base["photo"], "icon": "photo", "site": "photo"},
+        {"label": "绘画", "href": base["paint"], "icon": "paint", "site": "paint"},
         {"label": "搜索", "route": "search", "icon": "search"},
-        {"label": "摄影", "href": base["photo"], "icon": "photo", "kind": "cross", "sub": "photo"},
-        {"label": "绘画", "href": base["paint"], "icon": "paint", "kind": "cross", "sub": "paint"},
-        {"label": "导航", "href": "https://netcn.org/", "icon": "compass", "kind": "cross", "sub": "netcn.org"},
+        {"label": "导航", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],
               "paintBase": base["paint"], "nav": nav}
