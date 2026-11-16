@@ -15,8 +15,10 @@ img{display:block;max-width:100%}
   padding:14px 18px;border-bottom:1px solid var(--line);background:rgba(13,12,11,.88);
   backdrop-filter:blur(18px)}
 .g-brand{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
-.g-brand .g-cn{font-family:var(--serif);font-size:22px;letter-spacing:.18em}
-.g-brand .g-en{font-size:10px;letter-spacing:.18em;color:var(--dim)}
+.g-brand .wm{display:inline-flex;align-items:baseline;gap:1px}
+.g-brand .wm-lite{font-family:var(--serif);font-size:15px;color:var(--muted);letter-spacing:.03em}
+.g-brand .wm-strong{font-family:var(--serif);font-size:22px;color:var(--accent);letter-spacing:.03em}
+.g-brand .g-en{font-size:10px;letter-spacing:.12em;color:var(--dim)}
 .g-nav{margin-left:auto;display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
 .g-nav a:hover{color:var(--accent)}
 .g-wrap{max-width:1280px;margin:0 auto;padding:26px 18px 40px}

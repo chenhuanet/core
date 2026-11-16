@@ -72,6 +72,12 @@ def brand_href(kind):
     return "../" if kind == "main" else "../../main/"
 
 
+def wordmark_html():
+    return ('<span class="wm"><span class="wm-lite">出</span>'
+            '<span class="wm-strong">尘</span><span class="wm-lite">入</span>'
+            '<span class="wm-strong">画</span></span>')
+
+
 def nav_for(kind):
     if kind == "main":
         home, themes, timeline = "../", "../stories/", "../timeline/"
@@ -112,9 +118,9 @@ def head(title, desc, url, image, kind, extra_ld=""):
 </head>
 <body class="static-body">
 <div class="s-shell">
-<header class="s-head"><a class="s-brand" href="%s">尘画</a><span class="s-slogan">出尘入画</span><nav>%s</nav></header>
+<header class="s-head"><a class="s-brand" href="%s">%s</a><span class="s-slogan">尘归尘，画归画</span><nav>%s</nav></header>
 """ % (esc(title), esc(desc), esc(url), esc(title), esc(desc), esc(url), og,
-       BUILD_ID, BUILD_ID, extra_ld, brand_href(kind), nav)
+       BUILD_ID, BUILD_ID, extra_ld, brand_href(kind), wordmark_html(), nav)
 
 
 def foot(kind="main"):

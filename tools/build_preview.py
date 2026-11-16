@@ -373,7 +373,7 @@ def write_galleries(build_id):
 </head>
 <body>
 <header class="g-head">
-  <div class="g-brand"><span class="g-cn">尘画</span><span class="g-en">出尘入画 · %s</span></div>
+  <div class="g-brand"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en">尘归尘，画归画 · %s</span></div>
   <nav class="g-nav">
     <a href="../../dist/main/">尘画</a>
     <a href="../../dist/main/stories/">主题</a>
@@ -465,21 +465,21 @@ def main():
               "paintBase": base["paint"], "nav": nav}
     main_cfg = {
         "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画",
-        "sub": "出尘入画 · 以图为史",
+        "sub": "尘归尘，画归画",
         "desc": "尘画，出尘入画，尘归尘，画归画。以图为史，记录人间的大事与小事。",
         "collections": ["photos", "paintings", "links"],
         "base": base["main"], **common,
     }
     photo_cfg = {
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画",
-        "sub": "出尘入画 · 摄影",
+        "sub": "尘归尘，画归画",
         "desc": "尘画摄影，出尘入画，尘归尘，画归画。摄影影像开放档案。",
         "collections": ["photos", "links"],
         "base": base["photo"], **common,
     }
     paint_cfg = {
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画",
-        "sub": "出尘入画 · 绘画",
+        "sub": "尘归尘，画归画",
         "desc": "尘画绘画，出尘入画，尘归尘，画归画。绘画与版画开放档案。",
         "collections": ["paintings"],
         "base": base["paint"], **common,
