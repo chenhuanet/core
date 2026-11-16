@@ -69,14 +69,11 @@ def gallery_href(r):
 
 
 def nav_for(kind):
-    if kind == "photo":
-        return [("摄影", "../"), ("影像轴", "../gallery/"), ("专题", "../stories/"),
-                ("主站", "../../main/"), ("绘画", "../../paint/")]
-    if kind == "paint":
-        return [("绘画", "../"), ("影像轴", "../gallery/"),
-                ("主站", "../../main/"), ("摄影", "../../photo/")]
-    return [("主站", "../"), ("影像轴", "../gallery/"), ("专题", "../stories/"),
-            ("摄影", "../../photo/"), ("绘画", "../../paint/")]
+    photo = "../" if kind == "photo" else "../../photo/"
+    paint = "../" if kind == "paint" else "../../paint/"
+    return [("今日", "../"), ("影像", "../gallery/"), ("专题", "../stories/"),
+            ("搜索", "../search/"), ("摄影", photo), ("绘画", paint),
+            ("导航", "https://netcn.org/")]
 
 
 def head(title, desc, url, image, kind, extra_ld=""):
@@ -104,7 +101,7 @@ def head(title, desc, url, image, kind, extra_ld=""):
 </head>
 <body class="static-body">
 <div class="s-shell">
-<header class="s-head"><a class="s-brand" href="../">尘画</a><nav>%s</nav></header>
+<header class="s-head"><a class="s-brand" href="../">尘画</a><span class="s-slogan">出尘入画</span><nav>%s</nav></header>
 """ % (esc(title), esc(desc), esc(url), esc(title), esc(desc), esc(url), og,
        BUILD_ID, BUILD_ID, extra_ld, nav)
 
@@ -113,10 +110,82 @@ def foot(kind="main"):
     nav = "".join('<a href="%s">%s</a>' % (h, esc(t)) for t, h in nav_for(kind))
     return """<footer class="s-foot">
 <nav>%s</nav>
-<p>尘画 · 以图为史 · 非商业开放档案</p>
+<p class="brandline">尘画 · 出尘入画 · 尘归尘，画归画</p>
+<p><a href="../legal/">法律声明</a> · 影像版权归原作者与收藏机构；本站仅作非商业索引与展示</p>
 </footer>
 </div></body></html>
 """ % nav
+
+
+LEGAL_SECTIONS = [
+    ("一、项目性质", [
+        "尘画（出尘入画）是一个非商业性、开放的历史影像索引与展示项目。"
+        "本站不设账号、不投放广告、不出售图片，不以影像本身直接营利。",
+        "尘归尘，画归画：影像来自历史，也终将回到历史；本站只做整理、索引与展示，"
+        "不主张对历史影像本身的著作权。",
+    ]),
+    ("二、版权与授权", [
+        "站内影像的著作权、邻接权及其他权利归原作者、收藏机构或其他权利人所有。"
+        "每条记录均标注来源、作者、许可与使用性质（U1–U5），并以详情页的许可信息为准。",
+        "U1 表示可自由商用；U2/U3 可商用但须署名（U3 还须以同一许可发布衍生作品）；"
+        "U4 仅限非商业使用；U5 仅提供外链、不转载图片。"
+        "商用前请逐条核对源站许可与署名要求。本站不构成法律意见；涉及商业使用或权属争议时，请咨询专业律师。",
+    ]),
+    ("三、准确性与免责", [
+        "本站尽力核对馆藏著录、年代、作者与史实依据，但不保证内容完整、准确或最新。"
+        "历史记录可能存在争议、缺漏或错误，欢迎通过导航站提供线索与更正。",
+        "在适用法律允许的范围内，因使用或依赖本站内容产生的直接或间接损失，本站不承担责任。",
+    ]),
+    ("四、外部链接", [
+        "本站包含指向第三方馆藏、许可原文与导航站的链接。外部内容不受本站控制，"
+        "其可用性、准确性、合法性与隐私做法由第三方负责；访问外部链接的风险由访问者自行承担。",
+    ]),
+    ("五、权利人通知与下架", [
+        "如您是影像、文字或页面设计的权利人，认为本站内容侵犯您的权利，"
+        "请通过 https://netcn.org/ 联系，并提供权属证明、具体页面 URL 与联系方式。",
+        "我们核实后将及时更正、补充署名、替换来源或下架相关记录。",
+    ]),
+    ("六、隐私与日志", [
+        "本站不使用第三方统计、不投放广告、不设置追踪 Cookie，也不要求用户注册或登录。",
+        "站点由 GitHub Pages 托管、Cloudflare 提供 DNS 与加速。二者可能记录访问日志、IP 地址、"
+        "请求路径与浏览器信息，用于安全防护、性能优化与滥用治理；Cloudflare 也可能设置"
+        "安全防护所必需的安全 Cookie。",
+    ]),
+    ("七、版权标识", [
+        "© 2026 尘画 · 出尘入画 · 尘归尘，画归画。站内文字、页面设计与整理成果归尘画项目所有；"
+        "影像版权按各记录标注。",
+    ]),
+]
+
+
+def legal_page(kind):
+    domain = {"photo": PHOTO_DOMAIN, "paint": PAINT_DOMAIN, "main": MAIN_DOMAIN}[kind]
+    url = domain + "/legal/"
+    desc = "尘画法律声明：版权与授权、免责声明、外部链接、权利人通知与下架、隐私与日志。"
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "法律声明",
+        "description": desc,
+        "url": url,
+        "inLanguage": "zh-CN",
+        "dateModified": TODAY,
+        "isPartOf": domain + "/",
+    }
+    ld_json = '<script type="application/ld+json">%s</script>' % json.dumps(
+        ld, ensure_ascii=False).replace("</", "<\\/")
+    body = '<div class="s-kicker">法律与免责</div><h1 class="s-title">法律声明</h1>'
+    body += ('<div class="s-sub"><span>更新日期 %s</span><span>·</span>'
+             '<span>尘画 · 出尘入画 · 尘归尘，画归画</span></div>') % TODAY
+    body += ('<div class="s-note"><p>本页说明尘画的内容授权、免责边界、外部链接、'
+             '权利人下架流程与隐私做法。使用本站即表示您已阅读并理解本声明。</p></div>')
+    for title, paras in LEGAL_SECTIONS:
+        body += '<div class="s-usage"><h2>%s</h2>' % esc(title)
+        body += "".join("<p>%s</p>" % esc(p) for p in paras)
+        body += "</div>"
+    body += ('<div class="s-actions"><a class="s-btn gold" href="https://netcn.org/">联系与导航</a>'
+             '<a class="s-btn" href="../">返回首页</a></div>')
+    return head("法律声明", desc, url, "", kind, ld_json) + body + foot(kind)
 
 
 def photo_page(r, all_records):
@@ -291,14 +360,20 @@ def main():
     for s in stories:
         (DIST / "main" / "story" / ("%s.html" % s["id"])).write_text(
             story_page(s, records), encoding="utf-8", newline="\n")
+    for site, kind in (("main", "main"), ("photo", "photo"), ("paint", "paint")):
+        legal = DIST / site / "legal"
+        legal.mkdir(parents=True, exist_ok=True)
+        (legal / "index.html").write_text(legal_page(kind), encoding="utf-8", newline="\n")
 
     sitemap("photo", [PHOTO_DOMAIN + "/", PHOTO_DOMAIN + "/gallery/",
-                      PHOTO_DOMAIN + "/stories/", PHOTO_DOMAIN + "/about/"] +
-            [canonical(r) for r in photos])
+                      PHOTO_DOMAIN + "/stories/", PHOTO_DOMAIN + "/about/",
+                      PHOTO_DOMAIN + "/legal/"] + [canonical(r) for r in photos])
     sitemap("paint", [PAINT_DOMAIN + "/", PAINT_DOMAIN + "/gallery/",
-                      PAINT_DOMAIN + "/about/"] + [canonical(r) for r in paints])
+                      PAINT_DOMAIN + "/about/",
+                      PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
     sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/gallery/",
-                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/about/"] +
+                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/about/",
+                     MAIN_DOMAIN + "/legal/"] +
             ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories])
     print("静态页完成：照片 %d · 绘画 %d · 专题 %d · sitemap/robots 3 套" % (
         len(photos), len(paints), len(stories)))

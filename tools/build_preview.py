@@ -229,11 +229,11 @@ DOMAINS = {
     "paint": "https://paint.chenhua.net",
 }
 ROUTE_META = {
-    "today": ("%s", "以图为史，记录人间的大事与小事。"),  # root uses cfg.title / cfg.sub
-    "gallery": ("影像 · %s", "按年代与主题浏览尘画已收录的影像档案。"),
-    "stories": ("专题 · %s", "以影像串联的专题叙事。"),
+    "today": ("%s", "以图为史，记录人间的大事与小事。"),  # root uses cfg.title / cfg.desc
+    "gallery": ("影像 · %s", "出尘入画。按年代与主题浏览尘画已收录的影像档案。"),
+    "stories": ("专题 · %s", "出尘入画。以影像串联的专题叙事。"),
     "search": ("搜索 · %s", "搜标题、地点、作者、主题与年代。"),
-    "about": ("关于 · %s", "尘画的采集、复核与策展方式。"),
+    "about": ("关于 · %s", "尘画，出尘入画，尘归尘，画归画。采集、复核与策展方式。"),
     "rights": ("授权 · %s", "U1–U5 使用性质、署名与商用边界。"),
 }
 
@@ -243,24 +243,46 @@ def write_site(site, cfg, records, stories, stats, build_id):
     out.mkdir(parents=True, exist_ok=True)
     brand = cfg.get("brand") or "尘画"
     domain = DOMAINS[site]
-    routes = ["today", "gallery"]
-    if cfg.get("stories") is not False:
-        routes.append("stories")
-    routes += ["search", "about", "rights"]
+    routes = ["today", "gallery", "stories", "search", "about", "rights"]
+    site_ids = {r["id"] for r in records if r["collection"] in cfg["collections"]}
+    has_stories = any(site_ids.intersection(s.get("photo_ids") or []) for s in stories)
     cfg_json = json.dumps(cfg, ensure_ascii=False).replace("</", "<\\/")
     for route in routes:
         root = route == "today"
         title_tpl, desc_tpl = ROUTE_META[route]
         title = cfg["title"] if root else (title_tpl % brand)
-        desc = (cfg.get("sub") or "") if root else desc_tpl
+        desc = cfg.get("desc") if root else desc_tpl
         canonical = domain + "/" + ("" if root else route + "/")
         prefix = "../" if root else "../../"
-        noscript = "".join(
+        robots = "noindex,follow" if (route == "search" or (route == "stories" and not has_stories)) else "index,follow"
+        navlinks = "".join(
             '<a href="%s">%s</a>' % (
                 (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
                 {"today": "今日", "gallery": "影像", "stories": "专题",
                  "search": "搜索", "about": "关于", "rights": "授权"}[r])
             for r in routes)
+        navlinks += ('<a href="%s">摄影</a><a href="%s">绘画</a>'
+                     '<a href="https://netcn.org/">导航</a>') % (
+                         cfg.get("photoBase") or "", cfg.get("paintBase") or "")
+        noscript = ('<div class="seo-fallback"><h1>%s</h1><p>%s</p><nav>%s</nav></div>'
+                    % (title, desc, navlinks))
+        ld = ""
+        if site == "main" and root:
+            ld_data = {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "尘画",
+                "alternateName": ["出尘入画", "尘归尘，画归画"],
+                "url": DOMAINS["main"] + "/",
+                "inLanguage": "zh-CN",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": DOMAINS["main"] + "/search/?q={search_term_string}",
+                    "query-input": "required name=search_term_string",
+                },
+            }
+            ld = '<script type="application/ld+json">%s</script>\n' % json.dumps(
+                ld_data, ensure_ascii=False).replace("</", "<\\/")
         html = """<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -269,22 +291,26 @@ def write_site(site, cfg, records, stories, stats, build_id):
 <meta name="theme-color" content="#0d0c0b">
 <title>%s</title>
 <meta name="description" content="%s">
+<meta name="robots" content="%s">
 <link rel="canonical" href="%s">
 <meta property="og:type" content="website">
 <meta property="og:title" content="%s">
 <meta property="og:description" content="%s">
 <meta property="og:url" content="%s">
-<link rel="stylesheet" href="%sassets/app.css?v=%s">
+<link rel="dns-prefetch" href="//19century.chenhua.net">
+<link rel="dns-prefetch" href="//20century.chenhua.net">
+<link rel="dns-prefetch" href="//21century.chenhua.net">
+%s<link rel="stylesheet" href="%sassets/app.css?v=%s">
 </head>
 <body>
 <div id="app" aria-live="polite"></div>
-<noscript><nav class="noscript">%s</nav></noscript>
+<noscript>%s</noscript>
 <script>window.SITE_CONFIG = %s;</script>
 <script src="%sdata/bundle.js?v=%s"></script>
 <script src="%sassets/app.js?v=%s"></script>
 </body>
 </html>
-""" % (title, desc, canonical, title, desc, canonical,
+""" % (title, desc, robots, canonical, title, desc, canonical, ld,
        prefix, build_id, noscript, cfg_json,
        prefix, build_id, prefix, build_id)
         folder = out if root else out / route
@@ -320,11 +346,15 @@ def write_galleries(build_id):
 </head>
 <body>
 <header class="g-head">
-  <div class="g-brand"><span class="g-cn">尘画</span><span class="g-en">%s</span></div>
+  <div class="g-brand"><span class="g-cn">尘画</span><span class="g-en">出尘入画 · %s</span></div>
   <nav class="g-nav">
-    <a href="../../dist/main/">主站</a>
+    <a href="../../dist/main/">今日</a>
+    <a href="../../dist/main/gallery/">影像</a>
+    <a href="../../dist/main/stories/">专题</a>
+    <a href="../../dist/main/search/">搜索</a>
     <a href="../../dist/photo/">摄影</a>
     <a href="../../dist/paint/">绘画</a>
+    <a href="https://netcn.org/">导航</a>
   </nav>
 </header>
 <main class="g-wrap">
@@ -339,11 +369,16 @@ def write_galleries(build_id):
 </main>
 <footer class="g-foot">
   <nav>
-    <a href="../../dist/main/">尘画主站</a>
+    <a href="../../dist/main/">今日</a>
+    <a href="../../dist/main/gallery/">影像</a>
+    <a href="../../dist/main/stories/">专题</a>
+    <a href="../../dist/main/search/">搜索</a>
     <a href="../../dist/photo/">摄影</a>
     <a href="../../dist/paint/">绘画</a>
+    <a href="https://netcn.org/">导航</a>
   </nav>
-  <p>尘画 · 以图为史 · 非商业开放档案</p>
+  <p>尘画 · 出尘入画 · 尘归尘，画归画</p>
+  <p><a href="../../dist/main/legal/">法律声明</a> · 影像版权归原作者与收藏机构</p>
 </footer>
 <script>window.GALLERY_CONFIG = %s;</script>
 <script src="gallery.js?v=%s"></script>
@@ -390,53 +425,42 @@ def main():
         "main": "/next/dist/main/", "photo": "/next/dist/photo/",
         "paint": "/next/dist/paint/",
     }
-    main_nav = [
+    nav = [
         {"label": "今日", "route": "today", "icon": "today"},
         {"label": "影像", "route": "gallery", "icon": "gallery"},
         {"label": "专题", "route": "stories", "icon": "stories"},
-        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
+        {"label": "搜索", "route": "search", "icon": "search"},
         {"label": "摄影", "href": base["photo"], "icon": "photo", "kind": "cross", "sub": "photo"},
         {"label": "绘画", "href": base["paint"], "icon": "paint", "kind": "cross", "sub": "paint"},
-    ]
-    photo_nav = [
-        {"label": "今日", "route": "today", "icon": "today"},
-        {"label": "影像", "route": "gallery", "icon": "gallery"},
-        {"label": "专题", "route": "stories", "icon": "stories"},
-        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
-        {"label": "绘画", "href": base["paint"], "icon": "paint", "kind": "cross", "sub": "paint"},
-        {"label": "主站", "href": base["main"], "icon": "home", "kind": "cross", "sub": "www"},
-    ]
-    paint_nav = [
-        {"label": "今日", "route": "today", "icon": "today"},
-        {"label": "影像", "route": "gallery", "icon": "gallery"},
-        {"label": "搜索", "route": "search", "icon": "search", "mobile": False},
-        {"label": "摄影", "href": base["photo"], "icon": "photo", "kind": "cross", "sub": "photo"},
-        {"label": "主站", "href": base["main"], "icon": "home", "kind": "cross", "sub": "www"},
+        {"label": "导航", "href": "https://netcn.org/", "icon": "compass", "kind": "cross", "sub": "netcn.org"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],
-              "paintBase": base["paint"]}
+              "paintBase": base["paint"], "nav": nav}
     main_cfg = {
-        "site": "main", "title": "尘画 · 以图为史", "brand": "尘画",
-        "sub": "以图为史 · 记录人间的大事与小事",
+        "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画",
+        "sub": "出尘入画 · 以图为史",
+        "desc": "尘画，出尘入画，尘归尘，画归画。以图为史，记录人间的大事与小事。",
         "collections": ["photos", "paintings", "links"],
-        "base": base["main"], "nav": main_nav, **common,
+        "base": base["main"], **common,
     }
     photo_cfg = {
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画",
-        "sub": "摄影 · 影像档案",
+        "sub": "出尘入画 · 摄影",
+        "desc": "尘画摄影，出尘入画，尘归尘，画归画。摄影影像开放档案。",
         "collections": ["photos", "links"],
-        "base": base["photo"], "nav": photo_nav, **common,
+        "base": base["photo"], **common,
     }
     paint_cfg = {
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画",
-        "sub": "绘画与版画",
-        "collections": ["paintings"], "stories": False,
-        "base": base["paint"], "nav": paint_nav, **common,
+        "sub": "出尘入画 · 绘画",
+        "desc": "尘画绘画，出尘入画，尘归尘，画归画。绘画与版画开放档案。",
+        "collections": ["paintings"],
+        "base": base["paint"], **common,
     }
     write_bundle(records, stories, stats)
     write_site("main", main_cfg, records, stories, stats, build_id)
     write_site("photo", photo_cfg, records, stories, stats, build_id)
-    write_site("paint", paint_cfg, [], stories, stats, build_id)
+    write_site("paint", paint_cfg, records, stories, stats, build_id)
     write_galleries(build_id)
 
     print("预览构建完成：records %d · stories %d · 站点 main/photo/paint · 图片站 19/20/21century"
