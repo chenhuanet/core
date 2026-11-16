@@ -314,11 +314,18 @@ def story_page(s, records):
         "isPartOf": MAIN_DOMAIN + "/",
         "dateModified": TODAY,
     }
+    if s.get("date"):
+        ld["datePublished"] = s["date"]
     ld_json = '<script type="application/ld+json">%s</script>' % json.dumps(
         ld, ensure_ascii=False).replace("</", "<\\/")
+    kicker = "已刊"
+    if s.get("date_label") or s.get("date"):
+        kicker = s.get("date_label") or s.get("date")
+        if s.get("place"):
+            kicker += " · " + s.get("place")
     hero = ('<div class="s-story-hero" style="background-image:url(\'%s\')"><div class="in">'
-            '<div class="eyebrow" style="color:#c8a24a">已刊</div><h1>%s</h1><p>%s</p></div></div>'
-            % (esc(img_of(cover) if cover else ""), esc(s.get("title")), esc(s.get("subtitle"))))
+            '<div class="eyebrow" style="color:#c8a24a">%s</div><h1>%s</h1><p>%s</p></div></div>'
+            % (esc(img_of(cover) if cover else ""), esc(kicker), esc(s.get("title")), esc(s.get("subtitle"))))
     body = '<div class="s-note">' + "".join(
         "<p>%s</p>" % esc(p) for p in str(s.get("intro") or "").split("\n\n") if p.strip()) + "</div>"
     for i, ch in enumerate(s.get("chapters") or []):
@@ -339,6 +346,18 @@ def story_page(s, records):
         body += "</div></section>"
     rights = s.get("rights_summary") or ""
     body += '<div class="s-rights"><b>权利摘要</b><span>%s</span></div>' % esc(rights)
+    sources = s.get("sources") or []
+    if sources:
+        links = []
+        for src in sources:
+            if isinstance(src, dict):
+                st, su = src.get("title") or src.get("url") or "", src.get("url") or ""
+            else:
+                st, su = str(src), str(src)
+            if su:
+                links.append('<li><a href="%s" target="_blank" rel="noopener">%s</a></li>' % (esc(su), esc(st)))
+        if links:
+            body += '<div class="s-evidence"><h2>史实依据</h2><ul>%s</ul></div>' % "".join(links)
     body += '<div class="s-actions"><a class="s-btn gold" href="../stories/">全部主题</a>'
     body += '<a class="s-btn" href="../">主站首页</a><a class="s-btn" href="../../photo/">摄影站</a><a class="s-btn" href="../../paint/">绘画站</a></div>'
     return head(s.get("title"), desc, url, cover.get("image") if cover else "", "main", ld_json) + hero + body + foot("main")
