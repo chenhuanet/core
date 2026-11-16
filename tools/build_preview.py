@@ -260,6 +260,27 @@ def write_site(site, cfg, records, stories, stats, build_id):
         canonical = domain + "/" + ("" if root else route + "/")
         prefix = "../" if root else "../../"
         robots = "noindex,follow" if (route == "search" or (route == "stories" and not has_stories)) else "index,follow"
+        if site != "main" and route == "search":
+            scope = "photos" if site == "photo" else "paintings"
+            target = "../../main/search/?scope=" + scope
+            canonical_target = DOMAINS["main"] + "/search/?scope=" + scope
+            redirect = """<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<title>搜索 · 尘画</title>
+<link rel="canonical" href="%s">
+<meta http-equiv="refresh" content="0;url=%s">
+</head>
+<body><p>正在前往尘画统一搜索：<a href="%s">继续</a></p></body>
+</html>
+""" % (canonical_target, target, target)
+            folder = out / "search"
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / "index.html").write_text(redirect, encoding="utf-8", newline="\n")
+            continue
         navlinks = "".join(
             '<a href="%s">%s</a>' % (
                 (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
@@ -437,7 +458,7 @@ def main():
         {"label": "时间线", "timeline": True, "icon": "timeline", "wideOnly": True},
         {"label": "摄影", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "href": base["paint"], "icon": "paint", "site": "paint"},
-        {"label": "搜索", "route": "search", "icon": "search"},
+        {"label": "搜索", "search": True, "icon": "search"},
         {"label": "导航", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],

@@ -78,10 +78,10 @@ def nav_for(kind):
         search, photo, paint = "../search/", "../../photo/", "../../paint/"
     elif kind == "photo":
         home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
-        search, photo, paint = "../search/", "../", "../../paint/"
+        search, photo, paint = "../../main/search/?scope=photos", "../", "../../paint/"
     else:
         home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
-        search, photo, paint = "../search/", "../../photo/", "../"
+        search, photo, paint = "../../main/search/?scope=paintings", "../../photo/", "../"
     return [("尘画", home), ("主题", themes), ("时间线", timeline),
             ("摄影", photo), ("绘画", paint), ("搜索", search),
             ("导航", "https://netcn.org/")]
