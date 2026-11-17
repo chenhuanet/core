@@ -97,6 +97,14 @@ def english_date(value):
     special = {"清宫旧藏": "Qing palace collection"}
     if s in special:
         return special[s]
+    months = ["January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"]
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        return "%s %d, %d" % (months[int(m.group(2)) - 1], int(m.group(3)), int(m.group(1)))
+    m = re.fullmatch(r"公元前(\d+)年(\d+)月(\d+)日", s)
+    if m:
+        return "%s %d, %s BCE" % (months[int(m.group(2)) - 1], int(m.group(3)), m.group(1))
     s = s.replace("约 ", "ca. ").replace("约", "ca.")
     s = re.sub(r"(\d{1,2})\s*[–-]\s*(\d{1,2})\s*世纪",
                lambda m: _ordinal(m.group(1)) + "–" + _ordinal(m.group(2)) + " century", s)
@@ -333,6 +341,7 @@ def load_story_files(records):
             "type": fm.get("type") or "长文",
             "date": str(fm.get("date") or ""),
             "date_label": str(fm.get("date_label") or ""),
+            "today_rank": int(fm.get("today_rank") or 1),
             "place": fm.get("place") or "",
             "sources": fm.get("sources") or [],
             "intro": body.strip(),
@@ -455,6 +464,13 @@ def write_i18n_assets():
     site_js = CORE / "assets" / "site.js"
     if site_js.exists():
         shutil.copy2(site_js, assets / "site.js")
+    leaf_src = CORE / "leaf"
+    leaf_dst = assets / "leaf"
+    leaf_dst.mkdir(parents=True, exist_ok=True)
+    for name in ("calm.svg", "joy.svg", "curious.svg", "think.svg",
+                 "sleepy.svg", "surprised.svg", "shy.svg", "proud.svg", "favicon.svg"):
+        if (leaf_src / name).exists():
+            shutil.copy2(leaf_src / name, leaf_dst / name)
 
 
 def write_site(site, cfg, records, stories, stats, build_id):
@@ -467,9 +483,14 @@ def write_site(site, cfg, records, stories, stats, build_id):
         routes.insert(3, "timeline")
     site_ids = {r["id"] for r in records if r["collection"] in cfg["collections"]}
     has_stories = any(site_ids.intersection(s.get("photo_ids") or []) for s in stories)
+    def prefix_leaf(route):
+        return ("../" if route == "today" else "../../") + "assets/leaf/"
     cfg_json = json.dumps(cfg, ensure_ascii=False).replace("</", "<\\/")
     for route in routes:
         root = route == "today"
+        page_cfg = dict(cfg)
+        page_cfg["leafBase"] = prefix_leaf(route)
+        cfg_json = json.dumps(page_cfg, ensure_ascii=False).replace("</", "<\\/")
         title_tpl, desc_tpl = ROUTE_META[route]
         title = cfg["title"] if root else (title_tpl % brand)
         desc = cfg.get("desc") if root else desc_tpl
@@ -493,6 +514,7 @@ def write_site(site, cfg, records, stories, stats, build_id):
 <meta name="theme-color" content="#0d0c0b">
 <title>搜索 · 尘画</title>
 <link rel="canonical" href="%s">
+<link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
 <meta http-equiv="refresh" content="0;url=%s">
 <style>
 html[data-lang="en"] [data-l="zh"]{display:none}
@@ -519,6 +541,45 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "index.html").write_text(redirect, encoding="utf-8", newline="\n")
             continue
+        if site == "main" and route in ("stories", "timeline"):
+            target = "../atlas/index.html" + ("?view=timeline" if route == "timeline" else "")
+            canonical_target = domain + "/atlas/" + ("?view=timeline" if route == "timeline" else "")
+            redirect = """<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#0d0c0b">
+<title>%s</title>
+<link rel="canonical" href="%s">
+<link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
+<meta http-equiv="refresh" content="0;url=%s">
+<style>
+html[data-lang="en"] [data-l="zh"]{display:none}
+html[data-lang="zh"] [data-l="en"]{display:none}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0d0c0b;color:#ebe5da;font:14px/1.8 "PingFang SC","Microsoft YaHei",sans-serif}
+html[data-theme="light"] body{background:#f6f2ea;color:#231f19}
+a{color:#c8a24a}
+html[data-theme="light"] a{color:#8b6520}
+</style>
+<script>
+(function(){try{var t=localStorage.getItem("chenhua-theme");if(t)document.documentElement.setAttribute("data-theme",t);
+var l=localStorage.getItem("chenhua-lang");if(l){document.documentElement.setAttribute("data-lang",l);
+document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}})();
+</script>
+</head>
+<body data-title-zh="%s" data-title-en="%s">
+<p><span data-l="zh">正在前往全站图录：<a href="%s">继续</a></span><span data-l="en">Redirecting to the Atlas: <a href="%s">continue</a></span></p>
+</body>
+</html>
+""" % (title, canonical_target, target, title, title_en, target, target)
+            folder = out / route
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / "index.html").write_text(redirect, encoding="utf-8", newline="\n")
+            continue
+
         navlinks = "".join(
             '<a href="%s">%s</a>' % (
                 (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
@@ -561,6 +622,7 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
 <link rel="alternate" hreflang="zh-CN" href="%s">
 <link rel="alternate" hreflang="en" href="%s?lang=en">
 <link rel="alternate" hreflang="x-default" href="%s">
+<link rel="icon" type="image/svg+xml" href="%sassets/leaf/favicon.svg">
 <meta property="og:type" content="website">
 <meta property="og:title" content="%s">
 <meta property="og:description" content="%s">
@@ -582,6 +644,7 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
 </html>
 """ % (html_escape(title, quote=True), html_escape(desc, quote=True), robots, canonical,
        canonical, canonical, canonical,
+       prefix,
        html_escape(title, quote=True), html_escape(desc, quote=True), canonical, ld,
        prefix, build_id,
        html_escape(title, quote=True), html_escape(title_en or title, quote=True),
@@ -615,6 +678,21 @@ def write_galleries(build_id):
         desc_zh = "这是尘画的图片索引页。完整档案、许可与来源见摄影 / 绘画站；本页只做浏览入口。"
         desc_en = ("An image index for Chenhua. The complete archive, licences and sources "
                    "are on the Photography and Painting sites; this page is only an entrance.")
+        g_nav = (
+            '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>'
+            '<a href="../../dist/main/atlas/"><span data-l="zh">图录</span><span data-l="en">Atlas</span></a>'
+            '<a href="../../dist/main/atlas/?view=timeline"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
+            '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
+            '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
+            '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
+            '<a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>'
+            '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
+        )
+        g_utility = (
+            '<a href="../../dist/main/about/"><span data-l="zh">关于</span><span data-l="en">About</span></a>'
+            '<a href="../../dist/main/rights/"><span data-l="zh">授权</span><span data-l="en">Rights</span></a>'
+            '<a href="../../dist/main/legal/"><span data-l="zh">法律</span><span data-l="en">Legal</span></a>'
+        )
         html = f"""<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -625,6 +703,7 @@ def write_galleries(build_id):
 <title>{title_zh}</title>
 <link rel="alternate" hreflang="zh-CN" href="https://{century}.chenhua.net/">
 <link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/?lang=en">
+<link rel="icon" type="image/svg+xml" href="../../dist/assets/leaf/favicon.svg">
 <link rel="stylesheet" href="gallery.css?v={build_id}">
 <script>
 (function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");
@@ -635,15 +714,9 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 <body data-title-zh="{title_zh}" data-title-en="{title_en}"
       data-desc-zh="{desc_zh}" data-desc-en="{desc_en}">
 <header class="g-head">
-  <div class="g-brand"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画 · {title}</span><span data-l="en">Image as history · {title}</span></span></div>
+  <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="../../dist/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画 · {title}</span><span data-l="en">Image as history · {title}</span></span></a>
   <nav class="g-nav">
-    <a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>
-    <a href="../../dist/main/stories/"><span data-l="zh">主题</span><span data-l="en">Stories</span></a>
-    <a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>
-    <a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>
-    <a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>
-    <a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>
-    <a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>
+    {g_nav}
   </nav>
   <div class="g-tools">
     <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中</span></button>
@@ -664,17 +737,13 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
   <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
 </main>
 <footer class="g-foot">
-  <nav>
-    <a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>
-    <a href="../../dist/main/stories/"><span data-l="zh">主题</span><span data-l="en">Stories</span></a>
-    <a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>
-    <a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>
-    <a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>
-    <a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>
-    <a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>
+  <nav class="g-foot-nav">
+    {g_nav}
   </nav>
+  <nav class="g-utility">{g_utility}</nav>
+  <p class="g-foot-mark"><img src="../../dist/assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p>
   <p><span data-l="zh">尘画 · 出尘入画 · 尘归尘，画归画</span><span data-l="en">Chenhua · Out of dust, into the image</span></p>
-  <p><a href="../../dist/main/legal/"><span data-l="zh">法律声明</span><span data-l="en">Legal notice</span></a> · <span data-l="zh">影像版权归原作者与收藏机构</span><span data-l="en">Image rights remain with the creators and holding institutions</span></p>
+  <p><span data-l="zh">影像版权归原作者与收藏机构；本站仅作非商业索引与展示</span><span data-l="en">Image rights belong to their authors and holding institutions; this site is a non-commercial index and display.</span></p>
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
             "century": century,
@@ -691,6 +760,68 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 </html>
 """
         (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
+
+
+def write_404(build_id):
+    out = DIST / "main" / "404.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    nav_links = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
+                       for z, e, h in [
+                           ("尘画", "Chenhua", "index.html"),
+                           ("图录", "Atlas", "atlas/"),
+                           ("时间线", "Timeline", "atlas/?view=timeline"),
+                           ("历史上的今天", "On This Day", "today/"),
+                           ("摄影", "Photography", "../../photo/"),
+                           ("绘画", "Painting", "../../paint/"),
+                           ("搜索", "Search", "search/"),
+                           ("导航", "Directory", "https://netcn.org/"),
+                       ])
+    utility = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
+                      for z, e, h in [
+                          ("关于", "About", "about/"),
+                          ("授权", "Rights", "rights/"),
+                          ("法律", "Legal", "legal/"),
+                      ])
+    html = """<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0c0b">
+<title>页面走失了 · 尘画</title>
+<meta name="robots" content="noindex,follow">
+<link rel="icon" type="image/svg+xml" href="../assets/leaf/favicon.svg">
+<link rel="stylesheet" href="../assets/app.css?v=%s">
+<link rel="stylesheet" href="../assets/static.css?v=%s">
+<script>(function(){try{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();</script>
+<style>
+.static-body{min-height:100vh}
+.notfound{max-width:760px;margin:0 auto;padding:46px 20px 80px;text-align:center}
+.notfound .empty-mark{width:120px;height:120px;margin:0 auto 12px}
+.notfound h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,5vw,48px);letter-spacing:.08em;margin:0 0 8px}
+.notfound p{font-size:13px;color:var(--muted);line-height:1.9;margin:0 auto 18px;max-width:34em}
+.notfound .big{font-family:var(--serif);font-size:76px;line-height:1;color:var(--accent);letter-spacing:.04em;margin:0 0 8px}
+.notfound .btn{margin:4px 4px 0}
+</style>
+</head>
+<body class="static-body" data-title-zh="页面走失了 · 尘画" data-title-en="Lost page · Chenhua">
+<div class="s-shell">
+<header class="appbar s-appbar">
+<a class="brand" href="index.html"><img class="leaf-mark brand-mark" src="../assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
+<nav class="desknav">%s</nav>
+<div class="right"><button class="langbtn" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button><button class="iconbtn themebtn" type="button" data-themebtn aria-label="切换明暗"><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg></button></div>
+</header>
+<main class="notfound">
+<div class="big">404</div>
+<div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">这一页走失了</span><span data-l="en">This page has wandered off</span></b><p><span data-l="zh">可能是地址写错了，也可能是这条小径还没被画下来。回到日流，或去图录里找另一条路。</span><span data-l="en">The address may be wrong, or this path has not been drawn yet. Return to the day flow, or find another route in the Atlas.</span></p></div>
+<div><a class="btn gold" href="index.html"><span data-l="zh">回到首页</span><span data-l="en">Back home</span></a><a class="btn" href="atlas/"><span data-l="zh">打开图录</span><span data-l="en">Open the Atlas</span></a></div>
+</main>
+<footer class="s-foot"><p class="s-foot-mark"><img src="../assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p><p class="brandline"><span data-l="zh">尘画 · 出尘入画 · 尘归尘，画归画</span><span data-l="en">Chenhua · Out of dust, into the image</span></p><p class="motto"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Dust to dust, image to image</span></p><nav class="foot-primary">%s</nav><nav class="foot-utility">%s</nav><p><span data-l="zh">影像版权归原作者与收藏机构；本站仅作非商业索引与展示</span><span data-l="en">Image rights belong to their authors and holding institutions; this site is a non-commercial index and display.</span></p></footer>
+</div>
+<script src="../assets/site.js?v=%s"></script>
+</body></html>
+""" % (build_id, build_id, nav_links, nav_links, utility, build_id)
+    out.write_text(html, encoding="utf-8", newline="\n")
 
 
 def main():
@@ -724,15 +855,17 @@ def main():
     }
     nav = [
         {"label": "尘画", "label_en": "Chenhua", "href": base["main"], "icon": "home", "site": "main"},
-        {"label": "主题", "label_en": "Stories", "themes": True, "icon": "stories"},
-        {"label": "时间线", "label_en": "Timeline", "timeline": True, "icon": "timeline", "wideOnly": True},
+        {"label": "图录", "label_en": "Atlas", "href": base["main"] + "atlas/", "icon": "stories"},
+        {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "atlas/?view=timeline", "icon": "timeline", "wideOnly": True},
+        {"label": "历史上的今天", "label_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline", "wideOnly": True},
         {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
         {"label": "搜索", "label_en": "Search", "search": True, "icon": "search"},
         {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],
-              "paintBase": base["paint"], "nav": nav, "taxonomy": TAXONOMY}
+              "paintBase": base["paint"], "nav": nav, "taxonomy": TAXONOMY,
+              "leafBase": "/next/dist/assets/leaf/"}
     main_cfg = {
         "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Chenhua",
         "title_en": "Chenhua · Out of dust, into the image",
@@ -765,6 +898,7 @@ def main():
     write_site("main", main_cfg, records, stories, stats, build_id)
     write_site("photo", photo_cfg, records, stories, stats, build_id)
     write_site("paint", paint_cfg, records, stories, stats, build_id)
+    write_404(build_id)
     write_galleries(build_id)
 
     print("预览构建完成：records %d · stories %d · 站点 main/photo/paint · 图片站 19/20/21century"

@@ -25,12 +25,14 @@ img{display:block;max-width:100%}
 .g-head{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:18px;
   padding:14px 18px;border-bottom:1px solid var(--line);background:var(--head-bg);
   backdrop-filter:blur(18px)}
-.g-brand{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.g-brand{display:flex;align-items:center;gap:10px;white-space:nowrap;text-decoration:none;color:inherit}
+.g-brand .g-mark{width:30px;height:30px;flex:none;object-fit:contain;margin-right:-2px}
 .g-brand .wm{display:inline-flex;align-items:baseline;gap:1px}
 .g-brand .wm-lite{font-family:var(--serif);font-size:15px;color:var(--muted);letter-spacing:.03em}
 .g-brand .wm-strong{font-family:var(--serif);font-size:22px;color:var(--accent);letter-spacing:.03em}
 .g-brand .g-en{font-size:10px;letter-spacing:.12em;color:var(--dim)}
 .g-nav{margin-left:auto;display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.g-nav a{text-decoration:none;color:inherit}
 .g-nav a:hover{color:var(--accent)}
 .g-tools{display:flex;align-items:center;gap:4px;flex:none}
 .g-tool{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
@@ -67,11 +69,14 @@ img{display:block;max-width:100%}
 .g-more button:hover{border-color:#5a5040;color:var(--text)}
 .g-foot{border-top:1px solid var(--line);padding:18px;text-align:center;
   font-size:10px;color:var(--dim);letter-spacing:.12em}
-.g-foot nav{display:flex;justify-content:center;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.g-foot nav{display:flex;justify-content:center;gap:13px;margin-bottom:8px;flex-wrap:wrap}
+.g-foot .g-utility{font-size:9px;gap:11px;margin-bottom:12px}
 .g-foot a{color:var(--muted)}
 .g-foot a:hover{color:var(--accent)}
 .g-foot p{margin:0 0 4px}
-@media(max-width:820px){
+.g-foot .g-foot-mark{margin:0 0 4px;line-height:1}
+.g-foot .g-foot-mark img{width:24px;height:24px;margin:0 auto;opacity:.9}
+@media(max-width:900px){
   .g-head{gap:10px;padding:12px 16px}
   .g-brand .g-en{display:none}
   .g-nav{display:none}

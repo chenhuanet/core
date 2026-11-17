@@ -9,6 +9,7 @@ import html
 import json
 import os
 import pathlib
+import re
 import shutil
 import sys
 
@@ -116,24 +117,28 @@ def brand_href(kind):
     return "../" if kind == "main" else "../../main/"
 
 
-def wordmark_html():
-    return ('<span class="wm"><span class="wm-lite">出</span>'
+def wordmark_html(kind="main"):
+    expr = "curious" if kind == "photo" else ("proud" if kind == "paint" else "joy")
+    return ('<img class="leaf-mark brand-mark" src="../../assets/leaf/%s.svg" width="30" height="30" '
+            'alt="" aria-hidden="true" decoding="async">' % expr +
+            '<span class="wm"><span class="wm-lite">出</span>'
             '<span class="wm-strong">尘</span><span class="wm-lite">入</span>'
             '<span class="wm-strong">画</span></span>')
 
 
 def nav_for(kind):
     if kind == "main":
-        home, themes, timeline = "../", "../stories/", "../timeline/"
-        search, photo, paint = "../search/", "../../photo/", "../../paint/"
+        home, atlas, timeline = "../", "../atlas/", "../timeline/"
+        session, search, photo, paint = "../today/", "../search/", "../../photo/", "../../paint/"
     elif kind == "photo":
-        home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
-        search, photo, paint = "../../main/search/?scope=photos", "../", "../../paint/"
+        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/timeline/"
+        session, search, photo, paint = "../../main/today/", "../../main/search/?scope=photos", "../", "../../paint/"
     else:
-        home, themes, timeline = "../../main/", "../../main/stories/", "../../main/timeline/"
-        search, photo, paint = "../../main/search/?scope=paintings", "../../photo/", "../"
-    return [("尘画", "Chenhua", home), ("主题", "Stories", themes),
-            ("时间线", "Timeline", timeline), ("摄影", "Photography", photo),
+        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/timeline/"
+        session, search, photo, paint = "../../main/today/", "../../main/search/?scope=paintings", "../../photo/", "../"
+    return [("尘画", "Chenhua", home), ("图录", "Atlas", atlas),
+            ("时间线", "Timeline", atlas + "?view=timeline"), ("历史上的今天", "On This Day", session),
+            ("摄影", "Photography", photo),
             ("绘画", "Painting", paint), ("搜索", "Search", search),
             ("导航", "Directory", "https://netcn.org/")]
 
@@ -178,6 +183,7 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
 <link rel="canonical" href="%s">
 <link rel="alternate" hreflang="zh-CN" href="%s">
 <link rel="alternate" hreflang="en" href="%s?lang=en">
+<link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="%s · 尘画">
 <meta property="og:description" content="%s">
@@ -203,22 +209,31 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
        esc(title_zh), esc(desc_zh), esc(url), og,
        BUILD_ID, BUILD_ID, extra_ld,
        esc(title_zh), esc(title_en), esc(desc_zh), esc(desc_en),
-       brand_href(kind), wordmark_html(), tspan("尘归尘，画归画", "Image as history"),
+       brand_href(kind), wordmark_html(kind), tspan("尘归尘，画归画", "Image as history"),
        nav, SUN, MOON)
 
 
 def foot(kind="main"):
     nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_for(kind))
+    utility = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in [
+        ("关于", "About", "../about/"),
+        ("授权", "Rights", "../rights/"),
+        ("法律", "Legal", "../legal/"),
+    ])
     return """<footer class="s-foot">
-<nav>%s</nav>
+<p class="s-foot-mark"><img src="../../assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p>
 <p class="brandline">%s</p>
-<p><a href="../legal/">%s</a> · %s</p>
+<p class="motto">%s</p>
+<nav class="foot-primary">%s</nav>
+<nav class="foot-utility">%s</nav>
+<p>%s</p>
 </footer>
 </div>
 <script src="../../assets/site.js?v=%s"></script>
 </body></html>
-""" % (nav, tspan("尘画 · 出尘入画 · 尘归尘，画归画", "Chenhua · Out of dust, into the image"),
-       tspan("法律声明", "Legal notice"),
+""" % (tspan("尘画 · 出尘入画 · 尘归尘，画归画", "Chenhua · Out of dust, into the image"),
+       tspan("尘归尘，画归画", "Dust to dust, image to image"),
+       nav, utility,
        tspan("影像版权归原作者与收藏机构；本站仅作非商业索引与展示",
              "Image rights belong to their authors and holding institutions; this site is a non-commercial index and display."),
        BUILD_ID)
@@ -550,7 +565,9 @@ def story_page(s, records):
         if links:
             body += '<div class="s-evidence"><h2>%s</h2><ul>%s</ul></div>' % (
                 tspan("史实依据", "Sources"), "".join(links))
-    body += '<div class="s-actions"><a class="s-btn gold" href="../stories/">%s</a>' % tspan(
+    body += '<div class="s-actions"><a class="s-btn gold" href="../atlas/">%s</a>' % tspan(
+        "图录总览", "Atlas")
+    body += '<a class="s-btn" href="../stories/">%s</a>' % tspan(
         "全部主题", "All stories")
     body += '<a class="s-btn" href="../">%s</a><a class="s-btn" href="../../photo/">%s</a><a class="s-btn" href="../../paint/">%s</a></div>' % (
         tspan("主站首页", "Home"), tspan("摄影站", "Photography"), tspan("绘画站", "Painting"))
@@ -573,6 +590,8 @@ def sitemap(site, urls):
 def main():
     records = bp.load_records()
     stories = bp.load_story_files(records)
+    day_keys = sorted({str(s.get("date"))[5:10] for s in stories
+                       if re.match(r"^\d{4}-\d{2}-\d{2}$", str(s.get("date") or ""))})
     shutil.copy2(CORE / "static" / "static.css", DIST / "assets" / "static.css")
     if (CORE / "assets" / "site.js").exists():
         shutil.copy2(CORE / "assets" / "site.js", DIST / "assets" / "site.js")
@@ -603,10 +622,12 @@ def main():
     sitemap("paint", [PAINT_DOMAIN + "/", PAINT_DOMAIN + "/gallery/",
                       PAINT_DOMAIN + "/about/",
                       PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
-    sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/gallery/",
+    sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/atlas/", MAIN_DOMAIN + "/gallery/",
                      MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/timeline/",
+                     MAIN_DOMAIN + "/today/",
                      MAIN_DOMAIN + "/about/", MAIN_DOMAIN + "/legal/"] +
-            ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories])
+            ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories] +
+            ["%s/today/%s.html" % (MAIN_DOMAIN, d) for d in day_keys])
     print("静态页完成：照片 %d · 绘画 %d · 主题 %d · sitemap/robots 3 套" % (
         len(photos), len(paints), len(stories)))
 
