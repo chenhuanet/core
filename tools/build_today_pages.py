@@ -8,6 +8,7 @@ import html
 import json
 import re
 import shutil
+import time
 from pathlib import Path
 from datetime import date
 
@@ -17,7 +18,7 @@ MAIN = DIST / "main"
 TODAY = MAIN / "today"
 BUNDLE = DIST / "data" / "bundle.js"
 SITE = "https://www.chenhua.net"
-BUILD_ID = "1794848836"
+BUILD_ID = str(int(time.time()))
 
 MONTH_ZH = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
 MONTH_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
