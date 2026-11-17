@@ -63,8 +63,8 @@ def _tspan(zh, en):
 def primary_links():
     return [
         ("尘画", "Chenhua", "../"),
-        ("图录", "Atlas", "../atlas/"),
-        ("时间线", "Timeline", "../atlas/timeline/"),
+        ("主题", "Themes", "../themes/"),
+        ("时间线", "Timeline", "../timeline/"),
         ("历史上的今天", "On This Day", "../today/"),
         ("摄影", "Photography", "../../photo/"),
         ("绘画", "Painting", "../../paint/"),

@@ -10,8 +10,10 @@ import build_atlas_data as data_builder
 
 ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
 SOURCE = ROOT / "三轴融合原型" / "三轴融合原型.html"
-OUT_DIR = ROOT / "next" / "dist" / "main" / "atlas"
+MAIN = ROOT / "next" / "dist" / "main"
+OUT_DIR = MAIN / "themes"
 OUT = OUT_DIR / "index.html"
+TIMELINE_DIR = MAIN / "timeline"
 
 
 def read_source():
@@ -73,6 +75,36 @@ def set_selected(html, view):
     )
 
 
+def write_alias(path, target, canonical, title):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("""<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#0d0c0b">
+<title>%s</title>
+<link rel="canonical" href="%s">
+<link rel="icon" type="image/svg+xml" href="/assets/leaf/favicon.svg">
+<meta http-equiv="refresh" content="0;url=%s">
+<style>
+html[data-lang="en"] [data-l="zh"]{display:none}
+html[data-lang="zh"] [data-l="en"]{display:none}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0d0c0b;color:#ebe5da;font:14px/1.8 "PingFang SC","Microsoft YaHei",sans-serif}
+html[data-theme="light"] body{background:#f6f2ea;color:#231f19}
+a{color:#c8a24a}
+html[data-theme="light"] a{color:#8b6520}
+</style>
+</head>
+<body data-title-zh="%s" data-title-en="Redirect">
+<p><span data-l="zh">正在前往新地址：<a href="%s">继续</a></span><span data-l="en">Redirecting: <a href="%s">continue</a></span></p>
+</body>
+</html>
+""" % (title, canonical, target, title, target, target), encoding="utf-8", newline="\n")
+
+
 def main():
     html = read_source()
     data = build_data()
@@ -100,12 +132,14 @@ def main():
         1,
     )
 
-    # Canonical site paths. The Atlas is served at /atlas/ and /atlas/timeline/.
-    # Root-relative links keep both copies identical and avoid query-string routes.
+    # Canonical site paths: theme at /themes/, timeline at /timeline/, dates at /today/.
+    # The old /atlas/ paths are redirects, not navigation.
     html = html.replace("../next/dist/main/index.html", "/")
-    html = html.replace("../next/dist/main/atlas/index.html", "/atlas/")
-    html = html.replace("../next/dist/main/atlas/timeline/", "/atlas/timeline/")
-    html = html.replace("../next/dist/main/atlas/?view=timeline", "/atlas/timeline/")
+    html = html.replace("../next/dist/main/themes/index.html", "/themes/")
+    html = html.replace("../next/dist/main/timeline/", "/timeline/")
+    html = html.replace("../next/dist/main/atlas/index.html", "/themes/")
+    html = html.replace("../next/dist/main/atlas/timeline/", "/timeline/")
+    html = html.replace("../next/dist/main/atlas/?view=timeline", "/timeline/")
     html = html.replace("../next/dist/main/today/index.html", "/today/")
     html = html.replace("../next/dist/main/", "/")
     html = html.replace("../next/dist/photo/", "https://photo.chenhua.net/")
@@ -233,16 +267,16 @@ def main():
         (
             OUT_DIR / "index.html",
             "theme",
-            "图录 · 尘画",
+            "主题 · 尘画",
             "按主题浏览尘画的历史摄影与绘画故事。",
-            "https://www.chenhua.net/atlas/",
+            "https://www.chenhua.net/themes/",
         ),
         (
-            OUT_DIR / "timeline" / "index.html",
+            TIMELINE_DIR / "index.html",
             "timeline",
-            "时间线 · 图录 · 尘画",
+            "时间线 · 尘画",
             "按年代浏览尘画的历史摄影与绘画故事。",
-            "https://www.chenhua.net/atlas/timeline/",
+            "https://www.chenhua.net/timeline/",
         ),
     ]
     for path, view, title, description, canonical in routes:
@@ -251,15 +285,19 @@ def main():
             page = page.replace(base_state, base_state.replace('view:"theme"', 'view:"timeline"'), 1)
         page = set_selected(page, view)
         page = seo_head(page, title, description, canonical)
-        # Keep local file previews working as well as production: page assets
-        # live two levels above the URL root, while other links are site-relative.
-        asset_prefix = "../../" if view == "theme" else "../../../"
-        page = page.replace('href="/assets/', f'href="{asset_prefix}assets/').replace('src="/assets/', f'src="{asset_prefix}assets/')
-        prefix = "../" if view == "theme" else "../../"
-        page = page.replace('href="/', f'href="{prefix}').replace('src="/', f'src="{prefix}')
+        heading = "主题" if view == "theme" else "时间线"
+        page = page.replace("<h1>图录</h1>", f"<h1>{heading}</h1>", 1)
+        page = page.replace('aria-label="图录视图"', f'aria-label="{heading}视图"', 1)
+        # Local preview lives under next/dist/main/<route>; dist/assets is two levels up.
+        # split_repos.py rewrites this to ../assets for the published repo root.
+        page = page.replace('href="/assets/', 'href="../../assets/').replace('src="/assets/', 'src="../../assets/')
+        page = page.replace('href="/', 'href="../').replace('src="/', 'src="../')
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(page, encoding="utf-8")
         print("wrote", path, "bytes", path.stat().st_size, "stories", total, "dates", data["date_count"])
+
+    write_alias(MAIN / "atlas" / "index.html", "../themes/", "https://www.chenhua.net/themes/", "主题 · 尘画")
+    write_alias(MAIN / "atlas" / "timeline" / "index.html", "../../timeline/", "https://www.chenhua.net/timeline/", "时间线 · 尘画")
 
 
 if __name__ == "__main__":
