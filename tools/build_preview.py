@@ -437,21 +437,21 @@ DOMAINS = {
     "paint": "https://paint.chenhua.net",
 }
 ROUTE_META = {
-    "today": ("%s", "以图为史，记录人间的大事与小事。"),  # root uses cfg.title / cfg.desc
-    "gallery": ("影像 · %s", "出尘入画。按年代与主题浏览尘画已收录的影像档案。"),
-    "stories": ("主题 · %s", "出尘入画。事件、人物、地方、技艺与长文。"),
-    "timeline": ("时间线 · %s", "出尘入画。主题按年代排列。"),
+    "today": ("%s", "历史上的今天：每天至少一个故事。"),
+    "gallery": ("影像 · %s", "按年代与主题浏览摄影与绘画。"),
+    "stories": ("主题 · %s", "事件、人物、地方与技艺。"),
+    "timeline": ("时间线 · %s", "主题按年代排列。"),
     "search": ("搜索 · %s", "搜标题、地点、作者、主题与年代。"),
-    "about": ("关于 · %s", "尘画，出尘入画，尘归尘，画归画。采集、复核与策展方式。"),
-    "rights": ("授权 · %s", "U1–U5 使用性质、署名与商用边界。"),
+    "about": ("关于 · %s", "尘画的来源、许可与整理方式。"),
+    "rights": ("授权 · %s", "图片许可、署名与商用说明。"),
 }
 ROUTE_META_EN = {
-    "gallery": ("Archive · %s", "Browse the Chenhua archive by era and theme."),
-    "stories": ("Stories · %s", "Events, people, places, craft and long reads."),
+    "gallery": ("Archive · %s", "Browse photography and painting by era and theme."),
+    "stories": ("Stories · %s", "Events, people, places and craft."),
     "timeline": ("Timeline · %s", "Stories arranged by year."),
     "search": ("Search · %s", "Search titles, places, creators, themes and years."),
-    "about": ("About · %s", "How Chenhua collects, verifies and curates."),
-    "rights": ("Rights · %s", "U1–U5 usage, credit and commercial boundaries."),
+    "about": ("About · %s", "Sources, licences and how Chenhua organises its images."),
+    "rights": ("Rights · %s", "Image licences, credit and commercial use."),
 }
 
 
@@ -675,9 +675,8 @@ def write_galleries(build_id):
                  "21century": "21st Century"}[century]
         title_zh = "%s · 尘画图片索引" % title
         title_en = "%s · Chenhua Image Index" % title
-        desc_zh = "这是尘画的图片索引页。完整档案、许可与来源见摄影 / 绘画站；本页只做浏览入口。"
-        desc_en = ("An image index for Chenhua. The complete archive, licences and sources "
-                   "are on the Photography and Painting sites; this page is only an entrance.")
+        desc_zh = "按世纪浏览尘画影像。完整记录见摄影 / 绘画站。"
+        desc_en = "Browse Chenhua images by century. Full records are on the Photography and Painting sites."
         g_nav = (
             '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>'
             '<a href="../../dist/main/atlas/"><span data-l="zh">图录</span><span data-l="en">Atlas</span></a>'
@@ -784,7 +783,7 @@ def write_404(build_id):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0c0b">
-<title>页面走失了 · 尘画</title>
+<title>页面不存在 · 尘画</title>
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="../assets/leaf/favicon.svg">
 <link rel="stylesheet" href="../assets/app.css?v=%s">
@@ -800,7 +799,7 @@ def write_404(build_id):
 .notfound .btn{margin:4px 4px 0}
 </style>
 </head>
-<body class="static-body" data-title-zh="页面走失了 · 尘画" data-title-en="Lost page · Chenhua">
+<body class="static-body" data-title-zh="页面不存在 · 尘画" data-title-en="Page not found · Chenhua">
 <div class="s-shell">
 <header class="appbar s-appbar">
 <a class="brand" href="index.html"><img class="leaf-mark brand-mark" src="../assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
@@ -809,8 +808,8 @@ def write_404(build_id):
 </header>
 <main class="notfound">
 <div class="big">404</div>
-<div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">这一页走失了</span><span data-l="en">This page has wandered off</span></b><p><span data-l="zh">可能是地址写错了，也可能是这条小径还没被画下来。回到日流，或去图录里找另一条路。</span><span data-l="en">The address may be wrong, or this path has not been drawn yet. Return to the day flow, or find another route in the Atlas.</span></p></div>
-<div><a class="btn gold" href="index.html"><span data-l="zh">回到首页</span><span data-l="en">Back home</span></a><a class="btn" href="atlas/"><span data-l="zh">打开图录</span><span data-l="en">Open the Atlas</span></a></div>
+<div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
+<div><a class="btn gold" href="index.html"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="atlas/"><span data-l="zh">浏览图录</span><span data-l="en">Browse the Atlas</span></a></div>
 </main>
 <footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav></footer>
 </div>
@@ -866,8 +865,8 @@ def main():
         "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Chenhua",
         "title_en": "Chenhua · Out of dust, into the image",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
-        "desc": "尘画，出尘入画，尘归尘，画归画。以图为史，记录人间的大事与小事。",
-        "desc_en": "Chenhua is an open archive of historical photography and painting, recording the great and small things of the human world through images.",
+        "desc": "尘画：历史摄影与绘画图录。",
+        "desc_en": "Chenhua: an archive of historical photography and painting.",
         "collections": ["photos", "paintings", "links"],
         "base": base["main"], **common,
     }
@@ -875,8 +874,8 @@ def main():
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Chenhua",
         "title_en": "Chenhua · Photography",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
-        "desc": "尘画摄影，出尘入画，尘归尘，画归画。摄影影像开放档案。",
-        "desc_en": "Chenhua Photography: an open archive of photographic images.",
+        "desc": "尘画摄影：历史摄影图录。",
+        "desc_en": "Chenhua Photography: an archive of historical photographs.",
         "collections": ["photos", "links"],
         "base": base["photo"], **common,
     }
@@ -884,8 +883,8 @@ def main():
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Chenhua",
         "title_en": "Chenhua · Painting",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
-        "desc": "尘画绘画，出尘入画，尘归尘，画归画。绘画与版画开放档案。",
-        "desc_en": "Chenhua Painting: an open archive of paintings and prints.",
+        "desc": "尘画绘画：绘画与版画图录。",
+        "desc_en": "Chenhua Painting: an archive of paintings and prints.",
         "collections": ["paintings"],
         "base": base["paint"], **common,
     }

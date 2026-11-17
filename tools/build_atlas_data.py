@@ -10,23 +10,23 @@ BUNDLE = ROOT / "next" / "dist" / "data" / "bundle.js"
 
 SERIES = [
     {"key": "space", "name": "太空探索", "name_en": "Space Exploration", "color": "#234c5d", "glyph": "轨",
-     "desc": "从火箭、卫星到深空探测器：人类把相机送出大气层之后，图像第一次成为“远方的证据”。"},
+     "desc": "火箭、卫星与深空探测器。"},
     {"key": "disaster", "name": "灾难与调查", "name_en": "Disaster & Investigation", "color": "#a64227", "glyph": "灾",
-     "desc": "火灾、空难、地震与事故调查。影像在这里不是奇观，而是追责、复盘与公共记忆的一部分。"},
+     "desc": "火灾、空难、地震与事故调查。"},
     {"key": "war", "name": "战争与冲突", "name_en": "War & Conflict", "color": "#7a2f26", "glyph": "战",
-     "desc": "从战线到战后：战争如何被拍摄、被宣传、被记住。这里的照片往往既是证据，也是立场。"},
+     "desc": "战线、战后与战争影像。"},
     {"key": "politics", "name": "政治与制度", "name_en": "Politics & Institutions", "color": "#3f4a60", "glyph": "政",
-     "desc": "总统、议会、法院与街头政治：制度在照片里变成人物、手势和场景。"},
+     "desc": "总统、议会、法院与街头政治。"},
     {"key": "science", "name": "科学与技术", "name_en": "Science & Technology", "color": "#2f5f57", "glyph": "科",
-     "desc": "实验室、计算机、飞机与发明：技术改变了人看世界的方式，也改变了世界被记录的方式。"},
+     "desc": "实验室、计算机、飞机与发明。"},
     {"key": "city", "name": "工程与城市", "name_en": "Engineering & City", "color": "#6b5b3e", "glyph": "构",
-     "desc": "桥梁、隧道、铁塔与城市天际线：工程把时间浇进混凝土，也把人的生活重新排布。"},
+     "desc": "桥梁、隧道、铁塔与城市天际线。"},
     {"key": "rail", "name": "铁路与工业", "name_en": "Rail & Industry", "color": "#4e4b47", "glyph": "轨",
-     "desc": "蒸汽、钢轨与工厂。铁路是最早把“远方”变成日常时间表的机器。"},
+     "desc": "蒸汽、钢轨与工厂。"},
     {"key": "art", "name": "艺术与图像", "name_en": "Art & Image", "color": "#7a4a5a", "glyph": "像",
-     "desc": "摄影家、画家与美术馆：图像如何被拍摄、被收藏、被重新观看。"},
+     "desc": "摄影家、画家与美术馆。"},
     {"key": "world", "name": "社会与日常", "name_en": "Society & Everyday", "color": "#4b5964", "glyph": "世",
-     "desc": "城市生活、教育、宗教、体育与普通人的日常。它不是“其他”，而是历史发生的地方。"},
+     "desc": "城市生活、教育、宗教、体育与普通人的日常。"},
 ]
 
 # Explicit overrides for the 13 prototype stories; keep their curated series stable.

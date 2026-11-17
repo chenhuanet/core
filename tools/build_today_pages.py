@@ -137,7 +137,7 @@ def card(story, records):
 <div class="today-copy"><div class="eyebrow"><span data-l="zh">{label}</span><span data-l="en">{label_en}</span></div>
 <h2><a href="../story/{sid}.html"><span data-l="zh">{title}</span><span data-l="en">{title_en}</span></a></h2>
 <p><span data-l="zh">{subtitle}</span><span data-l="en">{subtitle_en}</span></p>
-<a class="today-more" href="../story/{sid}.html"><span data-l="zh">阅读完整的图史 →</span><span data-l="en">Read the full story →</span></a></div>
+<a class="today-more" href="../story/{sid}.html"><span data-l="zh">阅读全文 →</span><span data-l="en">Read the story →</span></a></div>
 </article>""".format(
         sid=esc(sid), title_alt=esc(title), image_html=image_html,
         label=text(label), label_en=text(label_en), title=text(title), title_en=text(title_en),
@@ -203,7 +203,7 @@ def page(md, stories, records, days):
 <section class="day-hero">
 <div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
 <h1><span data-l="zh">{zh}</span><span data-l="en">{en}</span></h1>
-<p><span data-l="zh">这一天在尘画档案里留下了 {count} 个可读的图史主题。每一篇都从事件出发，沿影像回到现场。</span><span data-l="en">The Chenhua archive holds {count} illustrated {story_word} for this day. Each begins with the event and returns to the scene through images.</span></p>
+<p><span data-l="zh">这一天有 {count} 个故事。</span><span data-l="en">{count} {story_word} for this day.</span></p>
 <div class="today-count"><span data-l="zh">{count} 篇 · 中英双语</span><span data-l="en">{count} story · bilingual</span></div>
 </section>
 <section class="today-list">{cards}</section>
@@ -238,8 +238,8 @@ def index_page(stories_by_day, days):
         cards.append('<section class="today-month"><h2><span data-l="zh">%s</span><span data-l="en">%s</span></h2><ol>%s</ol></section>' % (
             MONTH_ZH[m - 1], MONTH_EN[m - 1], "".join(cells)))
     first = stories_by_day.get(TODAY_MD, [])
-    desc = "366 天，逐日一条以上的历史图史。每一天都指向完整的中英双语故事与影像。"
-    desc_en = "366 days of illustrated history. Every date leads to a complete bilingual story and its images."
+    desc = "每天至少一个故事。"
+    desc_en = "At least one story for each day."
     ld = {
         "@context": "https://schema.org", "@type": "CollectionPage",
         "name": "历史上的今天 · 366 天", "alternateName": "On This Day · 366 days",
@@ -269,11 +269,11 @@ def index_page(stories_by_day, days):
 {appbar}
 <main class="today-main today-index">
 <div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
-<h1><span data-l="zh">366 天，逐日读史</span><span data-l="en">366 days, one image-history at a time</span></h1>
+<h1><span data-l="zh">366 天</span><span data-l="en">366 days</span></h1>
 <p><span data-l="zh">{desc}</span><span data-l="en">{desc_en}</span></p>
-<div class="today-count"><span data-l="zh">366 天 · 每天至少一篇 · 中英双语</span><span data-l="en">366 days · at least one story a day · bilingual</span></div>
+<div class="today-count"><span data-l="zh">每天至少一篇 · 中英双语</span><span data-l="en">At least one story a day · bilingual</span></div>
 <div class="today-months">{cards}</div>
-<p class="today-index-foot"><span data-l="zh">今天：{today_zh} · <a href="{today_md}.html">直接阅读今天的图史</a></span><span data-l="en">Today: {today_en} · <a href="{today_md}.html">read today's story</a></span></p>
+<p class="today-index-foot"><span data-l="zh">今天：{today_zh} · <a href="{today_md}.html">阅读今天的故事</a></span><span data-l="en">Today: {today_en} · <a href="{today_md}.html">read today's story</a></span></p>
 </main>
 {footer}
 </div>

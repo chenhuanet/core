@@ -80,7 +80,6 @@ def main():
     html = html.replace("本页载入 13 篇真实故事", f"全站 {total} 篇故事已接入；其中 {dated} 篇有日期，366 个日页与故事页保持独立。")
     html = html.replace("This page loads 13 real stories", f"All {total} stories are connected; {dated} carry a date, while the 366 day pages and story pages remain independent.")
     html = html.replace("原型说明：", "全站说明：")
-    html = html.replace("三轴如何贯通", "三种读法如何贯通")
     html = html.replace("三轴", "图录")
     html = html.replace("全站总览", "全站图录")
     html = html.replace(
