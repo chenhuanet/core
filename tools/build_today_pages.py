@@ -73,10 +73,17 @@ def primary_links():
     ]
 
 
-def nav_html(current=""):
+def footer_links():
+    return [
+        ("日历", "Calendar", "../today/") if z == "历史上的今天" else (z, e, h)
+        for z, e, h in primary_links()
+    ]
+
+
+def nav_html(current="", links=None):
     return "".join('<a href="%s"%s>%s</a>' % (
         h, ' aria-current="page"' if current and z == current else "", _tspan(z, e))
-        for z, e, h in primary_links())
+        for z, e, h in (links or primary_links()))
 
 
 def appbar(prefix="../", expr="joy"):
@@ -100,7 +107,7 @@ def footer(prefix="../"):
 </footer>""".format(
         prefix=prefix,
         brand=_tspan("出尘入画", "Chenhua"),
-        nav=nav_html(),
+        nav=nav_html(links=footer_links()),
         utility=utility,
     )
 

@@ -695,6 +695,10 @@ def write_galleries(build_id):
             '<a href="../../dist/main/rights/"><span data-l="zh">授权</span><span data-l="en">Rights</span></a>'
             '<a href="../../dist/main/legal/"><span data-l="zh">法律</span><span data-l="en">Legal</span></a>'
         )
+        g_foot_nav = g_nav.replace('<span data-l="zh">历史上的今天</span>',
+                                   '<span data-l="zh">日历</span>').replace(
+                                   '<span data-l="en">On This Day</span>',
+                                   '<span data-l="en">Calendar</span>')
         html = f"""<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -740,7 +744,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 </main>
 <footer class="site-foot">
   <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a>
-  <nav class="sf-nav">{g_nav}</nav>
+  <nav class="sf-nav">{g_foot_nav}</nav>
   <nav class="sf-utility">{g_utility}</nav>
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
@@ -780,6 +784,10 @@ def write_404(build_id):
                           ("授权", "Rights", "rights/"),
                           ("法律", "Legal", "legal/"),
                       ])
+    foot_nav_links = nav_links.replace('<span data-l="zh">历史上的今天</span>',
+                                       '<span data-l="zh">日历</span>').replace(
+                                       '<span data-l="en">On This Day</span>',
+                                       '<span data-l="en">Calendar</span>')
     html = """<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -818,7 +826,7 @@ def write_404(build_id):
 </div>
 <script src="../assets/site.js?v=%s"></script>
 </body></html>
-""" % (build_id, build_id, nav_links, nav_links, utility, build_id)
+""" % (build_id, build_id, nav_links, foot_nav_links, utility, build_id)
     out.write_text(html, encoding="utf-8", newline="\n")
 
 
@@ -855,7 +863,7 @@ def main():
         {"label": "尘画", "label_en": "Chenhua", "href": base["main"], "icon": "home", "site": "main"},
         {"label": "主题", "label_en": "Themes", "href": base["main"] + "themes/", "icon": "stories"},
         {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "timeline/", "icon": "timeline"},
-        {"label": "日历", "label_en": "Calendar", "href": base["main"] + "today/", "icon": "timeline"},
+        {"label": "日历", "label_en": "Calendar", "deskLabel": "历史上的今天", "deskLabel_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline"},
         {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
         {"label": "搜索", "label_en": "Search", "search": True, "icon": "search"},

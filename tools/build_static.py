@@ -215,7 +215,12 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
 
 def foot(kind="main"):
     home = nav_for(kind)[0][2]
-    nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_for(kind))
+    nav_items = []
+    for z, e, h in nav_for(kind):
+        if z == "历史上的今天":
+            z, e = "日历", "Calendar"
+        nav_items.append((z, e, h))
+    nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_items)
     utility = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in [
         ("关于", "About", "../about/"),
         ("授权", "Rights", "../rights/"),
