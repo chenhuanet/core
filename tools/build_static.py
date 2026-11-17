@@ -245,14 +245,14 @@ LEGAL_SECTIONS = [
     ]),
     (("二、版权与授权", "2. Copyright and licensing"), [
         ("站内影像的著作权、邻接权及其他权利归原作者、收藏机构或其他权利人所有。"
-         "每条记录均标注来源、作者、许可与使用性质（U1–U5），并以详情页的许可信息为准。",
+         "每条记录均标注来源、作者、许可与使用性质，并以详情页的许可信息为准。",
          "Copyright, neighbouring rights and other rights in the images belong to their authors, holding institutions or other rights holders. "
-         "Every record states its source, creator, licence and usage class (U1–U5); the licence information on the detail page prevails."),
-        ("U1 表示可自由商用；U2/U3 可商用但须署名（U3 还须以同一许可发布衍生作品）；"
-         "U4 仅限非商业使用；U5 仅提供外链、不转载图片。"
+         "Every record states its source, creator, licence and usage terms; the licence information on the detail page prevails."),
+        ("影像使用分为五类：可自由商用；可商用但须署名；可商用、须署名并以同一许可发布衍生作品；"
+         "仅限非商业使用；仅提供外链、不转载图片。"
          "商用前请逐条核对源站许可与署名要求。本站不构成法律意见；涉及商业使用或权属争议时，请咨询专业律师。",
-         "U1 may be used commercially without conditions; U2/U3 may be used commercially with credit (U3 also requires derivative works to carry the same licence); "
-         "U4 is non-commercial use only; U5 is an external link only, with no image reproduced here. "
+         "Images fall into five usage groups: free commercial use; commercial use with credit; commercial use with credit and share-alike; "
+         "non-commercial use only; and external link only, with no image reproduced here. "
          "Check each source's licence and credit requirements before commercial use. Nothing here is legal advice; consult a qualified lawyer for commercial use or ownership disputes."),
     ]),
     (("三、准确性与免责", "3. Accuracy and disclaimer"), [
@@ -374,8 +374,8 @@ def photo_page(r, all_records):
     region_en = r.get("region_en") or bp.tx("region", region_zh)
     theme_zh = "%s / %s" % (r.get("theme") or "", r.get("topic") or "")
     theme_en = "%s / %s" % (r.get("theme_en") or "", r.get("topic_en") or "")
-    usage_zh = "%s %s" % (r.get("usage_code") or "", r.get("usage_label") or "")
-    usage_en = "%s %s" % (r.get("usage_code") or "", r.get("usage_label_en") or "")
+    usage_zh = r.get("usage_label") or r.get("usage_code") or ""
+    usage_en = r.get("usage_label_en") or r.get("usage_label") or r.get("usage_code") or ""
     date_zh = r.get("date_label") or r.get("year") or ""
     date_en = r.get("date_label_en") or bp.english_date(date_zh)
     rows = [
@@ -431,7 +431,7 @@ def photo_page(r, all_records):
         links.append('<a class="s-btn" href="%s">%s</a>' % (
             esc(gallery_href(r)), tspan("图片站 ↗", "Image index ↗")))
     links.append('<a class="s-btn gold" href="%s">%s</a>' % (
-        esc("../gallery/"), tspan("返回影像轴", "Back to the archive")))
+        esc("../gallery/"), tspan("返回影像", "Back to the archive")))
 
     related = [x for x in all_records
                if x["id"] != r["id"] and x.get("topic") == r.get("topic")
@@ -460,7 +460,7 @@ def photo_page(r, all_records):
         tspan(r.get("place") or r.get("region") or "", r.get("place_en") or region_en or ""),
         tspan(r.get("medium") or "", r.get("medium_en") or ""))
     html_out += '<span class="tag">%s</span><span class="tag">%s</span></div>' % (
-        esc(r.get("usage_code") or ""), tspan(type_label_zh(r), type_label_en(r)))
+        esc(r.get("usage_label") or ""), tspan(type_label_zh(r), type_label_en(r)))
     html_out += figure
     html_out += '<div class="s-note"><div data-l="zh">%s</div><div data-l="en">%s</div></div>' % (
         r.get("note_html") or "", paragraphs(note_en, en=True))
@@ -468,7 +468,7 @@ def photo_page(r, all_records):
     html_out += ('<div class="s-usage"><h2>%s · %s</h2>'
                  '<div data-l="zh"><p>%s</p><div class="s-credit">%s</div></div>'
                  '<div data-l="en"><p>%s</p><div class="s-credit">%s</div></div></div>') % (
-        tspan("使用性质", "Usage"), esc(r.get("usage_code") or ""),
+        tspan("使用性质", "Usage"), tspan(r.get("usage_label") or "", r.get("usage_label_en") or ""),
         esc(r.get("usage_obligation") or ""), esc(r.get("credit_line") or ""),
         esc(r.get("usage_obligation_en") or ""), esc(r.get("credit_line_en") or ""))
     html_out += evidence
