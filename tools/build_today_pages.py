@@ -92,20 +92,15 @@ def footer(prefix="../"):
         ("授权", "Rights", "../rights/"),
         ("法律", "Legal", "../legal/"),
     ])
-    return """<footer class="s-foot">
-<p class="s-foot-mark"><img src="../../assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p>
-<p class="brandline">{brand}</p>
-<p class="motto">{motto}</p>
-<nav class="foot-primary">{nav}</nav>
-<nav class="foot-utility">{utility}</nav>
-<p>{disclaimer}</p>
+    return """<footer class="site-foot">
+<a class="sf-brand" href="{prefix}">{brand}</a>
+<nav class="sf-nav">{nav}</nav>
+<nav class="sf-utility">{utility}</nav>
 </footer>""".format(
-        brand=_tspan("尘画 · 出尘入画 · 尘归尘，画归画", "Chenhua · Out of dust, into the image"),
-        motto=_tspan("尘归尘，画归画", "Dust to dust, image to image"),
+        prefix=prefix,
+        brand=_tspan("出尘入画", "Chenhua"),
         nav=nav_html(),
         utility=utility,
-        disclaimer=_tspan("影像版权归原作者与收藏机构；本站仅作非商业索引与展示",
-                         "Image rights belong to their authors and holding institutions; this site is a non-commercial index and display."),
     )
 
 

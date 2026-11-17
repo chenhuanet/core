@@ -714,12 +714,12 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 <body data-title-zh="{title_zh}" data-title-en="{title_en}"
       data-desc-zh="{desc_zh}" data-desc-en="{desc_en}">
 <header class="g-head">
-  <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="../../dist/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画 · {title}</span><span data-l="en">Image as history · {title}</span></span></a>
+  <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="../../dist/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
   <nav class="g-nav">
     {g_nav}
   </nav>
   <div class="g-tools">
-    <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中</span></button>
+    <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button>
     <button class="g-tool" type="button" data-themebtn aria-label="切换到浅色">
       <span class="icon-sun"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></span>
       <span class="icon-moon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.6A8.4 8.4 0 1 1 9.4 4a6.8 6.8 0 0 0 10.6 10.6z"/></svg></span>
@@ -736,14 +736,10 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
   <div class="g-masonry" id="gMasonry"></div>
   <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
 </main>
-<footer class="g-foot">
-  <nav class="g-foot-nav">
-    {g_nav}
-  </nav>
-  <nav class="g-utility">{g_utility}</nav>
-  <p class="g-foot-mark"><img src="../../dist/assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p>
-  <p><span data-l="zh">尘画 · 出尘入画 · 尘归尘，画归画</span><span data-l="en">Chenhua · Out of dust, into the image</span></p>
-  <p><span data-l="zh">影像版权归原作者与收藏机构；本站仅作非商业索引与展示</span><span data-l="en">Image rights belong to their authors and holding institutions; this site is a non-commercial index and display.</span></p>
+<footer class="site-foot">
+  <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a>
+  <nav class="sf-nav">{g_nav}</nav>
+  <nav class="sf-utility">{g_utility}</nav>
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
             "century": century,
@@ -816,7 +812,7 @@ def write_404(build_id):
 <div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">这一页走失了</span><span data-l="en">This page has wandered off</span></b><p><span data-l="zh">可能是地址写错了，也可能是这条小径还没被画下来。回到日流，或去图录里找另一条路。</span><span data-l="en">The address may be wrong, or this path has not been drawn yet. Return to the day flow, or find another route in the Atlas.</span></p></div>
 <div><a class="btn gold" href="index.html"><span data-l="zh">回到首页</span><span data-l="en">Back home</span></a><a class="btn" href="atlas/"><span data-l="zh">打开图录</span><span data-l="en">Open the Atlas</span></a></div>
 </main>
-<footer class="s-foot"><p class="s-foot-mark"><img src="../assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p><p class="brandline"><span data-l="zh">尘画 · 出尘入画 · 尘归尘，画归画</span><span data-l="en">Chenhua · Out of dust, into the image</span></p><p class="motto"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Dust to dust, image to image</span></p><nav class="foot-primary">%s</nav><nav class="foot-utility">%s</nav><p><span data-l="zh">影像版权归原作者与收藏机构；本站仅作非商业索引与展示</span><span data-l="en">Image rights belong to their authors and holding institutions; this site is a non-commercial index and display.</span></p></footer>
+<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav></footer>
 </div>
 <script src="../assets/site.js?v=%s"></script>
 </body></html>

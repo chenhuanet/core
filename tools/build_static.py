@@ -214,29 +214,22 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
 
 
 def foot(kind="main"):
+    home = nav_for(kind)[0][2]
     nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_for(kind))
     utility = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in [
         ("关于", "About", "../about/"),
         ("授权", "Rights", "../rights/"),
         ("法律", "Legal", "../legal/"),
     ])
-    return """<footer class="s-foot">
-<p class="s-foot-mark"><img src="../../assets/leaf/calm.svg" width="24" height="24" alt="" aria-hidden="true" decoding="async"></p>
-<p class="brandline">%s</p>
-<p class="motto">%s</p>
-<nav class="foot-primary">%s</nav>
-<nav class="foot-utility">%s</nav>
-<p>%s</p>
+    return """<footer class="site-foot">
+<a class="sf-brand" href="%s">%s</a>
+<nav class="sf-nav">%s</nav>
+<nav class="sf-utility">%s</nav>
 </footer>
 </div>
 <script src="../../assets/site.js?v=%s"></script>
 </body></html>
-""" % (tspan("尘画 · 出尘入画 · 尘归尘，画归画", "Chenhua · Out of dust, into the image"),
-       tspan("尘归尘，画归画", "Dust to dust, image to image"),
-       nav, utility,
-       tspan("影像版权归原作者与收藏机构；本站仅作非商业索引与展示",
-             "Image rights belong to their authors and holding institutions; this site is a non-commercial index and display."),
-       BUILD_ID)
+""" % (home, tspan("出尘入画", "Chenhua"), nav, utility, BUILD_ID)
 
 
 LEGAL_SECTIONS = [
