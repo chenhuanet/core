@@ -39,6 +39,40 @@ def build_data():
     }
 
 
+def seo_head(html, title, description, canonical):
+    block = (
+        f"<title>{title}</title>\n"
+        f'<meta name="description" content="{description}">\n'
+        f'<meta name="robots" content="index,follow">\n'
+        f'<link rel="canonical" href="{canonical}">\n'
+        f'<link rel="alternate" hreflang="zh-CN" href="{canonical}">\n'
+        f'<link rel="alternate" hreflang="en" href="{canonical}?lang=en">\n'
+        f'<meta property="og:type" content="website">\n'
+        f'<meta property="og:title" content="{title}">\n'
+        f'<meta property="og:description" content="{description}">\n'
+        f'<meta property="og:url" content="{canonical}">\n'
+        f'<meta property="og:locale" content="zh_CN">\n'
+        f'<meta property="og:locale:alternate" content="en_US">'
+    )
+    old = "<title>图录 · 尘画</title>"
+    if old in html:
+        return html.replace(old, block, 1)
+    return html.replace("</head>", block + "\n</head>", 1)
+
+
+def set_selected(html, view):
+    for name in ("theme", "timeline", "calendar"):
+        html = html.replace(
+            f'data-view="{name}" aria-selected="true"',
+            f'data-view="{name}" aria-selected="false"',
+        )
+    return html.replace(
+        f'data-view="{view}" aria-selected="false"',
+        f'data-view="{view}" aria-selected="true"',
+        1,
+    )
+
+
 def main():
     html = read_source()
     data = build_data()
@@ -66,13 +100,18 @@ def main():
         1,
     )
 
-    # Header / labels / footer.
-    html = html.replace("../next/dist/main/", "../")
-    html = html.replace("../next/dist/photo/", "../../photo/")
-    html = html.replace("../next/dist/paint/", "../../paint/")
-    html = html.replace("../next/dist/assets/", "../../assets/")
-    html = html.replace("../next/dist/main/index.html", "../index.html")
-    html = html.replace("../next/dist/main/today/index.html", "../today/index.html")
+    # Canonical site paths. The Atlas is served at /atlas/ and /atlas/timeline/.
+    # Root-relative links keep both copies identical and avoid query-string routes.
+    html = html.replace("../next/dist/main/index.html", "/")
+    html = html.replace("../next/dist/main/atlas/index.html", "/atlas/")
+    html = html.replace("../next/dist/main/atlas/timeline/", "/atlas/timeline/")
+    html = html.replace("../next/dist/main/atlas/?view=timeline", "/atlas/timeline/")
+    html = html.replace("../next/dist/main/today/index.html", "/today/")
+    html = html.replace("../next/dist/main/", "/")
+    html = html.replace("../next/dist/photo/", "https://photo.chenhua.net/")
+    html = html.replace("../next/dist/paint/", "https://paint.chenhua.net/")
+    html = html.replace("../next/dist/assets/", "/assets/")
+    html = html.replace("../../assets/", "/assets/")
     html = html.replace("三轴档案 · 尘画", "图录总览 · 尘画")
     html = html.replace("Archive Atlas / 三轴档案", "Archive Atlas / 全站图录")
     html = html.replace("全站图录 · 13 篇抽样", f"全站图录 · {total} 篇")
@@ -123,7 +162,6 @@ def main():
     )
 
     # Counts are data-driven, not hard-coded.
-    html = html.replace('$("#dateCount").textContent = "366";', '$("#dateCount").textContent = ATLAS_DATA.date_count;')
 
     # Matrix columns depend on the real decade list.
     html = html.replace(
@@ -145,27 +183,7 @@ def main():
         1,
     )
 
-    # Deep links: /atlas/?view=timeline&theme=...&decade=...&date=...&story=...
-    html = html.replace(
-        "renderAll();\n</script>",
-        """function readParams(){
-  const q = new URLSearchParams(location.search);
-  const v = q.get("view");
-  if(v==="theme"||v==="timeline"||v==="calendar") state.view=v;
-  const th = q.get("theme");
-  if(th && THEMES.some(t=>t.name===th)) state.theme=th;
-  const dc = q.get("decade");
-  if(dc && DECADES.includes(dc)) state.decade=dc;
-  const dt = q.get("date");
-  if(dt && /^\\d{2}-\\d{2}$/.test(dt)) state.date=dt;
-  const sid = q.get("story");
-  if(sid && STORIES.some(s=>s.id===sid)) state.focus=sid;
-}
-readParams();
-renderAll();
-</script>""",
-        1,
-    )
+    # View state is selected by the static route, not by query parameters.
 
     # Keep the decade ruler aligned with the horizontally scrolling track.
     html = html.replace(
@@ -210,9 +228,38 @@ renderAll();
         1,
     )
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(html, encoding="utf-8")
-    print("wrote", OUT, "bytes", OUT.stat().st_size, "stories", total, "dates", data["date_count"])
+    base_state = 'const state = {view:"theme", theme:null, decade:null, date:null, focus:"today-01-01-new-horizons-2"};'
+    routes = [
+        (
+            OUT_DIR / "index.html",
+            "theme",
+            "图录 · 尘画",
+            "按主题浏览尘画的历史摄影与绘画故事。",
+            "https://www.chenhua.net/atlas/",
+        ),
+        (
+            OUT_DIR / "timeline" / "index.html",
+            "timeline",
+            "时间线 · 图录 · 尘画",
+            "按年代浏览尘画的历史摄影与绘画故事。",
+            "https://www.chenhua.net/atlas/timeline/",
+        ),
+    ]
+    for path, view, title, description, canonical in routes:
+        page = html
+        if view == "timeline":
+            page = page.replace(base_state, base_state.replace('view:"theme"', 'view:"timeline"'), 1)
+        page = set_selected(page, view)
+        page = seo_head(page, title, description, canonical)
+        # Keep local file previews working as well as production: page assets
+        # live two levels above the URL root, while other links are site-relative.
+        asset_prefix = "../../" if view == "theme" else "../../../"
+        page = page.replace('href="/assets/', f'href="{asset_prefix}assets/').replace('src="/assets/', f'src="{asset_prefix}assets/')
+        prefix = "../" if view == "theme" else "../../"
+        page = page.replace('href="/', f'href="{prefix}').replace('src="/', f'src="{prefix}')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(page, encoding="utf-8")
+        print("wrote", path, "bytes", path.stat().st_size, "stories", total, "dates", data["date_count"])
 
 
 if __name__ == "__main__":

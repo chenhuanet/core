@@ -63,7 +63,7 @@ def primary_links():
     return [
         ("尘画", "Chenhua", "../"),
         ("图录", "Atlas", "../atlas/"),
-        ("时间线", "Timeline", "../atlas/?view=timeline"),
+        ("时间线", "Timeline", "../atlas/timeline/"),
         ("历史上的今天", "On This Day", "../today/"),
         ("摄影", "Photography", "../../photo/"),
         ("绘画", "Painting", "../../paint/"),
@@ -204,7 +204,6 @@ def page(md, stories, records, days):
 <div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
 <h1><span data-l="zh">{zh}</span><span data-l="en">{en}</span></h1>
 <p><span data-l="zh">这一天有 {count} 个故事。</span><span data-l="en">{count} {story_word} for this day.</span></p>
-<div class="today-count"><span data-l="zh">{count} 篇 · 中英双语</span><span data-l="en">{count} story · bilingual</span></div>
 </section>
 <section class="today-list">{cards}</section>
 <nav class="today-nav"><a href="{prev_md}.html"><span data-l="zh">← {prev_zh}</span><span data-l="en">← {prev_en}</span></a><a class="center" href="index.html"><span data-l="zh">全年日历</span><span data-l="en">Full calendar</span></a><a href="{next_md}.html"><span data-l="zh">{next_zh} →</span><span data-l="en">{next_en} →</span></a></nav>
@@ -271,7 +270,6 @@ def index_page(stories_by_day, days):
 <div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
 <h1><span data-l="zh">366 天</span><span data-l="en">366 days</span></h1>
 <p><span data-l="zh">{desc}</span><span data-l="en">{desc_en}</span></p>
-<div class="today-count"><span data-l="zh">每天至少一篇 · 中英双语</span><span data-l="en">At least one story a day · bilingual</span></div>
 <div class="today-months">{cards}</div>
 <p class="today-index-foot"><span data-l="zh">今天：{today_zh} · <a href="{today_md}.html">阅读今天的故事</a></span><span data-l="en">Today: {today_en} · <a href="{today_md}.html">read today's story</a></span></p>
 </main>

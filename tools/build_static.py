@@ -128,16 +128,16 @@ def wordmark_html(kind="main"):
 
 def nav_for(kind):
     if kind == "main":
-        home, atlas, timeline = "../", "../atlas/", "../timeline/"
+        home, atlas, timeline = "../", "../atlas/", "../atlas/timeline/"
         session, search, photo, paint = "../today/", "../search/", "../../photo/", "../../paint/"
     elif kind == "photo":
-        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/timeline/"
+        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/atlas/timeline/"
         session, search, photo, paint = "../../main/today/", "../../main/search/?scope=photos", "../", "../../paint/"
     else:
-        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/timeline/"
+        home, atlas, timeline = "../../main/", "../../main/atlas/", "../../main/atlas/timeline/"
         session, search, photo, paint = "../../main/today/", "../../main/search/?scope=paintings", "../../photo/", "../"
     return [("尘画", "Chenhua", home), ("图录", "Atlas", atlas),
-            ("时间线", "Timeline", atlas + "?view=timeline"), ("历史上的今天", "On This Day", session),
+            ("时间线", "Timeline", timeline), ("历史上的今天", "On This Day", session),
             ("摄影", "Photography", photo),
             ("绘画", "Painting", paint), ("搜索", "Search", search),
             ("导航", "Directory", "https://netcn.org/")]
@@ -615,8 +615,9 @@ def main():
     sitemap("paint", [PAINT_DOMAIN + "/", PAINT_DOMAIN + "/gallery/",
                       PAINT_DOMAIN + "/about/",
                       PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
-    sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/atlas/", MAIN_DOMAIN + "/gallery/",
-                     MAIN_DOMAIN + "/stories/", MAIN_DOMAIN + "/timeline/",
+    sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/atlas/",
+                     MAIN_DOMAIN + "/atlas/timeline/", MAIN_DOMAIN + "/gallery/",
+                     MAIN_DOMAIN + "/stories/",
                      MAIN_DOMAIN + "/today/",
                      MAIN_DOMAIN + "/about/", MAIN_DOMAIN + "/legal/"] +
             ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories] +

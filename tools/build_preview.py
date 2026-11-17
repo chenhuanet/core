@@ -542,8 +542,8 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
             (folder / "index.html").write_text(redirect, encoding="utf-8", newline="\n")
             continue
         if site == "main" and route in ("stories", "timeline"):
-            target = "../atlas/index.html" + ("?view=timeline" if route == "timeline" else "")
-            canonical_target = domain + "/atlas/" + ("?view=timeline" if route == "timeline" else "")
+            target = "../atlas/timeline/" if route == "timeline" else "../atlas/index.html"
+            canonical_target = domain + ("/atlas/timeline/" if route == "timeline" else "/atlas/")
             redirect = """<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -680,7 +680,7 @@ def write_galleries(build_id):
         g_nav = (
             '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>'
             '<a href="../../dist/main/atlas/"><span data-l="zh">图录</span><span data-l="en">Atlas</span></a>'
-            '<a href="../../dist/main/atlas/?view=timeline"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
+            '<a href="../../dist/main/atlas/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
             '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
             '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
             '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
@@ -764,7 +764,7 @@ def write_404(build_id):
                        for z, e, h in [
                            ("尘画", "Chenhua", "index.html"),
                            ("图录", "Atlas", "atlas/"),
-                           ("时间线", "Timeline", "atlas/?view=timeline"),
+                           ("时间线", "Timeline", "atlas/timeline/"),
                            ("历史上的今天", "On This Day", "today/"),
                            ("摄影", "Photography", "../../photo/"),
                            ("绘画", "Painting", "../../paint/"),
@@ -851,7 +851,7 @@ def main():
     nav = [
         {"label": "尘画", "label_en": "Chenhua", "href": base["main"], "icon": "home", "site": "main"},
         {"label": "图录", "label_en": "Atlas", "href": base["main"] + "atlas/", "icon": "stories"},
-        {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "atlas/?view=timeline", "icon": "timeline", "wideOnly": True},
+        {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "atlas/timeline/", "icon": "timeline", "wideOnly": True},
         {"label": "历史上的今天", "label_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline", "wideOnly": True},
         {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
