@@ -587,9 +587,8 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
             '<a href="%s">%s</a>' % (
                 (cfg.get("base") or "/") + ("" if r == "today" else r + "/"),
                 {"today": "今日", "gallery": "影像", "stories": "主题",
-                 "timeline": "时间线", "search": "搜索",
-                 "about": "关于", "rights": "授权"}[r])
-            for r in routes)
+                 "timeline": "时间线", "about": "关于", "rights": "授权"}[r])
+            for r in routes if r != "search")
         navlinks += ('<a href="%s">摄影</a><a href="%s">绘画</a>'
                      '<a href="https://netcn.org/">导航</a>') % (
                          cfg.get("photoBase") or "", cfg.get("paintBase") or "")
@@ -687,7 +686,6 @@ def write_galleries(build_id):
             '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
             '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
             '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
-            '<a href="../../dist/main/search/"><span data-l="zh">搜索</span><span data-l="en">Search</span></a>'
             '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
         )
         g_utility = (
@@ -775,7 +773,6 @@ def write_404(build_id):
                            ("历史上的今天", "On This Day", "today/"),
                            ("摄影", "Photography", "../../photo/"),
                            ("绘画", "Painting", "../../paint/"),
-                           ("搜索", "Search", "search/"),
                            ("导航", "Directory", "https://netcn.org/"),
                        ])
     utility = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
@@ -866,7 +863,6 @@ def main():
         {"label": "日历", "label_en": "Calendar", "deskLabel": "历史上的今天", "deskLabel_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline"},
         {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
-        {"label": "搜索", "label_en": "Search", "search": True, "icon": "search"},
         {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],

@@ -29,6 +29,9 @@ def build_data():
             "en": s["name_en"],
             "color": s["color"],
             "desc": s["desc"],
+            "desc_en": s.get("desc_en") or s["desc"],
+            "cover": next((x["img"] for x in raw["stories"] if x["theme"] == s["name"] and x["img"]), ""),
+            "covers": [x["img"] for x in raw["stories"] if x["theme"] == s["name"] and x["img"]][:6],
         }
         for s in raw["series"]
     ]
@@ -229,6 +232,7 @@ def main():
             "主题 · 尘画",
             "按主题浏览尘画的历史摄影与绘画故事。",
             "https://www.chenhua.net/themes/",
+            "Themes · Chenhua",
         ),
         (
             TIMELINE_DIR / "index.html",
@@ -236,14 +240,16 @@ def main():
             "时间线 · 尘画",
             "按年代浏览尘画的历史摄影与绘画故事。",
             "https://www.chenhua.net/timeline/",
+            "Timeline · Chenhua",
         ),
     ]
-    for path, view, title, description, canonical in routes:
+    for path, view, title, description, canonical, title_en in routes:
         page = html
         if view == "timeline":
             page = page.replace(base_state, base_state.replace('view:"theme"', 'view:"timeline"'), 1)
         page = set_selected(page, view)
         page = seo_head(page, title, description, canonical)
+        page = page.replace("<body>", f'<body data-title-zh="{title}" data-title-en="{title_en}">', 1)
         heading = "主题" if view == "theme" else "时间线"
         page = page.replace("<h1>图录</h1>", f"<h1>{heading}</h1>", 1)
         page = page.replace('aria-label="图录视图"', f'aria-label="{heading}视图"', 1)

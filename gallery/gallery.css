@@ -37,11 +37,20 @@ img{display:block;max-width:100%}
 .g-nav a:hover{color:var(--accent);background:var(--surface2)}
 .g-nav a:hover{color:var(--accent)}
 .g-tools{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto}
+.g-head.has-head-search .g-tools{margin-left:0}
+.head-search{display:flex;align-items:center;gap:3px;height:32px;min-width:92px;max-width:190px;flex:1 1 140px;
+  margin-left:auto;margin-right:3px;padding:0 4px 0 11px;border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);color:var(--muted)}
+.head-search input{min-width:0;width:100%;height:100%;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:11px}
+.head-search input::placeholder{color:var(--dim)}
+.head-search button{width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--muted)}
+.head-search button svg{width:15px;height:15px}
 .g-tool{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
   border:1px solid var(--line);border-radius:50%;color:var(--muted);background:var(--surface)}
 .g-tool:hover{color:var(--text);border-color:var(--accent)}
 .g-tool svg{display:block}
-.g-lang{font-size:10px;letter-spacing:.06em}
+.g-lang{font-size:0;padding:0;display:grid;place-items:center}
+@media(max-width:899px){.head-search{display:none}}
 .g-wrap{max-width:1240px;margin:0 auto;padding:26px 18px 40px}
 .g-intro{padding:6px 0 20px;border-bottom:1px solid var(--line);margin-bottom:16px}
 .g-intro h1{font-family:var(--serif);font-weight:400;font-size:clamp(28px,5vw,46px);
@@ -90,6 +99,11 @@ img{display:block;max-width:100%}
   .g-brand .g-en{display:none}
   .g-nav{display:none}
   .site-foot{padding-left:18px;padding-right:18px}
+}
+@media(min-width:900px) and (max-width:1099px){
+  html[data-lang="en"] .g-nav a{font-size:11px;padding:6px 7px}
+  html[data-lang="en"] .head-search{max-width:140px;min-width:84px;flex:0 1 140px}
+  html[data-lang="en"] .g-brand .g-en{display:none}
 }
 .g-empty{padding:60px 0;text-align:center;color:var(--dim);font-family:var(--serif);letter-spacing:.1em}
 @media(min-width:700px){

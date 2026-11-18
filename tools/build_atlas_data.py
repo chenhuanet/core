@@ -10,23 +10,23 @@ BUNDLE = ROOT / "next" / "dist" / "data" / "bundle.js"
 
 SERIES = [
     {"key": "space", "name": "太空探索", "name_en": "Space Exploration", "color": "#234c5d", "glyph": "轨",
-     "desc": "火箭、卫星与深空探测器。"},
+     "desc": "火箭、卫星与深空探测器。", "desc_en": "Rockets, satellites and deep-space probes."},
     {"key": "disaster", "name": "灾难与调查", "name_en": "Disaster & Investigation", "color": "#a64227", "glyph": "灾",
-     "desc": "火灾、空难、地震与事故调查。"},
+     "desc": "火灾、空难、地震与事故调查。", "desc_en": "Fires, air disasters, earthquakes and investigations."},
     {"key": "war", "name": "战争与冲突", "name_en": "War & Conflict", "color": "#7a2f26", "glyph": "战",
-     "desc": "战线、战后与战争影像。"},
+     "desc": "战线、战后与战争影像。", "desc_en": "Front lines, aftermath and the imagery of war."},
     {"key": "politics", "name": "政治与制度", "name_en": "Politics & Institutions", "color": "#3f4a60", "glyph": "政",
-     "desc": "总统、议会、法院与街头政治。"},
+     "desc": "总统、议会、法院与街头政治。", "desc_en": "Presidents, parliaments, courts and street politics."},
     {"key": "science", "name": "科学与技术", "name_en": "Science & Technology", "color": "#2f5f57", "glyph": "科",
-     "desc": "实验室、计算机、飞机与发明。"},
+     "desc": "实验室、计算机、飞机与发明。", "desc_en": "Laboratories, computers, aircraft and invention."},
     {"key": "city", "name": "工程与城市", "name_en": "Engineering & City", "color": "#6b5b3e", "glyph": "构",
-     "desc": "桥梁、隧道、铁塔与城市天际线。"},
+     "desc": "桥梁、隧道、铁塔与城市天际线。", "desc_en": "Bridges, tunnels, towers and city skylines."},
     {"key": "rail", "name": "铁路与工业", "name_en": "Rail & Industry", "color": "#4e4b47", "glyph": "轨",
-     "desc": "蒸汽、钢轨与工厂。"},
+     "desc": "蒸汽、钢轨与工厂。", "desc_en": "Steam, steel rails and factories."},
     {"key": "art", "name": "艺术与图像", "name_en": "Art & Image", "color": "#7a4a5a", "glyph": "像",
-     "desc": "摄影家、画家与美术馆。"},
+     "desc": "摄影家、画家与美术馆。", "desc_en": "Photographers, painters and museums."},
     {"key": "world", "name": "社会与日常", "name_en": "Society & Everyday", "color": "#4b5964", "glyph": "世",
-     "desc": "城市生活、教育、宗教、体育与普通人的日常。"},
+     "desc": "城市生活、教育、宗教、体育与普通人的日常。", "desc_en": "City life, education, religion, sport and ordinary days."},
 ]
 
 # Explicit overrides for the 13 prototype stories; keep their curated series stable.
@@ -174,24 +174,38 @@ def build_data():
         series_key = OVERRIDES.get(sid) or classify(s.get("title", ""), s.get("subtitle", ""), s.get("themes") or [])
         cover = records.get(s.get("cover"))
         image = (cover or {}).get("image") or ""
+        if not image:
+            for pid in s.get("photo_ids") or []:
+                rec = records.get(pid) or {}
+                image = rec.get("image") or rec.get("preview_image") or ""
+                if image:
+                    break
         series = series_by_key[series_key]
+        place = s.get("place") or "档案"
+        place_en = s.get("place_en") or ("Archive" if place in ("档案", "") else place)
         stories.append({
             "id": sid,
             "title": s.get("title") or sid,
+            "title_en": s.get("title_en") or s.get("title") or sid,
             "subtitle": s.get("subtitle") or "",
+            "subtitle_en": s.get("subtitle_en") or s.get("subtitle") or "",
             "summary": s.get("intro") or s.get("subtitle") or "",
+            "summary_en": s.get("intro_en") or s.get("subtitle_en") or s.get("intro") or "",
             "date": mmdd,
             "year": year,
             "decade": decade,
             "theme": series["name"],
             "series_key": series_key,
-            "place": s.get("place") or "档案",
+            "place": place,
+            "place_en": place_en,
             "themes": s.get("themes") or [],
+            "themes_en": s.get("themes_en") or [],
             "img": image,
             "cover": s.get("cover") or "",
             "href": f"../story/{sid}.html",
             "day_href": f"../today/{mmdd}.html" if mmdd else "",
             "type": s.get("type") or "",
+            "type_en": s.get("type_en") or s.get("type") or "",
             "today_rank": s.get("today_rank") or 0,
         })
     stories.sort(key=lambda x: (x["date"] or "99-99", x["year"] or 0, x["id"]))

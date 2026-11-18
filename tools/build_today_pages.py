@@ -229,7 +229,7 @@ def page(md, stories, records, days):
     )
 
 
-def index_page(stories_by_day, days):
+def index_page(stories_by_day, days, records):
     cards = []
     for m in range(1, 13):
         month_days = [d for d in days if int(d[:2]) == m]
@@ -255,6 +255,33 @@ def index_page(stories_by_day, days):
   <div class="today-days">%s</div>
 </section>""" % (current, MONTH_ZH[m - 1], MONTH_EN[m - 1], month_stories, month_stories, "".join(cells)))
     today_count = len(stories_by_day.get(TODAY_MD, []))
+    # A small visual lead-in: today's image plus the nearest dated images.
+    feature = []
+    seen = set()
+    cursor = days.index(TODAY_MD)
+    for offset in (0, 1, -1, 2, -2, 3):
+        md = days[(cursor + offset) % len(days)]
+        for story in stories_by_day.get(md, []):
+            image = story_image(story, records)
+            if image and image not in seen:
+                seen.add(image)
+                feature.append((md, story, image))
+                break
+        if len(feature) >= 3:
+            break
+    feature_main = ""
+    feature_side = ""
+    if feature:
+        md, story, image = feature[0]
+        feature_main = '<a class="today-feature-main" href="%s.html"><img src="%s" alt="%s" loading="eager"><span class="today-feature-date"><span data-l="zh">%s</span><span data-l="en">%s</span></span></a>' % (
+            md, esc(image), esc(story.get("title") or ""), text(day_title(md)[0]), text(day_title(md)[1]))
+        side = feature[1:3]
+        if side:
+            feature_side = '<div class="today-feature-side">%s</div>' % "".join(
+                '<a href="%s.html"><img src="%s" alt="%s" loading="lazy"><span class="today-feature-label"><span data-l="zh">%s</span><span data-l="en">%s</span></span></a>' % (
+                    md, esc(image), esc(story.get("title") or ""), text(day_title(md)[0]), text(day_title(md)[1]))
+                for md, story, image in side)
+    feature_html = '<div class="today-feature">%s%s</div>' % (feature_main, feature_side) if feature_main else ""
     desc = "按日期浏览尘画收录的历史故事与影像。"
     desc_en = "Browse historical stories and images by date."
     ld = {
@@ -292,6 +319,7 @@ def index_page(stories_by_day, days):
       <p class="today-intro-meta"><span data-l="zh">今天有 {today_count} 个故事</span><span data-l="en">{today_count} {story_word} today</span><a href="{today_md}.html"><span data-l="zh">阅读今天的故事 →</span><span data-l="en">Read today's {story_word} →</span></a></p>
     </div>
   </header>
+  {feature}
   <div class="year-head"><h2><span data-l="zh">全年日历</span><span data-l="en">Full calendar</span></h2></div>
   <div class="today-months">{cards}</div>
 </main>
@@ -302,7 +330,8 @@ def index_page(stories_by_day, days):
 """.format(desc=esc(desc), desc_en=esc(desc_en), site=SITE, build=BUILD_ID,
            ld=json.dumps(ld, ensure_ascii=False).replace("</", "<\\/"), appbar=appbar(expr="calm"), footer=footer(),
            cards="".join(cards), today_zh=text(day_title(TODAY_MD)[0]), today_en=text(day_title(TODAY_MD)[1]), today_md=TODAY_MD,
-           today_count=today_count, story_word="story" if today_count == 1 else "stories")
+           today_count=today_count, story_word="story" if today_count == 1 else "stories",
+           feature=feature_html)
 
 
 def main():
@@ -331,7 +360,7 @@ def main():
     shutil.copyfile(BASE / "core" / "static" / "today.css", DIST / "assets" / "today.css")
     for md in days:
         (TODAY / (md + ".html")).write_text(page(md, by_day[md], records, days), encoding="utf-8", newline="\n")
-    (TODAY / "index.html").write_text(index_page(by_day, days), encoding="utf-8", newline="\n")
+    (TODAY / "index.html").write_text(index_page(by_day, days, records), encoding="utf-8", newline="\n")
     print("today pages: %d days, %d stories" % (len(days), sum(len(v) for v in by_day.values())))
 
 
