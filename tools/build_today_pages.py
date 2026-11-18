@@ -230,6 +230,22 @@ def page(md, stories, records, days):
 
 
 def index_page(stories_by_day, days, records):
+    def month_cover(month):
+        for day_key in days:
+            if int(day_key[:2]) != month:
+                continue
+            for story in stories_by_day.get(day_key, []):
+                image = story_image(story, records)
+                if image:
+                    return image
+        for rec in records.values():
+            label = str(rec.get("date_label") or "")
+            found = re.search(r"(\d{1,2})月", label)
+            if found and int(found.group(1)) == month:
+                image = rec.get("image") or rec.get("preview_image") or ""
+                if image:
+                    return image
+        return ""
     cards = []
     for m in range(1, 13):
         month_days = [d for d in days if int(d[:2]) == m]
@@ -244,16 +260,20 @@ def index_page(stories_by_day, days, records):
             count = len(stories_by_day.get(md, []))
             if count:
                 cls = "today-day has-stories" + (" is-today" if md == TODAY_MD else "")
-                cells.append('<a class="%s" href="%s.html" title="%s · %d 个故事">%d</a>' % (
-                    cls, md, md.replace("-", "月") + "日", count, day_number))
+                cells.append('<a class="%s" href="%s.html">%d</a>' % (cls, md, day_number))
             else:
                 cells.append('<span class="today-day is-empty">%d</span>' % day_number)
         current = " is-current" if m == int(TODAY_MD[:2]) else ""
+        cover = month_cover(m)
+        cover_html = ""
+        if cover:
+            cover_html = '<div class="today-month-cover"><img src="%s" alt="" loading="lazy">%s</div>' % (
+                esc(cover), '<span class="today-month-flag"><span data-l="zh">本月</span><span data-l="en">This month</span></span>' if current else "")
         cards.append("""<section class="today-month%s">
-  <h2><span data-l="zh">%s</span><span data-l="en">%s</span><span class="today-month-count"><span data-l="zh">%d 个故事</span><span data-l="en">%d stories</span></span></h2>
+  %s<h2><span data-l="zh">%s</span><span data-l="en">%s</span><span class="today-month-count"><span data-l="zh">%d 个故事</span><span data-l="en">%d stories</span></span></h2>
   <div class="today-weekdays" aria-hidden="true"><span><span data-l="zh">日</span><span data-l="en">S</span></span><span><span data-l="zh">一</span><span data-l="en">M</span></span><span><span data-l="zh">二</span><span data-l="en">T</span></span><span><span data-l="zh">三</span><span data-l="en">W</span></span><span><span data-l="zh">四</span><span data-l="en">T</span></span><span><span data-l="zh">五</span><span data-l="en">F</span></span><span><span data-l="zh">六</span><span data-l="en">S</span></span></div>
   <div class="today-days">%s</div>
-</section>""" % (current, MONTH_ZH[m - 1], MONTH_EN[m - 1], month_stories, month_stories, "".join(cells)))
+</section>""" % (current, cover_html, MONTH_ZH[m - 1], MONTH_EN[m - 1], month_stories, month_stories, "".join(cells)))
     today_count = len(stories_by_day.get(TODAY_MD, []))
     # A small visual lead-in: today's image plus the nearest dated images.
     feature = []
