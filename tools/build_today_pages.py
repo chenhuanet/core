@@ -198,7 +198,7 @@ def page(md, stories, records, days):
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 {ogimage}
-<script>(function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){{document.documentElement.setAttribute("data-theme","light");}}}}catch(e){{}}}})();</script>
+<script>(function(){{try{{function ck(n){{var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){{document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}}else{{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}}})();</script>
 <link rel="stylesheet" href="../../assets/app.css?v={build}">
 <link rel="stylesheet" href="../../assets/static.css?v={build}">
 <link rel="stylesheet" href="../../assets/today.css?v={build}">
@@ -265,7 +265,7 @@ def index_page(stories_by_day, days):
 <link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
 <meta property="og:type" content="website"><meta property="og:title" content="历史上的今天 · 366 天 · 尘画">
 <meta property="og:description" content="{desc}"><meta property="og:url" content="{site}/today/">
-<script>(function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){{document.documentElement.setAttribute("data-theme","light");}}}}catch(e){{}}}})();</script>
+<script>(function(){{try{{function ck(n){{var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){{document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}}else{{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}}})();</script>
 <link rel="stylesheet" href="../../assets/app.css?v={build}">
 <link rel="stylesheet" href="../../assets/static.css?v={build}">
 <link rel="stylesheet" href="../../assets/today.css?v={build}">

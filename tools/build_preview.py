@@ -633,7 +633,7 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
 <link rel="dns-prefetch" href="//19century.chenhua.net">
 <link rel="dns-prefetch" href="//20century.chenhua.net">
 <link rel="dns-prefetch" href="//21century.chenhua.net">
-<script>(function(){try{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();</script>
+<script>(function(){try{function ck(n){var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}else{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}catch(e){}})();</script>
 %s<link rel="stylesheet" href="%sassets/app.css?v=%s">
 </head>
 <body data-title-zh="%s" data-title-en="%s" data-desc-zh="%s" data-desc-en="%s">
@@ -799,7 +799,7 @@ def write_404(build_id):
 <link rel="icon" type="image/svg+xml" href="../assets/leaf/favicon.svg">
 <link rel="stylesheet" href="../assets/app.css?v=%s">
 <link rel="stylesheet" href="../assets/static.css?v=%s">
-<script>(function(){try{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en";}var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();</script>
+<script>(function(){try{function ck(n){var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}else{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}catch(e){}})();</script>
 <style>
 .static-body{min-height:100vh}
 .notfound{max-width:760px;margin:0 auto;padding:46px 20px 80px;text-align:center}
