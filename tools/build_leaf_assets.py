@@ -168,7 +168,7 @@ def svg(kind, size=64):
         f'{face(kind)}</g>'
     )
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="{size}" height="{size}" '
-            f'role="img" aria-label="Chenhua ginkgo leaf spirit · {kind}">'
+            f'role="img" aria-label="Frame & Grain ginkgo leaf spirit · {kind}">'
             f'{DEFS}{shadow()}{body}</svg>\n')
 
 

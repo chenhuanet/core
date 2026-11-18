@@ -232,7 +232,7 @@ def main():
             "主题 · 尘画",
             "按主题浏览尘画的历史摄影与绘画故事。",
             "https://www.chenhua.net/themes/",
-            "Themes · Chenhua",
+            "Themes · Frame & Grain",
         ),
         (
             TIMELINE_DIR / "index.html",
@@ -240,7 +240,7 @@ def main():
             "时间线 · 尘画",
             "按年代浏览尘画的历史摄影与绘画故事。",
             "https://www.chenhua.net/timeline/",
-            "Timeline · Chenhua",
+            "Timeline · Frame & Grain",
         ),
     ]
     for path, view, title, description, canonical, title_en in routes:

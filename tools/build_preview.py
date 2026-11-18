@@ -450,7 +450,7 @@ ROUTE_META_EN = {
     "stories": ("Stories · %s", "Events, people, places and craft."),
     "timeline": ("Timeline · %s", "Stories arranged by year."),
     "search": ("Search · %s", "Search titles, places, creators, themes and years."),
-    "about": ("About · %s", "Sources, licences and how Chenhua organises its images."),
+    "about": ("About · %s", "Sources, licences and how Frame & Grain organises its images."),
     "rights": ("Rights · %s", "Image licences, credit and commercial use."),
 }
 
@@ -495,7 +495,7 @@ def write_site(site, cfg, records, stories, stats, build_id):
         title = cfg["title"] if root else (title_tpl % brand)
         desc = cfg.get("desc") if root else desc_tpl
         title_en_tpl, desc_en_tpl = ROUTE_META_EN.get(route, ("%s", ""))
-        brand_en = cfg.get("brand_en") or "Chenhua"
+        brand_en = cfg.get("brand_en") or "Frame & Grain"
         title_en = cfg.get("title_en") if root else (title_en_tpl % brand_en)
         desc_en = cfg.get("desc_en") if root else desc_en_tpl
         canonical = domain + "/" + ("" if root else route + "/")
@@ -531,8 +531,8 @@ var l=localStorage.getItem("chenhua-lang");if(l){document.documentElement.setAtt
 document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}})();
 </script>
 </head>
-<body data-title-zh="搜索 · 尘画" data-title-en="Search · Chenhua">
-<p><span data-l="zh">正在前往尘画统一搜索：<a href="%s">继续</a></span><span data-l="en">Redirecting to Chenhua search: <a href="%s">continue</a></span></p>
+<body data-title-zh="搜索 · 尘画" data-title-en="Search · Frame & Grain">
+<p><span data-l="zh">正在前往尘画统一搜索：<a href="%s">继续</a></span><span data-l="en">Redirecting to Frame & Grain search: <a href="%s">continue</a></span></p>
 <script src="../../assets/site.js"></script>
 </body>
 </html>
@@ -676,11 +676,11 @@ def write_galleries(build_id):
         title = {"19century": "19th Century", "20century": "20th Century",
                  "21century": "21st Century"}[century]
         title_zh = "%s · 尘画图片索引" % title
-        title_en = "%s · Chenhua Image Index" % title
+        title_en = "%s · Frame & Grain Image Index" % title
         desc_zh = "按世纪浏览尘画影像。完整记录见摄影 / 绘画站。"
-        desc_en = "Browse Chenhua images by century. Full records are on the Photography and Painting sites."
+        desc_en = "Browse Frame & Grain images by century. Full records are on the Photography and Painting sites."
         g_nav = (
-            '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Chenhua</span></a>'
+            '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Frame & Grain</span></a>'
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
             '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
@@ -741,7 +741,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
   <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
 </main>
 <footer class="site-foot">
-  <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a>
+  <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a>
   <nav class="sf-nav">{g_foot_nav}</nav>
   <nav class="sf-utility">{g_utility}</nav>
 </footer>
@@ -767,7 +767,7 @@ def write_404(build_id):
     out.parent.mkdir(parents=True, exist_ok=True)
     nav_links = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
                        for z, e, h in [
-                           ("尘画", "Chenhua", "index.html"),
+                           ("尘画", "Frame & Grain", "index.html"),
                            ("主题", "Themes", "themes/"),
                            ("时间线", "Timeline", "timeline/"),
                            ("历史上的今天", "On This Day", "today/"),
@@ -807,7 +807,7 @@ def write_404(build_id):
 .notfound .btn{margin:4px 4px 0}
 </style>
 </head>
-<body class="static-body" data-title-zh="页面不存在 · 尘画" data-title-en="Page not found · Chenhua">
+<body class="static-body" data-title-zh="页面不存在 · 尘画" data-title-en="Page not found · Frame & Grain">
 <div class="s-shell">
 <header class="appbar s-appbar">
 <a class="brand" href="index.html"><img class="leaf-mark brand-mark" src="../assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
@@ -819,7 +819,7 @@ def write_404(build_id):
 <div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
 <div><a class="btn gold" href="index.html"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
 </main>
-<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Chenhua</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav></footer>
+<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav></footer>
 </div>
 <script src="../assets/site.js?v=%s"></script>
 </body></html>
@@ -857,7 +857,7 @@ def main():
         "paint": "/next/dist/paint/",
     }
     nav = [
-        {"label": "尘画", "label_en": "Chenhua", "href": base["main"], "icon": "home", "site": "main"},
+        {"label": "尘画", "label_en": "Frame & Grain", "href": base["main"], "icon": "home", "site": "main"},
         {"label": "主题", "label_en": "Themes", "href": base["main"] + "themes/", "icon": "stories"},
         {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "timeline/", "icon": "timeline"},
         {"label": "日历", "label_en": "Calendar", "deskLabel": "历史上的今天", "deskLabel_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline"},
@@ -869,29 +869,29 @@ def main():
               "paintBase": base["paint"], "nav": nav, "taxonomy": TAXONOMY,
               "leafBase": "/next/dist/assets/leaf/"}
     main_cfg = {
-        "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Chenhua",
-        "title_en": "Chenhua · Out of dust, into the image",
+        "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Frame & Grain",
+        "title_en": "Frame & Grain · Out of dust, into the image",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画：历史摄影与绘画图录。",
-        "desc_en": "Chenhua: an archive of historical photography and painting.",
+        "desc_en": "Frame & Grain: an archive of historical photography and painting.",
         "collections": ["photos", "paintings", "links"],
         "base": base["main"], **common,
     }
     photo_cfg = {
-        "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Chenhua",
-        "title_en": "Chenhua · Photography",
+        "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Frame & Grain",
+        "title_en": "Frame & Grain · Photography",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画摄影：历史摄影图录。",
-        "desc_en": "Chenhua Photography: an archive of historical photographs.",
+        "desc_en": "Frame & Grain Photography: an archive of historical photographs.",
         "collections": ["photos", "links"],
         "base": base["photo"], **common,
     }
     paint_cfg = {
-        "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Chenhua",
-        "title_en": "Chenhua · Painting",
+        "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Frame & Grain",
+        "title_en": "Frame & Grain · Painting",
         "sub": "尘归尘，画归画", "sub_en": "Image as history",
         "desc": "尘画绘画：绘画与版画图录。",
-        "desc_en": "Chenhua Painting: an archive of paintings and prints.",
+        "desc_en": "Frame & Grain Painting: an archive of paintings and prints.",
         "collections": ["paintings"],
         "base": base["paint"], **common,
     }

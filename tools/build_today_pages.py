@@ -62,7 +62,7 @@ def _tspan(zh, en):
 
 def primary_links():
     return [
-        ("尘画", "Chenhua", "../"),
+        ("尘画", "Frame & Grain", "../"),
         ("主题", "Themes", "../themes/"),
         ("时间线", "Timeline", "../timeline/"),
         ("历史上的今天", "On This Day", "../today/"),
@@ -106,7 +106,7 @@ def footer(prefix="../"):
 <nav class="sf-utility">{utility}</nav>
 </footer>""".format(
         prefix=prefix,
-        brand=_tspan("出尘入画", "Chenhua"),
+        brand=_tspan("出尘入画", "Frame & Grain"),
         nav=nav_html(links=footer_links()),
         utility=utility,
     )
@@ -159,7 +159,7 @@ def page(md, stories, records, days):
     count = len(stories)
     first = stories[0]
     meta_title = "%s · 历史上的今天 · 尘画" % zh
-    meta_title_en = "%s · On This Day · Chenhua" % en
+    meta_title_en = "%s · On This Day · Frame & Grain" % en
     desc = clean(first.get("subtitle") or first.get("intro") or "", 180)
     desc_en = clean(first.get("subtitle_en") or first.get("intro_en") or desc, 180)
     image = story_image(first, records)
@@ -328,7 +328,7 @@ def index_page(stories_by_day, days, records):
 <link rel="stylesheet" href="../../assets/today.css?v={build}">
 <script type="application/ld+json">{ld}</script>
 </head>
-<body class="static-body today-body" data-title-zh="历史上的今天 · 尘画" data-title-en="On This Day · Chenhua" data-desc-zh="{desc}" data-desc-en="{desc_en}">
+<body class="static-body today-body" data-title-zh="历史上的今天 · 尘画" data-title-en="On This Day · Frame & Grain" data-desc-zh="{desc}" data-desc-en="{desc_en}">
 <div class="s-shell">
 {appbar}
 <main class="today-main today-index">
