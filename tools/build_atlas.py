@@ -31,7 +31,8 @@ def build_data():
             "desc": s["desc"],
             "desc_en": s.get("desc_en") or s["desc"],
             "cover": next((x["img"] for x in raw["stories"] if x["theme"] == s["name"] and x["img"]), ""),
-            "covers": [x["img"] for x in raw["stories"] if x["theme"] == s["name"] and x["img"]][:6],
+            "covers": list(dict.fromkeys(
+                x["img"] for x in raw["stories"] if x["theme"] == s["name"] and x["img"]))[:6],
         }
         for s in raw["series"]
     ]
