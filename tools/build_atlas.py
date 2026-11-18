@@ -2,6 +2,7 @@
 """Generate the real-content Atlas page from the existing bundle."""
 import json
 import sys
+import time
 from pathlib import Path
 
 TOOLS = Path(r"C:\Users\chenhua\Desktop\chenhua\next\tools")
@@ -75,36 +76,6 @@ def set_selected(html, view):
     )
 
 
-def write_alias(path, target, canonical, title):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("""<!doctype html>
-<html lang="zh-CN" data-theme="dark" data-lang="zh">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex,follow">
-<meta name="theme-color" content="#0d0c0b">
-<title>%s</title>
-<link rel="canonical" href="%s">
-<link rel="icon" type="image/svg+xml" href="/assets/leaf/favicon.svg">
-<meta http-equiv="refresh" content="0;url=%s">
-<style>
-html[data-lang="en"] [data-l="zh"]{display:none}
-html[data-lang="zh"] [data-l="en"]{display:none}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0d0c0b;color:#ebe5da;font:14px/1.8 "PingFang SC","Microsoft YaHei",sans-serif}
-html[data-theme="light"] body{background:#f6f2ea;color:#231f19}
-a{color:#c8a24a}
-html[data-theme="light"] a{color:#8b6520}
-</style>
-</head>
-<body data-title-zh="%s" data-title-en="Redirect">
-<p><span data-l="zh">正在前往新地址：<a href="%s">继续</a></span><span data-l="en">Redirecting: <a href="%s">continue</a></span></p>
-</body>
-</html>
-""" % (title, canonical, target, title, target, target), encoding="utf-8", newline="\n")
-
-
 def main():
     html = read_source()
     data = build_data()
@@ -133,13 +104,9 @@ def main():
     )
 
     # Canonical site paths: theme at /themes/, timeline at /timeline/, dates at /today/.
-    # The old /atlas/ paths are redirects, not navigation.
     html = html.replace("../next/dist/main/index.html", "/")
     html = html.replace("../next/dist/main/themes/index.html", "/themes/")
     html = html.replace("../next/dist/main/timeline/", "/timeline/")
-    html = html.replace("../next/dist/main/atlas/index.html", "/themes/")
-    html = html.replace("../next/dist/main/atlas/timeline/", "/timeline/")
-    html = html.replace("../next/dist/main/atlas/?view=timeline", "/timeline/")
     html = html.replace("../next/dist/main/today/index.html", "/today/")
     html = html.replace("../next/dist/main/", "/")
     html = html.replace("../next/dist/photo/", "https://photo.chenhua.net/")
@@ -292,12 +259,10 @@ def main():
         # split_repos.py rewrites this to ../assets for the published repo root.
         page = page.replace('href="/assets/', 'href="../../assets/').replace('src="/assets/', 'src="../../assets/')
         page = page.replace('href="/', 'href="../').replace('src="/', 'src="../')
+        page = page.replace('src="../../assets/site.js"', 'src="../../assets/site.js?v=%s"' % int(time.time()))
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(page, encoding="utf-8")
         print("wrote", path, "bytes", path.stat().st_size, "stories", total, "dates", data["date_count"])
-
-    write_alias(MAIN / "atlas" / "index.html", "../themes/", "https://www.chenhua.net/themes/", "主题 · 尘画")
-    write_alias(MAIN / "atlas" / "timeline" / "index.html", "../../timeline/", "https://www.chenhua.net/timeline/", "时间线 · 尘画")
 
 
 if __name__ == "__main__":

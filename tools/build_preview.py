@@ -756,7 +756,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
             "mainBase": "../../dist/main/",
             "preview": True,
         }, ensure_ascii=False)};</script>
-<script src="../../dist/assets/site.js"></script>
+<script src="../../dist/assets/site.js?v={build_id}"></script>
 <script src="gallery.js?v={build_id}"></script>
 </body>
 </html>
