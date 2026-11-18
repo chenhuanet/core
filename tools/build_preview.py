@@ -744,6 +744,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
   <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a>
   <nav class="sf-nav">{g_foot_nav}</nav>
   <nav class="sf-utility">{g_utility}</nav>
+  <span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
             "century": century,
@@ -819,7 +820,7 @@ def write_404(build_id):
 <div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
 <div><a class="btn gold" href="index.html"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
 </main>
-<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav></footer>
+<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav><span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span></footer>
 </div>
 <script src="../assets/site.js?v=%s"></script>
 </body></html>

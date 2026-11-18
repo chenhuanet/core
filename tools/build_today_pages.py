@@ -104,6 +104,7 @@ def footer(prefix="../"):
 <a class="sf-brand" href="{prefix}">{brand}</a>
 <nav class="sf-nav">{nav}</nav>
 <nav class="sf-utility">{utility}</nav>
+<span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
 </footer>""".format(
         prefix=prefix,
         brand=_tspan("出尘入画", "Frame & Grain"),

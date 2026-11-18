@@ -230,6 +230,7 @@ def foot(kind="main"):
 <a class="sf-brand" href="%s">%s</a>
 <nav class="sf-nav">%s</nav>
 <nav class="sf-utility">%s</nav>
+<span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
 </footer>
 </div>
 <script src="../../assets/site.js?v=%s"></script>
