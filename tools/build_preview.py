@@ -768,12 +768,12 @@ def write_404(build_id):
     out.parent.mkdir(parents=True, exist_ok=True)
     nav_links = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
                        for z, e, h in [
-                           ("尘画", "Frame & Grain", "index.html"),
-                           ("主题", "Themes", "themes/"),
-                           ("时间线", "Timeline", "timeline/"),
-                           ("历史上的今天", "On This Day", "today/"),
-                           ("摄影", "Photography", "../../photo/"),
-                           ("绘画", "Painting", "../../paint/"),
+                           ("尘画", "Frame & Grain", "/"),
+                           ("主题", "Themes", "/themes/"),
+                           ("时间线", "Timeline", "/timeline/"),
+                           ("历史上的今天", "On This Day", "/today/"),
+                           ("摄影", "Photography", "https://photo.chenhua.net/"),
+                           ("绘画", "Painting", "https://paint.chenhua.net/"),
                            ("导航", "Directory", "https://netcn.org/"),
                        ])
     foot_nav_links = nav_links.replace(
@@ -798,9 +798,9 @@ def write_404(build_id):
 <meta name="theme-color" content="#0d0c0b">
 <title>页面不存在 · 尘画</title>
 <meta name="robots" content="noindex,follow">
-<link rel="icon" type="image/svg+xml" href="../assets/leaf/favicon.svg">
-<link rel="stylesheet" href="../assets/app.css?v=%s">
-<link rel="stylesheet" href="../assets/static.css?v=%s">
+<link rel="icon" type="image/svg+xml" href="/assets/leaf/favicon.svg">
+<link rel="stylesheet" href="/assets/app.css?v=%s">
+<link rel="stylesheet" href="/assets/static.css?v=%s">
 <script>(function(){try{function ck(n){var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}else{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}catch(e){}})();</script>
 <style>
 .static-body{min-height:100vh}
@@ -815,22 +815,22 @@ def write_404(build_id):
 <body class="static-body" data-title-zh="页面不存在 · 尘画" data-title-en="Page not found · Frame & Grain">
 <div class="s-shell">
 <header class="appbar s-appbar">
-<a class="brand" href="index.html"><img class="leaf-mark brand-mark" src="../assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
+<a class="brand" href="/"><img class="leaf-mark brand-mark" src="/assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
 <nav class="desknav">%s</nav>
 <div class="right"><button class="langbtn" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button><button class="iconbtn themebtn" type="button" data-themebtn aria-label="切换明暗"><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg></button></div>
 </header>
 <main class="notfound">
 <div class="big">404</div>
-<div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
-<div><a class="btn gold" href="index.html"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
+<div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="/assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
+<div><a class="btn gold" href="/"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="/themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
 </main>
 <footer class="site-foot">
 %s
 <nav class="sf-nav" aria-label="站内导航">%s</nav>
-<div class="sf-right"><a href="legal/"><span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>
+<div class="sf-right"><a href="/legal/"><span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>
 </footer>
 </div>
-<script src="../assets/site.js?v=%s"></script>
+<script src="/assets/site.js?v=%s"></script>
 </body></html>
 """ % (build_id, build_id, nav_links, foot_left, foot_nav_links, build_id)
     out.write_text(html, encoding="utf-8", newline="\n")
