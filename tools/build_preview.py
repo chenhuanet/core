@@ -224,6 +224,12 @@ def load_records():
                 "china": fm.get("china"),
                 "creator": fm.get("creator"),
                 "creator_status": fm.get("creator_status"),
+                "movement": fm.get("movement") or "",
+                "movement_en_raw": fm.get("movement_en") or "",
+                "dimensions": fm.get("dimensions") or "",
+                "dimensions_en_raw": fm.get("dimensions_en") or "",
+                "holding": fm.get("holding") or "",
+                "holding_en_raw": fm.get("holding_en") or "",
                 "source": fm.get("source"),
                 "source_short": fm.get("source_short"),
                 "source_url": fm.get("source_url"),
@@ -259,17 +265,21 @@ def load_records():
                     fm.get("period") if re.fullmatch(r"\d{4}s", str(fm.get("period") or "")) else ""),
                 "search_text": " ".join(str(x) for x in [
                     fm.get("title"), fm.get("year"), fm.get("date_label"), fm.get("place"),
-                    fm.get("creator"), fm.get("topic"), fm.get("theme"), fm.get("region"),
+                    fm.get("creator"), fm.get("movement"), fm.get("topic"), fm.get("theme"), fm.get("region"),
                     fm.get("medium"), fm.get("source_short"), note] if x).lower(),
             }
             tr = RECORD_I18N.get(rid, {}) or {}
             ue = USAGE_EN.get(u["code"], {})
             rec["title_en"] = tr.get("title") or (fm.get("title") if not re.search(r"[\u4e00-\u9fff]", str(fm.get("title") or "")) else rec["title"])
-            rec["place_en"] = tr.get("place") or tx("place", fm.get("place"))
+            rec["creator_en"] = tr.get("creator") or creator_en(fm.get("creator"))
+            rec["movement_en"] = tr.get("movement") or rec.get("movement_en_raw") or ""
+            rec["dimensions_en"] = tr.get("dimensions") or rec.get("dimensions_en_raw") or rec.get("dimensions") or ""
+            rec["holding_en"] = tr.get("holding") or rec.get("holding_en_raw") or ""
+            rec["medium_en"] = tr.get("medium") or tx("medium", fm.get("medium"))
+            rec["place_en"] = tr.get("place") or (TAXONOMY.get("place") or {}).get(fm.get("place")) or tx("region", fm.get("place"))
             rec["theme_en"] = tx("theme", fm.get("theme"))
             rec["topic_en"] = tx("topic", fm.get("topic"))
             rec["region_en"] = tx("region", fm.get("region"))
-            rec["medium_en"] = tx("medium", fm.get("medium"))
             rec["kind_en"] = tx("kind", fm.get("kind"))
             rec["era_en"] = tx("era", fm.get("era"))
             rec["content_type_en"] = tx("content_type", rec["content_type"])
@@ -280,7 +290,7 @@ def load_records():
             rec["usage_obligation_en"] = ue.get("obligation") or u["obligation"]
             rec["usage_credit_en"] = ue.get("credit") or u["credit"]
             rec["note_en"] = tr.get("note") or note_en_for(rec, None)
-            credit_parts = [creator_en(fm.get("creator")), rec["source_short_en"],
+            credit_parts = [rec["creator_en"], rec["source_short_en"],
                             license_en(fm.get("license"))]
             credit_parts = [p for i, p in enumerate(credit_parts)
                             if p and (i == 0 or p != credit_parts[i - 1])]
@@ -288,7 +298,7 @@ def load_records():
             rec["date_label_en"] = english_date(fm.get("date_label") or fm.get("year"))
             rec["search_text_en"] = " ".join(str(x) for x in [
                 rec["title_en"], fm.get("year"), fm.get("date_label"), rec["place_en"],
-                fm.get("creator"), rec["topic_en"], rec["theme_en"], rec["region_en"],
+                fm.get("creator"), rec["movement_en"], rec["topic_en"], rec["theme_en"], rec["region_en"],
                 rec["medium_en"], rec["source_short_en"], rec["note_en"]] if x).lower()
             rows.append(rec)
     rows.sort(key=lambda r: (r["year"] or 0, r["title"]))

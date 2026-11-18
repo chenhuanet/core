@@ -395,7 +395,7 @@ def photo_page(r, all_records):
         "contentUrl": r.get("image") or r.get("source_image") or "",
         "thumbnailUrl": r.get("image") or "",
         "datePublished": r.get("date_label_en") or bp.english_date(r.get("date_label") or r.get("year")),
-        "creator": bp.creator_en(r.get("creator")),
+        "creator": r.get("creator_en") or bp.creator_en(r.get("creator")),
         "creditText": r.get("credit_line_en") or "",
         "license": r.get("license_url") or "",
         "isPartOf": MAIN_DOMAIN + "/",
@@ -425,13 +425,17 @@ def photo_page(r, all_records):
     date_zh = r.get("date_label") or r.get("year") or ""
     date_en = r.get("date_label_en") or bp.english_date(date_zh)
     rows = [
-        (tspan("作者", "Creator"), tspan(creator_zh, bp.creator_en(creator_zh))),
+        (tspan("作者", "Creator"), tspan(creator_zh, r.get("creator_en") or bp.creator_en(creator_zh))),
+        (tspan("流派", "Movement"), tspan(r.get("movement") or "", r.get("movement_en") or "")),
+        (tspan("馆藏", "Collection"), tspan(r.get("holding") or "", r.get("holding_en") or "")),
+        (tspan("尺寸", "Dimensions"), tspan(r.get("dimensions") or "", r.get("dimensions_en") or "")),
         (tspan("来源", "Source"), tspan(r.get("source_short") or r.get("source") or "",
                                        r.get("source_short_en") or r.get("source_short") or "")),
         (tspan("年代", "Date"), tspan(date_zh, date_en)),
         (tspan("地域", "Region"), tspan(region_zh, region_en or "—")),
-        (tspan("类型", "Type"), tspan(type_label_zh(r) + " / " + (r.get("medium") or ""),
-                                     type_label_en(r) + " / " + (r.get("medium_en") or ""))),
+        (tspan("类型", "Type"),
+         tspan(type_label_zh(r) + (" / " + r["medium"] if r.get("medium") and r["medium"] != type_label_zh(r) else ""),
+               type_label_en(r) + (" / " + r["medium_en"] if r.get("medium_en") and r["medium_en"] != type_label_en(r) else ""))),
         (tspan("主题", "Theme"), tspan(theme_zh, theme_en)),
         (tspan("许可", "Licence"), tspan(r.get("license") or "", bp.license_en(r.get("license")))),
         (tspan("使用性质", "Usage"), tspan(usage_zh, usage_en)),
@@ -449,7 +453,7 @@ def photo_page(r, all_records):
     evidence = ('<div class="s-evidence"><h2>%s</h2>' % tspan("史实依据", "Source verification"))
     evidence += '<div data-l="zh"><p><b>陈述：</b>%s</p><p><b>依据：</b>%s</p><p><b>核验：</b>%s · %s</p></div>' % (
         esc(ev.get("claim") or "—"), esc(ev.get("basis") or "—"), esc(checked), esc(status_zh))
-    creator_en_text = bp.creator_en(creator_zh)
+    creator_en_text = r.get("creator_en") or bp.creator_en(creator_zh)
     source_en_text = r.get("source_short_en") or r.get("source_short") or ""
     claim_en = ", ".join(x for x in (
         date_en,
@@ -506,10 +510,13 @@ def photo_page(r, all_records):
         tspan(r.get("place") or r.get("region") or "", r.get("place_en") or region_en or ""),
         tspan(r.get("medium") or "", r.get("medium_en") or ""))
     html_out += '<span class="tag">%s</span><span class="tag">%s</span></div>' % (
-        esc(r.get("usage_label") or ""), tspan(type_label_zh(r), type_label_en(r)))
+        tspan(r.get("usage_label") or "", r.get("usage_label_en") or r.get("usage_label") or ""),
+        tspan(type_label_zh(r), type_label_en(r)))
     html_out += figure
+    note_zh_html = "".join("<p>%s</p>" % bp.md_inline(p.strip())
+                          for p in re.split(r"\n\s*\n", note_zh) if p.strip())
     html_out += '<div class="s-note"><div data-l="zh">%s</div><div data-l="en">%s</div></div>' % (
-        r.get("note_html") or "", paragraphs(note_en, en=True))
+        note_zh_html, paragraphs(note_en, en=True))
     html_out += meta
     html_out += ('<div class="s-usage"><h2>%s · %s</h2>'
                  '<div data-l="zh"><p>%s</p><div class="s-credit">%s</div></div>'
