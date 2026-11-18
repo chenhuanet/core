@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Build the 366 'On This Day' landing pages plus the calendar index.
+"""Build the daily 'On This Day' pages plus the calendar index.
 
 Input: next/dist/data/bundle.js (written by build_preview.py)
 Output: next/dist/main/today/MM-DD.html and next/dist/main/today/index.html
@@ -235,21 +235,31 @@ def index_page(stories_by_day, days):
         month_days = [d for d in days if int(d[:2]) == m]
         if not month_days:
             continue
-        cells = []
-        for d in month_days:
-            count = len(stories_by_day.get(d, []))
-            cls = ' class="is-today"' if d == TODAY_MD else ""
-            cells.append('<li><a%s href="%s.html">%s</a></li>' % (cls, d, int(d[3:])))
-        # pad leading cells so the 1st sits under the right weekday-ish column is
-        # not required; a plain grid reads more clearly for a 366-day index.
-        cards.append('<section class="today-month"><h2><span data-l="zh">%s</span><span data-l="en">%s</span></h2><ol>%s</ol></section>' % (
-            MONTH_ZH[m - 1], MONTH_EN[m - 1], "".join(cells)))
-    first = stories_by_day.get(TODAY_MD, [])
-    desc = "每天至少一个故事。"
-    desc_en = "At least one story for each day."
+        month_stories = sum(len(stories_by_day.get(d, [])) for d in month_days)
+        first_weekday = (date(2024, m, 1).weekday() + 1) % 7
+        cells = ['<span class="today-day is-blank" aria-hidden="true"></span>' for _ in range(first_weekday)]
+        days_in_month = (date(2024, m + 1, 1) - date(2024, m, 1)).days if m < 12 else 31
+        for day_number in range(1, days_in_month + 1):
+            md = "%02d-%02d" % (m, day_number)
+            count = len(stories_by_day.get(md, []))
+            if count:
+                cls = "today-day has-stories" + (" is-today" if md == TODAY_MD else "")
+                cells.append('<a class="%s" href="%s.html" title="%s · %d 个故事">%d</a>' % (
+                    cls, md, md.replace("-", "月") + "日", count, day_number))
+            else:
+                cells.append('<span class="today-day is-empty">%d</span>' % day_number)
+        current = " is-current" if m == int(TODAY_MD[:2]) else ""
+        cards.append("""<section class="today-month%s">
+  <h2><span data-l="zh">%s</span><span data-l="en">%s</span><span class="today-month-count"><span data-l="zh">%d 个故事</span><span data-l="en">%d stories</span></span></h2>
+  <div class="today-weekdays" aria-hidden="true"><span><span data-l="zh">日</span><span data-l="en">S</span></span><span><span data-l="zh">一</span><span data-l="en">M</span></span><span><span data-l="zh">二</span><span data-l="en">T</span></span><span><span data-l="zh">三</span><span data-l="en">W</span></span><span><span data-l="zh">四</span><span data-l="en">T</span></span><span><span data-l="zh">五</span><span data-l="en">F</span></span><span><span data-l="zh">六</span><span data-l="en">S</span></span></div>
+  <div class="today-days">%s</div>
+</section>""" % (current, MONTH_ZH[m - 1], MONTH_EN[m - 1], month_stories, month_stories, "".join(cells)))
+    today_count = len(stories_by_day.get(TODAY_MD, []))
+    desc = "按日期浏览尘画收录的历史故事与影像。"
+    desc_en = "Browse historical stories and images by date."
     ld = {
         "@context": "https://schema.org", "@type": "CollectionPage",
-        "name": "历史上的今天 · 366 天", "alternateName": "On This Day · 366 days",
+        "name": "历史上的今天", "alternateName": "On This Day",
         "description": desc_en, "url": SITE + "/today/",
     }
     return """<!doctype html>
@@ -257,13 +267,13 @@ def index_page(stories_by_day, days):
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0c0b">
-<title>历史上的今天 · 366 天 · 尘画</title>
+<title>历史上的今天 · 尘画</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{site}/today/">
 <link rel="alternate" hreflang="zh-CN" href="{site}/today/">
 <link rel="alternate" hreflang="en" href="{site}/today/?lang=en">
 <link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
-<meta property="og:type" content="website"><meta property="og:title" content="历史上的今天 · 366 天 · 尘画">
+<meta property="og:type" content="website"><meta property="og:title" content="历史上的今天 · 尘画">
 <meta property="og:description" content="{desc}"><meta property="og:url" content="{site}/today/">
 <script>(function(){{try{{function ck(n){{var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}}var q=new URLSearchParams(location.search).get("lang");var l=q||ck("chenhua-lang")||localStorage.getItem("chenhua-lang")||"zh";if(l==="en"){{document.documentElement.setAttribute("data-lang","en");document.documentElement.lang="en"}}else{{document.documentElement.setAttribute("data-lang","zh");document.documentElement.lang="zh-CN"}}var t=ck("chenhua-theme")||localStorage.getItem("chenhua-theme");if(t!=="light"&&t!=="dark")t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}}})();</script>
 <link rel="stylesheet" href="../../assets/app.css?v={build}">
@@ -271,15 +281,19 @@ def index_page(stories_by_day, days):
 <link rel="stylesheet" href="../../assets/today.css?v={build}">
 <script type="application/ld+json">{ld}</script>
 </head>
-<body class="static-body today-body" data-title-zh="历史上的今天 · 366 天 · 尘画" data-title-en="On This Day · 366 days · Chenhua" data-desc-zh="{desc}" data-desc-en="{desc_en}">
+<body class="static-body today-body" data-title-zh="历史上的今天 · 尘画" data-title-en="On This Day · Chenhua" data-desc-zh="{desc}" data-desc-en="{desc_en}">
 <div class="s-shell">
 {appbar}
 <main class="today-main today-index">
-<div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
-<h1><span data-l="zh">366 天</span><span data-l="en">366 days</span></h1>
-<p><span data-l="zh">{desc}</span><span data-l="en">{desc_en}</span></p>
-<div class="today-months">{cards}</div>
-<p class="today-index-foot"><span data-l="zh">今天：{today_zh} · <a href="{today_md}.html">阅读今天的故事</a></span><span data-l="en">Today: {today_en} · <a href="{today_md}.html">read today's story</a></span></p>
+  <header class="today-intro">
+    <div>
+      <p class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></p>
+      <h1><span data-l="zh">{today_zh}</span><span data-l="en">{today_en}</span></h1>
+      <p class="today-intro-meta"><span data-l="zh">今天有 {today_count} 个故事</span><span data-l="en">{today_count} {story_word} today</span><a href="{today_md}.html"><span data-l="zh">阅读今天的故事 →</span><span data-l="en">Read today's {story_word} →</span></a></p>
+    </div>
+  </header>
+  <div class="year-head"><h2><span data-l="zh">全年日历</span><span data-l="en">Full calendar</span></h2></div>
+  <div class="today-months">{cards}</div>
 </main>
 {footer}
 </div>
@@ -287,7 +301,8 @@ def index_page(stories_by_day, days):
 </body></html>
 """.format(desc=esc(desc), desc_en=esc(desc_en), site=SITE, build=BUILD_ID,
            ld=json.dumps(ld, ensure_ascii=False).replace("</", "<\\/"), appbar=appbar(expr="calm"), footer=footer(),
-           cards="".join(cards), today_zh=text(day_title(TODAY_MD)[0]), today_en=text(day_title(TODAY_MD)[1]), today_md=TODAY_MD)
+           cards="".join(cards), today_zh=text(day_title(TODAY_MD)[0]), today_en=text(day_title(TODAY_MD)[1]), today_md=TODAY_MD,
+           today_count=today_count, story_word="story" if today_count == 1 else "stories")
 
 
 def main():

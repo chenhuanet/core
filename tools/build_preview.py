@@ -437,7 +437,7 @@ DOMAINS = {
     "paint": "https://paint.chenhua.net",
 }
 ROUTE_META = {
-    "today": ("%s", "历史上的今天：每天至少一个故事。"),
+    "today": ("%s", "历史上的今天：按日期浏览尘画收录的历史故事与影像。"),
     "gallery": ("影像 · %s", "按年代与主题浏览摄影与绘画。"),
     "stories": ("主题 · %s", "事件、人物、地方与技艺。"),
     "timeline": ("时间线 · %s", "主题按年代排列。"),

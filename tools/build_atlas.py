@@ -117,14 +117,14 @@ def main():
     html = html.replace("Archive Atlas / 三轴档案", "Archive Atlas / 全站图录")
     html = html.replace("全站图录 · 13 篇抽样", f"全站图录 · {total} 篇")
     html = html.replace("Full Atlas · 13 sampled entries", f"Full Atlas · {total} entries")
-    html = html.replace("本页载入 13 篇真实故事", f"全站 {total} 篇故事已接入；其中 {dated} 篇有日期，366 个日页与故事页保持独立。")
-    html = html.replace("This page loads 13 real stories", f"All {total} stories are connected; {dated} carry a date, while the 366 day pages and story pages remain independent.")
+    html = html.replace("本页载入 13 篇真实故事", f"全站 {total} 篇故事已接入；其中 {dated} 篇有日期。")
+    html = html.replace("This page loads 13 real stories", f"All {total} stories are connected; {dated} carry a date.")
     html = html.replace("原型说明：", "全站说明：")
     html = html.replace("三轴", "图录")
     html = html.replace("全站总览", "全站图录")
     html = html.replace(
         "本页只载入 13 篇真实故事，用于验证三轴联动；完整 376 篇在站点日页。",
-        f"全站 {total} 篇故事已接入；其中 {dated} 篇有日期，366 个日页与故事页保持独立。",
+        f"全站 {total} 篇故事已接入；其中 {dated} 篇有日期。",
     )
 
     # JS strings that still assume the 13-story sample.
@@ -137,16 +137,8 @@ def main():
         "这一天暂无故事；全站日期索引仍可从日页查看。",
     )
     html = html.replace(
-        "完整站点可在 366 天索引里查。",
-        "全站 366 天索引可查。",
-    )
-    html = html.replace(
-        "仅显示前 6 篇；选主题查看该类全部故事。",
-        "当前主题的全部故事；右侧面板可滚动查看。",
-    )
-    html = html.replace(
         "左边是主题目录，右边的横条是该主题在十个年代里的分布。点横条上的年代分布，也能直接切到时间线。",
-        f"左边是主题目录，右边的横条是该主题在 {decades} 个年代里的分布。点横条上的年代分布，也能直接切到时间线。",
+        f"按主题浏览；年代分布横条显示该主题在 {decades} 个年代里的篇数。",
     )
     html = html.replace("无抽样故事", "无故事")
 
@@ -260,6 +252,9 @@ def main():
         page = page.replace('href="/assets/', 'href="../../assets/').replace('src="/assets/', 'src="../../assets/')
         page = page.replace('href="/', 'href="../').replace('src="/', 'src="../')
         page = page.replace('src="../../assets/site.js"', 'src="../../assets/site.js?v=%s"' % int(time.time()))
+        active_href = "../themes/" if view == "theme" else "../timeline/"
+        page = page.replace('<a href="%s">' % active_href, '<a href="%s" aria-current="page">' % active_href, 1)
+        page = page.replace("<title>图录 · 尘画</title>", "<title>%s · 尘画</title>" % ("主题" if view == "theme" else "时间线"))
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(page, encoding="utf-8")
         print("wrote", path, "bytes", path.stat().st_size, "stories", total, "dates", data["date_count"])

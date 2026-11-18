@@ -22,9 +22,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
 img{display:block;max-width:100%}
-.g-head{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:18px;min-height:60px;
+.g-head{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:18px;height:60px;min-height:60px;
   max-width:1240px;margin:0 auto;width:100%;
-  padding:12px 18px;border-bottom:1px solid var(--line);background:var(--head-bg);
+  padding:0 18px;border-bottom:1px solid var(--line);background:var(--head-bg);
   backdrop-filter:blur(18px)}
 .g-brand{display:flex;align-items:center;gap:10px;white-space:nowrap;text-decoration:none;color:inherit}
 .g-brand .g-mark{width:30px;height:30px;flex:none;object-fit:contain;margin-right:-2px}
@@ -32,8 +32,9 @@ img{display:block;max-width:100%}
 .g-brand .wm-lite{font-family:var(--serif);font-size:17px;color:var(--muted);letter-spacing:.03em}
 .g-brand .wm-strong{font-family:var(--serif);font-size:24px;color:var(--accent);letter-spacing:.03em}
 .g-brand .g-en{font-size:10px;letter-spacing:.12em;color:var(--dim)}
-.g-nav{margin-left:0;display:flex;gap:12px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;justify-content:flex-start}
-.g-nav a{text-decoration:none;color:inherit}
+.g-nav{margin-left:0;display:flex;align-items:center;gap:2px;font-size:12px;color:var(--muted);flex-wrap:wrap;justify-content:flex-start}
+.g-nav a{text-decoration:none;color:inherit;padding:7px 10px;border-radius:999px}
+.g-nav a:hover{color:var(--accent);background:var(--surface2)}
 .g-nav a:hover{color:var(--accent)}
 .g-tools{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto}
 .g-tool{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
@@ -85,7 +86,7 @@ img{display:block;max-width:100%}
 .g-foot .g-foot-mark{margin:0 0 4px;line-height:1}
 .g-foot .g-foot-mark img{width:24px;height:24px;margin:0 auto;opacity:.9}
 @media(max-width:899px){
-  .g-head{gap:10px;padding:12px 18px}
+  .g-head{gap:10px;padding:0 18px}
   .g-brand .g-en{display:none}
   .g-nav{display:none}
   .site-foot{padding-left:18px;padding-right:18px}
@@ -93,7 +94,7 @@ img{display:block;max-width:100%}
 .g-empty{padding:60px 0;text-align:center;color:var(--dim);font-family:var(--serif);letter-spacing:.1em}
 @media(min-width:700px){
   .g-masonry{columns:3}
-  .g-head{padding:16px 28px}
+  .g-head{padding:0 28px}
   .g-wrap{padding:34px 28px 56px}
 }
 @media(min-width:1100px){
