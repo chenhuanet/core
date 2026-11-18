@@ -213,37 +213,52 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
        nav, SUN, MOON)
 
 
+def footer_home_label():
+    return ('<span data-l="zh">出尘入画</span><span data-l="en">'
+            '<span class="sf-brand-long">Frame &amp; Grain</span>'
+            '<span class="sf-brand-short">Frame</span></span>')
+
+
+def footer_left():
+    return ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
+            '<a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span>'
+            '<span class="sf-brand-short">Frame</span> · '
+            '<a href="https://www.chenhua.net">chenhua.net</a></span></div>')
+
+
 def foot(kind="main"):
-    home = nav_for(kind)[0][2]
     nav_items = []
     for z, e, h in nav_for(kind):
+        if z == "搜索":
+            continue
         if z == "历史上的今天":
             z, e = "日历", "Calendar"
         nav_items.append((z, e, h))
-    nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_items)
-    utility = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in [
-        ("关于", "About", "../about/"),
-        ("授权", "Rights", "../rights/"),
-        ("法律", "Legal", "../legal/"),
-    ])
+    nav = "".join('<a href="%s">%s</a>' % (
+        h, footer_home_label() if z == "尘画" else tspan(z, e))
+        for z, e, h in nav_items)
     return """<footer class="site-foot">
-<a class="sf-brand" href="%s">%s</a>
-<nav class="sf-nav">%s</nav>
-<nav class="sf-utility">%s</nav>
-<span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
+%s
+<nav class="sf-nav" aria-label="站内导航">%s</nav>
+<div class="sf-right"><a href="../legal/">%s</a></div>
 </footer>
 </div>
 <script src="../../assets/site.js?v=%s"></script>
 </body></html>
-""" % (home, tspan("出尘入画", "Frame & Grain"), nav, utility, BUILD_ID)
+""" % (footer_left(), nav, tspan("免责条款", "Disclaimer"), BUILD_ID)
 
 
 LEGAL_SECTIONS = [
-    (("一、项目性质", "1. Nature of the project"), [
+    (("一、关于本站", "1. About this site"), [
         ("尘画（出尘入画）是一个非商业性、开放的历史影像索引与展示项目。"
          "本站不设账号、不投放广告、不出售图片，不以影像本身直接营利。",
          "Frame & Grain (Out of dust, into the image) is a non-commercial, open index and display of historical images. "
          "The site has no accounts, no advertising and does not sell images; it does not profit directly from the images themselves."),
+        ("站内影像按主题、年代与日期整理，逐条标注来源、作者与许可；整理工作只做索引与展示，"
+         "不代替任何馆藏机构或权利人的官方说明。",
+         "Images are organised by theme, period and date, with source, creator and licence noted record by record. "
+         "The work is an index and display only; it does not replace any institution's or rights holder's official description."),
         ("尘归尘，画归画：影像来自历史，也终将回到历史；本站只做整理、索引与展示，"
          "不主张对历史影像本身的著作权。",
          "Dust to dust, image to image: images come from history and return to it. The site only organises, indexes and displays them, "
@@ -261,7 +276,25 @@ LEGAL_SECTIONS = [
          "non-commercial use only; and external link only, with no image reproduced here. "
          "Check each source's licence and credit requirements before commercial use. Nothing here is legal advice; consult a qualified lawyer for commercial use or ownership disputes."),
     ]),
-    (("三、准确性与免责", "3. Accuracy and disclaimer"), [
+    (("三、原创内容与代码许可", "3. Original content and code"), [
+        ("除另有署名外，本站自行创作的文字、策展说明与页面版式采用 "
+         '<a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hans" target="_blank" rel="noopener">CC BY 4.0</a>'
+         " 许可：可以复制、转载、改编与商用，但须注明来源为“尘画 / Frame & Grain”，"
+         "并链接至 https://www.chenhua.net。历史影像不在此许可范围内，仍按各记录页标注使用。",
+         "Unless otherwise credited, original text, curatorial notes and page layouts created by Frame & Grain are licensed under "
+         '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>'
+         ": reuse, adaptation and commercial use are allowed with credit to “Frame & Grain” and a link to https://www.chenhua.net. "
+         "Historical images are not covered by this licence; their terms are stated on each record page."),
+        ("站点代码以 "
+         '<a href="https://opensource.org/license/mit" target="_blank" rel="noopener">MIT License</a>'
+         " 发布，版权归 © 2026 尘画 / Frame & Grain。可自由使用、修改与分发，"
+         "但须在副本中保留版权声明与许可声明。",
+         "The site code is released under the "
+         '<a href="https://opensource.org/license/mit" target="_blank" rel="noopener">MIT License</a>'
+         ", copyright © 2026 Frame & Grain. It may be used, modified and distributed freely, "
+         "provided the copyright and licence notices are retained in copies."),
+    ]),
+    (("四、准确性与免责", "4. Accuracy and disclaimer"), [
         ("本站尽力核对馆藏著录、年代、作者与史实依据，但不保证内容完整、准确或最新。"
          "历史记录可能存在争议、缺漏或错误，欢迎通过导航站提供线索与更正。",
          "The site makes every reasonable effort to verify catalog records, dates, creators and supporting evidence, but does not warrant that the content is complete, accurate or current. "
@@ -269,13 +302,13 @@ LEGAL_SECTIONS = [
         ("在适用法律允许的范围内，因使用或依赖本站内容产生的直接或间接损失，本站不承担责任。",
          "To the extent permitted by applicable law, the site accepts no liability for direct or indirect loss arising from use of, or reliance on, its content."),
     ]),
-    (("四、外部链接", "4. External links"), [
+    (("五、外部链接", "5. External links"), [
         ("本站包含指向第三方馆藏、许可原文与导航站的链接。外部内容不受本站控制，"
          "其可用性、准确性、合法性与隐私做法由第三方负责；访问外部链接的风险由访问者自行承担。",
          "The site links to third-party collections, licence deeds and the directory site. External content is not under our control; "
          "its availability, accuracy, legality and privacy practices are the responsibility of the third party, and visitors follow external links at their own risk."),
     ]),
-    (("五、权利人通知与下架", "5. Rights-holder notices and takedown"), [
+    (("六、权利人通知与下架", "6. Rights-holder notices and takedown"), [
         ("如您是影像、文字或页面设计的权利人，认为本站内容侵犯您的权利，"
          "请通过 https://netcn.org/ 联系，并提供权属证明、具体页面 URL 与联系方式。",
          "If you hold rights in an image, text or page design and believe this site infringes them, please contact us through https://netcn.org/ "
@@ -283,7 +316,7 @@ LEGAL_SECTIONS = [
         ("我们核实后将及时更正、补充署名、替换来源或下架相关记录。",
          "Once verified, we will promptly correct the record, add credit, replace the source or remove it."),
     ]),
-    (("六、隐私与日志", "6. Privacy and logs"), [
+    (("七、隐私与日志", "7. Privacy and logs"), [
         ("本站不使用第三方统计、不投放广告、不设置追踪 Cookie，也不要求用户注册或登录。",
          "The site uses no third-party analytics, serves no advertising, sets no tracking cookies and requires no account or login."),
         ("站点由 GitHub Pages 托管、Cloudflare 提供 DNS 与加速。二者可能记录访问日志、IP 地址、"
@@ -292,11 +325,11 @@ LEGAL_SECTIONS = [
          "The site is hosted on GitHub Pages, with DNS and acceleration by Cloudflare. Both may log access records, IP addresses, "
          "request paths and browser information for security, performance and abuse control; Cloudflare may also set security cookies strictly necessary for protection."),
     ]),
-    (("七、版权标识", "7. Copyright notice"), [
-        ("© 2026 尘画 · 出尘入画 · 尘归尘，画归画。站内文字、页面设计与整理成果归尘画项目所有；"
-         "影像版权按各记录标注。",
-         "© 2026 Frame & Grain · Out of dust, into the image · Dust to dust, image to image. Text, page design and compilation belong to the Frame & Grain project; "
-         "image rights are stated record by record."),
+    (("八、版权标识", "8. Copyright notice"), [
+        ("© 2026 尘画 · 出尘入画 · 尘归尘，画归画。原创文字、策展说明与页面版式按 CC BY 4.0 许可；"
+         "站点代码按 MIT 许可；影像版权按各记录标注。",
+         "© 2026 Frame & Grain · Out of dust, into the image · Dust to dust, image to image. Original text, curatorial notes and page layouts are licensed under CC BY 4.0; "
+         "site code under the MIT License; image rights are stated record by record."),
     ]),
 ]
 
@@ -304,12 +337,12 @@ LEGAL_SECTIONS = [
 def legal_page(kind):
     domain = {"photo": PHOTO_DOMAIN, "paint": PAINT_DOMAIN, "main": MAIN_DOMAIN}[kind]
     url = domain + "/legal/"
-    desc_zh = "尘画法律声明：版权与授权、免责声明、外部链接、权利人通知与下架、隐私与日志。"
-    desc_en = "Frame & Grain legal notice: copyright and licensing, disclaimer, external links, rights-holder notices and takedown, privacy and logs."
+    desc_zh = "尘画免责条款：关于本站、版权与授权、原创内容与代码许可、准确性与免责、外部链接、权利人通知与下架、隐私与日志。"
+    desc_en = "Frame & Grain disclaimer: about the site, copyright and licensing, original content and code, accuracy, external links, rights-holder notices and takedown, privacy and logs."
     ld = {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "法律声明 · Legal notice",
+        "name": "免责条款 · Disclaimer",
         "description": desc_zh,
         "url": url,
         "inLanguage": "zh-CN",
@@ -319,13 +352,13 @@ def legal_page(kind):
     ld_json = '<script type="application/ld+json">%s</script>' % json.dumps(
         ld, ensure_ascii=False).replace("</", "<\\/")
     body = '<div class="s-kicker">%s</div><h1 class="s-title">%s</h1>' % (
-        tspan("法律与免责", "Legal and disclaimer"), tspan("法律声明", "Legal notice"))
+        tspan("使用与免责", "Use and disclaimer"), tspan("免责条款", "Disclaimer"))
     body += '<div class="s-sub"><span>%s</span><span>·</span><span>%s</span></div>' % (
         tspan("更新日期 %s" % TODAY, "Updated %s" % TODAY),
         tspan("尘画 · 出尘入画 · 尘归尘，画归画", "Frame & Grain · Out of dust, into the image"))
     body += ('<div class="s-note">%s</div>' % block(
-        "p", "本页说明尘画的内容授权、免责边界、外部链接、权利人下架流程与隐私做法。使用本站即表示您已阅读并理解本声明。",
-        "This page explains Frame & Grain's content licensing, disclaimer, external links, rights-holder takedown process and privacy practices. By using this site you confirm that you have read and understood it."))
+        "p", "本页说明尘画的来源与整理方式、内容与代码许可、免责边界、外部链接、权利人下架流程与隐私做法。使用本站即表示您已阅读并理解本声明。",
+        "This page explains Frame & Grain's sources and editorial approach, content and code licences, disclaimer, external links, rights-holder takedown process and privacy practices. By using this site you confirm that you have read and understood it."))
     for (title_zh, title_en), paras in LEGAL_SECTIONS:
         body += '<div class="s-usage"><h2>%s</h2>' % tspan(title_zh, title_en)
         body += "".join(block("p", zh, en) for zh, en in paras)
@@ -333,7 +366,7 @@ def legal_page(kind):
     body += ('<div class="s-actions"><a class="s-btn gold" href="https://netcn.org/">%s</a>'
              '<a class="s-btn" href="../">%s</a></div>') % (
                  tspan("联系与导航", "Contact and directory"), tspan("返回首页", "Back to home"))
-    return head("法律声明", "Legal notice", desc_zh, desc_en, url, "", kind, ld_json) + body + foot(kind)
+    return head("免责条款", "Disclaimer", desc_zh, desc_en, url, "", kind, ld_json) + body + foot(kind)
 
 
 def photo_page(r, all_records):
@@ -616,15 +649,14 @@ def main():
         (legal / "index.html").write_text(legal_page(kind), encoding="utf-8", newline="\n")
 
     sitemap("photo", [PHOTO_DOMAIN + "/", PHOTO_DOMAIN + "/gallery/",
-                      PHOTO_DOMAIN + "/stories/", PHOTO_DOMAIN + "/about/",
+                      PHOTO_DOMAIN + "/stories/",
                       PHOTO_DOMAIN + "/legal/"] + [canonical(r) for r in photos])
     sitemap("paint", [PAINT_DOMAIN + "/", PAINT_DOMAIN + "/gallery/",
-                      PAINT_DOMAIN + "/about/",
                       PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
     sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/themes/",
                      MAIN_DOMAIN + "/timeline/", MAIN_DOMAIN + "/gallery/",
                      MAIN_DOMAIN + "/today/",
-                     MAIN_DOMAIN + "/about/", MAIN_DOMAIN + "/legal/"] +
+                     MAIN_DOMAIN + "/legal/"] +
             ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories] +
             ["%s/today/%s.html" % (MAIN_DOMAIN, d) for d in day_keys])
     print("静态页完成：照片 %d · 绘画 %d · 主题 %d · sitemap/robots 3 套" % (

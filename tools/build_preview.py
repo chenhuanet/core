@@ -478,9 +478,13 @@ def write_site(site, cfg, records, stories, stats, build_id):
     out.mkdir(parents=True, exist_ok=True)
     brand = cfg.get("brand") or "尘画"
     domain = DOMAINS[site]
-    routes = ["today", "gallery", "stories", "search", "about", "rights"]
+    routes = ["today", "gallery", "stories", "search"]
     if site == "main":
         routes.insert(3, "timeline")
+    for stale in ("about", "rights"):
+        stale_dir = out / stale
+        if stale_dir.exists():
+            shutil.rmtree(stale_dir)
     site_ids = {r["id"] for r in records if r["collection"] in cfg["collections"]}
     has_stories = any(site_ids.intersection(s.get("photo_ids") or []) for s in stories)
     def prefix_leaf(route):
@@ -680,23 +684,20 @@ def write_galleries(build_id):
         desc_zh = "按世纪浏览尘画影像。完整记录见摄影 / 绘画站。"
         desc_en = "Browse Frame & Grain images by century. Full records are on the Photography and Painting sites."
         g_nav = (
-            '<a href="../../dist/main/"><span data-l="zh">尘画</span><span data-l="en">Frame & Grain</span></a>'
+            '<a href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en"><span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span></span></a>'
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
-            '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
+            '<a href="../../dist/main/today/"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
             '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
             '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
             '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
         )
-        g_utility = (
-            '<a href="../../dist/main/about/"><span data-l="zh">关于</span><span data-l="en">About</span></a>'
-            '<a href="../../dist/main/rights/"><span data-l="zh">授权</span><span data-l="en">Rights</span></a>'
-            '<a href="../../dist/main/legal/"><span data-l="zh">法律</span><span data-l="en">Legal</span></a>'
+        g_left = (
+            '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://www.chenhua.net">chenhua.net</a></span></div>'
         )
-        g_foot_nav = g_nav.replace('<span data-l="zh">历史上的今天</span>',
-                                   '<span data-l="zh">日历</span>').replace(
-                                   '<span data-l="en">On This Day</span>',
-                                   '<span data-l="en">Calendar</span>')
+        g_right = ('<div class="sf-right"><a href="../../dist/main/legal/">'
+                   '<span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>')
         html = f"""<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -741,10 +742,9 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
   <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
 </main>
 <footer class="site-foot">
-  <a class="sf-brand" href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a>
-  <nav class="sf-nav">{g_foot_nav}</nav>
-  <nav class="sf-utility">{g_utility}</nav>
-  <span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
+  {g_left}
+  <nav class="sf-nav" aria-label="站内导航">{g_nav}</nav>
+  {g_right}
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
             "century": century,
@@ -776,16 +776,20 @@ def write_404(build_id):
                            ("绘画", "Painting", "../../paint/"),
                            ("导航", "Directory", "https://netcn.org/"),
                        ])
-    utility = "".join('<a href="%s"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (h, z, e)
-                      for z, e, h in [
-                          ("关于", "About", "about/"),
-                          ("授权", "Rights", "rights/"),
-                          ("法律", "Legal", "legal/"),
-                      ])
-    foot_nav_links = nav_links.replace('<span data-l="zh">历史上的今天</span>',
-                                       '<span data-l="zh">日历</span>').replace(
-                                       '<span data-l="en">On This Day</span>',
-                                       '<span data-l="en">Calendar</span>')
+    foot_nav_links = nav_links.replace(
+        '<span data-l="zh">尘画</span><span data-l="en">Frame & Grain</span>',
+        '<span data-l="zh">出尘入画</span><span data-l="en"><span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span></span>'
+    ).replace(
+        '<span data-l="zh">历史上的今天</span>',
+        '<span data-l="zh">日历</span>'
+    ).replace(
+        '<span data-l="en">On This Day</span>',
+        '<span data-l="en">Calendar</span>'
+    )
+    foot_left = (
+        '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span>'
+        '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://www.chenhua.net">chenhua.net</a></span></div>'
+    )
     html = """<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -820,11 +824,15 @@ def write_404(build_id):
 <div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="../assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
 <div><a class="btn gold" href="index.html"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
 </main>
-<footer class="site-foot"><a class="sf-brand" href="index.html"><span data-l="zh">出尘入画</span><span data-l="en">Frame & Grain</span></a><nav class="sf-nav">%s</nav><nav class="sf-utility">%s</nav><span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span></footer>
+<footer class="site-foot">
+%s
+<nav class="sf-nav" aria-label="站内导航">%s</nav>
+<div class="sf-right"><a href="legal/"><span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>
+</footer>
 </div>
 <script src="../assets/site.js?v=%s"></script>
 </body></html>
-""" % (build_id, build_id, nav_links, foot_nav_links, utility, build_id)
+""" % (build_id, build_id, nav_links, foot_left, foot_nav_links, build_id)
     out.write_text(html, encoding="utf-8", newline="\n")
 
 

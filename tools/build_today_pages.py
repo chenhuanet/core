@@ -95,21 +95,31 @@ def appbar(prefix="../", expr="joy"):
 
 
 def footer(prefix="../"):
-    utility = "".join('<a href="%s">%s</a>' % (h, _tspan(z, e)) for z, e, h in [
-        ("关于", "About", "../about/"),
-        ("授权", "Rights", "../rights/"),
-        ("法律", "Legal", "../legal/"),
-    ])
+    links = []
+    for z, e, h in footer_links():
+        if z == "搜索":
+            continue
+        if z == "尘画":
+            label = ('<span data-l="zh">出尘入画</span><span data-l="en">'
+                     '<span class="sf-brand-long">Frame &amp; Grain</span>'
+                     '<span class="sf-brand-short">Frame</span></span>')
+        else:
+            label = _tspan(z, e)
+        links.append('<a href="%s">%s</a>' % (h, label))
+    nav = "".join(links)
+    left = ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
+            '<a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span>'
+            '<span class="sf-brand-short">Frame</span> · '
+            '<a href="https://www.chenhua.net">chenhua.net</a></span></div>')
     return """<footer class="site-foot">
-<a class="sf-brand" href="{prefix}">{brand}</a>
-<nav class="sf-nav">{nav}</nav>
-<nav class="sf-utility">{utility}</nav>
-<span class="sf-copy"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://www.chenhua.net">chenhua.net</a></span></span>
+{left}
+<nav class="sf-nav" aria-label="站内导航">{nav}</nav>
+<div class="sf-right"><a href="../legal/">{disclaimer}</a></div>
 </footer>""".format(
-        prefix=prefix,
-        brand=_tspan("出尘入画", "Frame & Grain"),
-        nav=nav_html(links=footer_links()),
-        utility=utility,
+        left=left,
+        nav=nav,
+        disclaimer=_tspan("免责条款", "Disclaimer"),
     )
 
 
