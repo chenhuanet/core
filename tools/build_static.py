@@ -296,12 +296,12 @@ LEGAL_SECTIONS = [
     ]),
     (("四、准确性与免责", "4. Accuracy and disclaimer"), [
         ("本站尽力核对馆藏著录、年代、作者与史实依据，但不保证内容完整、准确或最新。"
-         "历史记录可能存在争议、缺漏或错误，欢迎发送邮件至 "
-         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
+         "历史记录可能存在争议、缺漏或错误，欢迎到 "
+         '<a href="https://github.com/chenhuanet/historical-photography-and-painting/issues/new" target="_blank" rel="noopener">内容仓提交 issue</a>'
          " 提供线索与更正。",
          "The site makes every reasonable effort to verify catalog records, dates, creators and supporting evidence, but does not warrant that the content is complete, accurate or current. "
-         "Historical records may be disputed, incomplete or wrong; corrections and leads are welcome at "
-         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>.'),
+         "Historical records may be disputed, incomplete or wrong; corrections and leads are welcome in "
+         '<a href="https://github.com/chenhuanet/historical-photography-and-painting/issues/new" target="_blank" rel="noopener">an issue on the content repository</a>.'),
         ("在适用法律允许的范围内，因使用或依赖本站内容产生的直接或间接损失，本站不承担责任。",
          "To the extent permitted by applicable law, the site accepts no liability for direct or indirect loss arising from use of, or reliance on, its content."),
     ]),
@@ -313,11 +313,11 @@ LEGAL_SECTIONS = [
     ]),
     (("六、权利人通知与下架", "6. Rights-holder notices and takedown"), [
         ("如您是影像、文字或页面设计的权利人，认为本站内容侵犯您的权利，"
-         '请通过 <a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
-         " 联系，并提供权属证明、具体页面 URL 与联系方式。",
-         "If you hold rights in an image, text or page design and believe this site infringes them, please contact "
-         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
-         " with proof of ownership, the specific page URL and your contact details."),
+         '请到 <a href="https://github.com/chenhuanet/historical-photography-and-painting/issues/new" target="_blank" rel="noopener">内容仓提交以 [takedown] 开头的 issue</a>'
+         "，并提供权属证明、具体页面 URL 与联系方式；请勿在公开 issue 中上传身份证件等敏感材料。",
+         "If you hold rights in an image, text or page design and believe this site infringes them, please open "
+         '<a href="https://github.com/chenhuanet/historical-photography-and-painting/issues/new" target="_blank" rel="noopener">an issue titled [takedown] in the content repository</a>'
+         " with proof of ownership, the specific page URL and your contact details; do not upload identity documents or other sensitive material to a public issue."),
         ("我们核实后将及时更正、补充署名、替换来源或下架相关记录。",
          "Once verified, we will promptly correct the record, add credit, replace the source or remove it."),
     ]),
@@ -368,7 +368,7 @@ def legal_page(kind):
         body += '<div class="s-usage"><h2>%s</h2>' % tspan(title_zh, title_en)
         body += "".join(block("p", zh, en) for zh, en in paras)
         body += "</div>"
-    body += ('<div class="s-actions"><a class="s-btn gold" href="mailto:issue@chenhua.net">%s</a>'
+    body += ('<div class="s-actions"><a class="s-btn gold" href="https://github.com/chenhuanet/historical-photography-and-painting/issues/new" target="_blank" rel="noopener">%s</a>'
              '<a class="s-btn" href="../">%s</a></div>') % (
                  tspan("反馈问题", "Send feedback"), tspan("返回首页", "Back to home"))
     page = head("免责条款", "Disclaimer", desc_zh, desc_en, url, "", kind, ld_json) + body + foot(kind)
