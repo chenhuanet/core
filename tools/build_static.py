@@ -296,23 +296,28 @@ LEGAL_SECTIONS = [
     ]),
     (("四、准确性与免责", "4. Accuracy and disclaimer"), [
         ("本站尽力核对馆藏著录、年代、作者与史实依据，但不保证内容完整、准确或最新。"
-         "历史记录可能存在争议、缺漏或错误，欢迎通过导航站提供线索与更正。",
+         "历史记录可能存在争议、缺漏或错误，欢迎发送邮件至 "
+         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
+         " 提供线索与更正。",
          "The site makes every reasonable effort to verify catalog records, dates, creators and supporting evidence, but does not warrant that the content is complete, accurate or current. "
-         "Historical records may be disputed, incomplete or wrong; corrections and leads are welcome through the directory site."),
+         "Historical records may be disputed, incomplete or wrong; corrections and leads are welcome at "
+         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>.'),
         ("在适用法律允许的范围内，因使用或依赖本站内容产生的直接或间接损失，本站不承担责任。",
          "To the extent permitted by applicable law, the site accepts no liability for direct or indirect loss arising from use of, or reliance on, its content."),
     ]),
     (("五、外部链接", "5. External links"), [
-        ("本站包含指向第三方馆藏、许可原文与导航站的链接。外部内容不受本站控制，"
+        ("本站包含指向第三方馆藏、许可原文与外部网站的链接。外部内容不受本站控制，"
          "其可用性、准确性、合法性与隐私做法由第三方负责；访问外部链接的风险由访问者自行承担。",
-         "The site links to third-party collections, licence deeds and the directory site. External content is not under our control; "
+         "The site links to third-party collections, licence deeds and external websites. External content is not under our control; "
          "its availability, accuracy, legality and privacy practices are the responsibility of the third party, and visitors follow external links at their own risk."),
     ]),
     (("六、权利人通知与下架", "6. Rights-holder notices and takedown"), [
         ("如您是影像、文字或页面设计的权利人，认为本站内容侵犯您的权利，"
-         "请通过 https://netcn.org/ 联系，并提供权属证明、具体页面 URL 与联系方式。",
-         "If you hold rights in an image, text or page design and believe this site infringes them, please contact us through https://netcn.org/ "
-         "with proof of ownership, the specific page URL and your contact details."),
+         '请通过 <a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
+         " 联系，并提供权属证明、具体页面 URL 与联系方式。",
+         "If you hold rights in an image, text or page design and believe this site infringes them, please contact "
+         '<a href="mailto:issue@chenhua.net">issue@chenhua.net</a>'
+         " with proof of ownership, the specific page URL and your contact details."),
         ("我们核实后将及时更正、补充署名、替换来源或下架相关记录。",
          "Once verified, we will promptly correct the record, add credit, replace the source or remove it."),
     ]),
@@ -363,10 +368,12 @@ def legal_page(kind):
         body += '<div class="s-usage"><h2>%s</h2>' % tspan(title_zh, title_en)
         body += "".join(block("p", zh, en) for zh, en in paras)
         body += "</div>"
-    body += ('<div class="s-actions"><a class="s-btn gold" href="https://netcn.org/">%s</a>'
+    body += ('<div class="s-actions"><a class="s-btn gold" href="mailto:issue@chenhua.net">%s</a>'
              '<a class="s-btn" href="../">%s</a></div>') % (
-                 tspan("联系与导航", "Contact and directory"), tspan("返回首页", "Back to home"))
-    return head("免责条款", "Disclaimer", desc_zh, desc_en, url, "", kind, ld_json) + body + foot(kind)
+                 tspan("反馈问题", "Send feedback"), tspan("返回首页", "Back to home"))
+    page = head("免责条款", "Disclaimer", desc_zh, desc_en, url, "", kind, ld_json) + body + foot(kind)
+    return page.replace('data-title-zh="免责条款"', 'data-title-zh="免责条款 · 尘画"').replace(
+        'data-title-en="Disclaimer"', 'data-title-en="Disclaimer · Frame & Grain"')
 
 
 def photo_page(r, all_records):
