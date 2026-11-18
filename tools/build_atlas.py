@@ -57,7 +57,7 @@ def seo_head(html, title, description, canonical):
         f'<meta property="og:locale" content="zh_CN">\n'
         f'<meta property="og:locale:alternate" content="en_US">'
     )
-    old = "<title>图录 · 尘画</title>"
+    old = "<title>主题 · 尘画</title>"
     if old in html:
         return html.replace(old, block, 1)
     return html.replace("</head>", block + "\n</head>", 1)
@@ -254,7 +254,6 @@ def main():
         page = page.replace('src="../../assets/site.js"', 'src="../../assets/site.js?v=%s"' % int(time.time()))
         active_href = "../themes/" if view == "theme" else "../timeline/"
         page = page.replace('<a href="%s">' % active_href, '<a href="%s" aria-current="page">' % active_href, 1)
-        page = page.replace("<title>图录 · 尘画</title>", "<title>%s · 尘画</title>" % ("主题" if view == "theme" else "时间线"))
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(page, encoding="utf-8")
         print("wrote", path, "bytes", path.stat().st_size, "stories", total, "dates", data["date_count"])
