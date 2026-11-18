@@ -21,6 +21,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.parse
 
 import yaml
 
@@ -81,6 +82,17 @@ def norm_url(u):
     return u.rstrip("/").lower()
 
 
+def norm_url_exact(u):
+    """保留 query（例如 Smithsonian 的 ?id= 才是图片身份）。"""
+    if not u:
+        return ""
+    u = str(u).strip()
+    parts = urllib.parse.urlsplit(u)
+    return urllib.parse.urlunsplit((
+        parts.scheme.lower(), parts.netloc.lower(),
+        parts.path.rstrip("/"), parts.query, ""))
+
+
 def norm_title(t):
     t = re.sub(r"[^\w\u4e00-\u9fff]+", "", str(t or "").lower())
     return t
@@ -116,7 +128,7 @@ def main():
     groups = {
         "display_hash": group_by(rows, lambda r: r.get("image_sha256")),
         "original_hash": group_by(rows, lambda r: r.get("image_original_sha256")),
-        "source_image": group_by(rows, lambda r: norm_url(r.get("source_image"))),
+        "source_image": group_by(rows, lambda r: norm_url_exact(r.get("source_image"))),
         "page_url": group_by(rows, lambda r: norm_url(r.get("page_url"))),
         "title_year": group_by(rows, lambda r: (
             norm_title(r.get("title")), str(r.get("year") or "")) if r.get("year") else ""),
