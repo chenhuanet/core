@@ -152,11 +152,6 @@ def build_calendar(site):
         title_en = "Calendar · Frame & Grain"
         data_zh = "摄影与绘画的日历。"
         data_en = "A calendar of photography and painting."
-        kicker = "CALENDAR"
-        h1 = tspan("日历", "Calendar")
-        h1 = h1.replace("&lt;br&gt;", "<br>").replace("&lt;i&gt;", "<i>").replace("&lt;/i&gt;", "</i>")
-        sub = ""
-        stats = ('<div class="cal-meta"><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
         combined = True
     else:
         source = PHOTO / "today" / "index.html"
@@ -165,11 +160,6 @@ def build_calendar(site):
         title_en = "Photography Calendar · Frame & Grain"
         data_zh = "摄影日历。"
         data_en = "A photography calendar."
-        kicker = "CALENDAR / PHOTOGRAPHY"
-        h1 = tspan("摄影日历", "Photography Calendar")
-        h1 = h1.replace("&lt;br&gt;", "<br>")
-        sub = ""
-        stats = ('<div class="cal-meta"><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
         combined = False
 
     month_links = "".join(
@@ -200,7 +190,7 @@ def build_calendar(site):
                         tspan("2024", "2024"),
                         "".join('<span>%s</span>' % tspan(z, e) for z, e in zip(WEEK_ZH, WEEK_EN)),
                         "".join(cells)))
-    body.append('<script>(function(){var months=[].slice.call(document.querySelectorAll(".cal-month"));var links=[].slice.call(document.querySelectorAll(".cal-jump a"));var bar=document.querySelector(".cal-bar");var i=0;var hm=location.hash.match(/month-(\\d{2})/);if(hm){i=Math.max(0,Math.min(11,parseInt(hm[1],10)-1));}else{i=new Date().getMonth();}function show(n){i=Math.max(0,Math.min(11,n));months.forEach(function(el,k){el.classList.toggle("is-active",k===i)});links.forEach(function(el,k){el.classList.toggle("is-active",k===i)});var a=links[i];if(a&&a.scrollIntoView){a.scrollIntoView({block:"nearest",inline:"center"})}if(history.replaceState)history.replaceState(null,"","#month-"+String(i+1).padStart(2,"0"));}links.forEach(function(a,k){a.addEventListener("click",function(e){e.preventDefault();show(k)})});var p=bar&&bar.querySelector(".cal-prev"),n=bar&&bar.querySelector(".cal-next");if(p)p.addEventListener("click",function(){show(i-1)});if(n)n.addEventListener("click",function(){show(i+1)});show(i);})();</script>')
+    body.append('<script>(function(){if(history.scrollRestoration)history.scrollRestoration="manual";var months=[].slice.call(document.querySelectorAll(".cal-month"));var links=[].slice.call(document.querySelectorAll(".cal-jump a"));var jump=document.querySelector(".cal-jump");var bar=document.querySelector(".cal-bar");var i=0;var hm=location.hash.match(/month-(\\d{2})/);if(hm){i=Math.max(0,Math.min(11,parseInt(hm[1],10)-1));}else{i=new Date().getMonth();}function show(n){i=Math.max(0,Math.min(11,n));months.forEach(function(el,k){el.classList.toggle("is-active",k===i)});links.forEach(function(el,k){el.classList.toggle("is-active",k===i)});var a=links[i];if(a&&jump){jump.scrollLeft=Math.max(0,a.offsetLeft-(jump.clientWidth-a.offsetWidth)/2)}}links.forEach(function(a,k){a.addEventListener("click",function(e){e.preventDefault();show(k)})});var p=bar&&bar.querySelector(".cal-prev"),n=bar&&bar.querySelector(".cal-next");if(p)p.addEventListener("click",function(){show(i-1)});if(n)n.addEventListener("click",function(){show(i+1)});show(i);setTimeout(function(){window.scrollTo(0,0)},0);})();</script>')
     body.append('<script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");var el=document.querySelector(\'.cal-day[data-date="\'+md+\'"]\');if(el)el.classList.add("is-today")})();</script>')
     body.append('<script>(function(){var imgs=[].slice.call(document.querySelectorAll(".cal-photo,.cal-paint"));function load(el){if(el.dataset.calLoaded==="1")return;el.dataset.calLoaded="1";el.loading="eager";var s=el.getAttribute("src");if(s)el.setAttribute("src",s);}function prime(){var vh=window.innerHeight||800;imgs.forEach(function(el){var r=el.getBoundingClientRect();if(r.top<vh+900&&r.bottom>-220)load(el);});}prime();window.addEventListener("scroll",prime,{passive:true});window.addEventListener("resize",prime,{passive:true});setTimeout(prime,700);})();</script>')
 
