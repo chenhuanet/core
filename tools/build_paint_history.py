@@ -697,7 +697,7 @@ def timeline_page():
         tspan("日历不是时间轴的缩写", "The calendar is not a mini timeline"),
         tspan("时间轴回答“在什么时代”，日历回答“今天看哪件”。两者共用作品，但问题不同。",
               "The timeline answers 'in what era'; the calendar answers 'what to look at today'. They share works but ask different questions."),
-        tspan("打开 366 天日历", "Open the 366-day calendar"),
+        tspan("打开日历", "Open calendar"),
         tspan("回到主站时间轴", "Back to the main timeline"))
     return page("绘画时间轴", "Painting timeline", "400–1930，八个时期。", "400–1930 in eight periods.",
                 "timeline.html", body, og_img("hokusai-great-wave-1831"),
@@ -848,7 +848,7 @@ def today_paint_card(md, work_id):
         esc(work_id), tspan(work_title(r), work_title_en(r)),
         tspan(readable_zh_note(r), first_para(r.get("note_en"))),
         tspan("编辑排期，非创作日期。", "Editorial schedule, not a creation date."),
-        tspan("打开 366 天日历", "Open the 366-day calendar"))
+        tspan("打开日历", "Open calendar"))
 
 
 def inject_today():
