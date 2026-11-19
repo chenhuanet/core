@@ -184,6 +184,15 @@ def artist_link(name):
     return "artist-%s.html" % a["slug"] if a else ""
 
 
+def artist_card(a):
+    image = img_of(a.get("hero") or "")
+    media = ('<img src="%s" alt="%s" loading="lazy">' % (esc(image), esc(a["zh"])) if image
+             else '<div class="ph-artist-noimg" aria-hidden="true"></div>')
+    return ('<a class="ph-artist-card" href="artist-%s.html">%s<div class="c"><b>%s</b><span>%s</span></div></a>'
+            % (esc(a["slug"]), media, tspan(a["zh"], a["en"]),
+               tspan(a["country_zh"] + " · " + a["years"], a["country_en"] + " · " + artist_years_en(a))))
+
+
 def chapters_sorted():
     return list(chapters.CHAPTERS)
 
@@ -328,10 +337,7 @@ def index_page():
         tspan("%d 件" % len(m.get("works", [])), "%d works" % len(m.get("works", []))),
         tspan(m.get("summary_zh", ""), m.get("summary_en", "")))
         for m in movements.MOVEMENTS)
-    artists_html = "".join("""<a class="ph-artist-card" href="artist-%s.html"><img src="%s" alt="%s" loading="lazy"><div class="c"><b>%s</b><span>%s</span></div></a>""" % (
-        esc(a["slug"]), esc(img_of(a["hero"])), esc(a["zh"]),
-        tspan(a["zh"], a["en"]), tspan(a["country_zh"] + " · " + a["years"], a["country_en"] + " · " + artist_years_en(a)))
-        for a in artists.ARTISTS[:24])
+    artists_html = "".join(artist_card(a) for a in artists.ARTISTS[:24])
     trails_html = "".join("""<a class="ph-trail" href="trail-%s.html"><h3>%s</h3><p>%s</p></a>""" % (
         esc(t["slug"]), tspan(t["zh"], t["en"]), tspan(t["intro_zh"], t["intro_en"]))
         for t in trails.TRAILS)
@@ -375,13 +381,13 @@ def index_page():
     body = hero_block(
         hero, "PAINTING HISTORY / 400–1930", "PAINTING HISTORY / 400–1930",
         "绘画史：把作品串成一条可以走的路",
-        "A History of Painting: 106 works, one walkable path",
-        "不是 106 张孤立的杰作，而是 14 个章节、15 个流派页、36 位艺术家、8 个时期、12 种技法、8 条小径。先看“为什么重要”，再看“怎么读”，最后看“什么时候”。",
-        "Not 106 isolated masterpieces, but 14 chapters, 15 movement pages, 36 artists, 8 periods, 12 techniques and 8 trails. First ask why it matters, then how to read it, then when it happened.",
-        [("106 件作品", "106 works"), ("14 章", "14 chapters"), ("400–1930", "400–1930")]) + """
+        "A History of Painting: 105 works, one walkable path",
+        "不是 105 张孤立的杰作，而是 14 个章节、15 个流派页、36 位艺术家、8 个时期、12 种技法、8 条小径。先看“为什么重要”，再看“怎么读”，最后看“什么时候”。",
+        "Not 105 isolated masterpieces, but 14 chapters, 15 movement pages, 36 artists, 8 periods, 12 techniques and 8 trails. First ask why it matters, then how to read it, then when it happened.",
+        [("105 件作品", "105 works"), ("14 章", "14 chapters"), ("400–1930", "400–1930")]) + """
 <section class="ph-lead">%s</section>
 <div class="ph-stat-grid">
-<div class="ph-stat"><b>106</b><span>%s</span></div>
+<div class="ph-stat"><b>105</b><span>%s</span></div>
 <div class="ph-stat"><b>36</b><span>%s</span></div>
 <div class="ph-stat"><b>15</b><span>%s</span></div>
 <div class="ph-stat"><b>8</b><span>%s</span></div>
@@ -400,9 +406,9 @@ def index_page():
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-pill-row">%s</div></section>
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-actions"><a class="ph-btn gold" href="timeline.html">%s</a><a class="ph-btn" href="calendar.html">%s</a></div></section>
 """ % args
-    return page("绘画史", "A History of Painting", "从 400 到 1930，106 件作品、14 个章节、15 个流派页、36 位艺术家。",
-                "From 400 to 1930: 106 works, 14 chapters, 15 movement pages and 36 artists.",
-                "index.html", body, og_img(hero), collection_ld("A History of Painting", "106 works, 14 chapters, 15 movements.", DOMAIN + "/history/"))
+    return page("绘画史", "A History of Painting", "从 400 到 1930，105 件作品、14 个章节、15 个流派页、36 位艺术家。",
+                "From 400 to 1930: 105 works, 14 chapters, 15 movement pages and 36 artists.",
+                "index.html", body, og_img(hero), collection_ld("A History of Painting", "105 works, 14 chapters, 15 movements.", DOMAIN + "/history/"))
 
 
 def chapter_page(c):
@@ -598,10 +604,7 @@ def movements_index():
 
 
 def artists_index():
-    cards = "".join("""<a class="ph-artist-card" href="artist-%s.html"><img src="%s" alt="%s" loading="lazy"><div class="c"><b>%s</b><span>%s</span></div></a>""" % (
-        esc(a["slug"]), esc(img_of(a["hero"])), esc(a["zh"]), tspan(a["zh"], a["en"]),
-        tspan(a["country_zh"] + " · " + a["years"], a["country_en"] + " · " + artist_years_en(a)))
-        for a in artists.ARTISTS)
+    cards = "".join(artist_card(a) for a in artists.ARTISTS)
     body = hero_block("rembrandt-self-portrait-1669", "INDEX / ARTISTS", "INDEX / ARTISTS",
                       "三十六位艺术家", "Thirty-six artists",
                       "不是排行榜，而是一张工作网：谁在什么城市、什么赞助、什么技术条件下工作，又把手艺传给了谁。",
@@ -657,9 +660,9 @@ def trails_index():
         for t in trails.TRAILS)
     body = hero_block("caravaggio-calling-of-matthew-1600", "INDEX / TRAILS", "INDEX / TRAILS",
                       "八条横向小径", "Eight lateral trails",
-                      "章节是纵轴，小径是横轴：同一条线索穿过不同年代、不同地域，让 106 件作品彼此照亮。",
-                      "Chapters are the vertical axis; trails are horizontal. One thread runs through different periods and regions, letting 106 works illuminate one another.",
-                      [("8 条", "8 trails"), ("106 件", "106 works")]) + """
+                      "章节是纵轴，小径是横轴：同一条线索穿过不同年代、不同地域，让 105 件作品彼此照亮。",
+                      "Chapters are the vertical axis; trails are horizontal. One thread runs through different periods and regions, letting 105 works illuminate one another.",
+                      [("8 条", "8 trails"), ("105 件", "105 works")]) + """
 <section class="ph-section"><div class="ph-trail-grid">%s</div></section>
 """ % cards
     return page("小径索引", "Trails", "8 条横向小径。", "Eight lateral trails.",
