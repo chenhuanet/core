@@ -69,6 +69,7 @@ def load_records():
 
 RECORDS = load_records()
 WORK_IDS = sorted(RECORDS, key=lambda i: (RECORDS[i].get("year") or 0, RECORDS[i].get("title") or i))
+PAINT_WORK_IDS = [i for i in WORK_IDS if RECORDS.get(i, {}).get("content_type") == "painting"]
 WORK_BY_ID = RECORDS
 CH_BY_SLUG = {c["slug"]: c for c in chapters.CHAPTERS}
 MOV_A = {m["slug"]: m for m in movements.MOVEMENTS}
@@ -461,7 +462,8 @@ def movement_page(m):
 <section class="ph-section"><h2>%s</h2><p>%s</p>%s</section>
 """ % (
         tspan("绘画史", "Painting History"), tspan("流派", "Movements"),
-        tspan(m["summary_zh"], m["summary_en"]),
+        tspan("先看三个特征，再看三件作品；最后把它放回它所在的章节。",
+              "Start with three traits, then three works; finally put it back into its chapter."),
         tspan("三个特征", "Three traits"), ul(m["traits_zh"]), ul(m["traits_en"]),
         tspan("怎么看", "How to look"), ul(m["look_zh"]), ul(m["look_en"]),
         tspan("代表作品", "Key works"), works,
@@ -487,7 +489,8 @@ def artist_page(a):
 <section class="ph-section"><h2>%s</h2><div class="ph-pill-row">%s</div></section>
 """ % (
         tspan("绘画史", "Painting History"), tspan("艺术家", "Artists"),
-        tspan(a["bio_zh"][0], a["bio_en"][0]),
+        tspan("先读小传，再看作品；作品说明解释他/她为什么这样画。",
+              "Read the life first, then the works; the notes explain why they painted this way."),
         tspan("小传", "Biography"), paras(a["bio_zh"][1:]), paras(a["bio_en"][1:]),
         tspan(a["note_zh"], a["note_en"]),
         tspan("代表作品", "Key works"), works,
@@ -513,7 +516,8 @@ def period_page(p):
 <section class="ph-section"><h2>%s</h2><div class="ph-pill-row">%s</div></section>
 """ % (
         tspan("绘画史", "Painting History"), tspan("时期", "Periods"),
-        tspan(p["summary_zh"], p["summary_en"]),
+        tspan("先看关键词，再看作品；最后用相邻流派确认这段时间的边界。",
+              "Start with the keywords, then the works; use the neighbouring movements to mark the period's edges."),
         tspan("三个关键词", "Three keywords"), themes,
         tspan("代表作品", "Key works"), works,
         tspan("相关流派", "Movements"), movs)
@@ -541,7 +545,8 @@ def technique_page(t):
 <section class="ph-section"><h2>%s</h2><div class="ph-pill-row">%s</div>%s</section>
 """ % (
         tspan("绘画史", "Painting History"), tspan("技法", "Techniques"),
-        tspan(t["summary_zh"], t["summary_en"]),
+        tspan("先看三步做法，再看作品；技法只有在具体的画里才成立。",
+              "Start with the three steps, then the works; a technique only exists inside a specific picture."),
         tspan("怎么做", "How it is done"), steps,
         tspan("代表作品", "Key works"), works,
         tspan("相关艺术家", "Artists"), artists_html, note)
@@ -562,7 +567,8 @@ def trail_page(t):
 <section class="ph-section"><h2>%s</h2><p class="ph-lead">%s</p></section>
 """ % (
         tspan("绘画史", "Painting History"), tspan("小径", "Trails"),
-        tspan(t["intro_zh"], t["intro_en"]),
+        tspan("按停靠顺序走；每一站只留一条线索，最后回到收束句。",
+              "Follow the stops in order; each stop leaves one thread, and the closing sentence ties them together."),
         tspan("沿途", "Along the trail"), stops,
         tspan("走完之后", "After the walk"), tspan(t["closing_zh"], t["closing_en"]))
     return page(t["zh"], t["en"], t["intro_zh"], t["intro_en"],
@@ -621,7 +627,7 @@ def periods_index():
                       "时期不是整齐的抽屉，而是八段可以被讨论的时间。每一段都给出关键词、代表作品和相邻流派。",
                       "Periods are not neat drawers but eight discussable stretches of time, each with keywords, key works and neighbouring movements.",
                       [("8 段", "8 periods"), ("400–1930", "400–1930")]) + """
-<section class="ph-section"><div class="ph-chapter-grid">%s</div></section>
+<section class="ph-section"><div class="ph-chapter-grid ph-period-grid">%s</div></section>
 """ % cards
     return page("时期索引", "Periods", "8 个时期页，400–1930。", "Eight periods, 400–1930.",
                 "periods.html", body, og_img("turner-fighting-temeraire-1839"),
@@ -700,7 +706,13 @@ def timeline_page():
 
 
 def calendar_page():
-    slots = ph_calendar.build_slots(WORK_IDS)
+    slots = ph_calendar.build_slots(PAINT_WORK_IDS)
+    n_works = len(PAINT_WORK_IDS)
+    counts = {}
+    for s in slots:
+        counts[s["work"]] = counts.get(s["work"], 0) + 1
+    n4 = sum(1 for v in counts.values() if v == 4)
+    n3 = sum(1 for v in counts.values() if v == 3)
     months = ph_calendar.calendar_months(slots)
     month_html = []
     for m in range(1, 13):
@@ -720,24 +732,35 @@ def calendar_page():
             tspan("%d 件" % len(month_slots), "%d works" % len(month_slots), ), "".join(cells)))
     month_nav = "".join('<a class="ph-pill" href="#month-%02d">%s</a>' % (m, tspan(ph_calendar.MONTH_ZH[m - 1][:2], ph_calendar.MONTH_EN[m - 1][:3]))
                         for m in range(1, 13))
+    events = sorted(ph_calendar.ART_EVENTS, key=lambda e: (e["date"], e["year"]))
+    events_html = "".join("""<div class="ph-event" data-date="%s"><div class="d">%s</div><div class="y">%d</div><div class="t"><b>%s</b></div></div>""" % (
+        esc(e["date"]), esc(e["date"]), e["year"], tspan(e["zh"], e["en"]))
+        for e in events)
     body = hero_block("vermeer-girl-pearl-earring-1665", "CALENDAR / 366 DAYS", "CALENDAR / 366 DAYS",
                       "今日一画：三百六十六天", "A painting a day: 366 days",
                       "这是一份编辑排期，不是创作日期。它不声称“某年某月某日画了这张画”，只安排“今天看哪一件”。历史事件另立“艺术史上的今天”，宁缺毋滥。",
                       "This is an editorial schedule, not a creation date. It does not claim 'this was painted on this day'; it only decides 'what to look at today'. Historical events belong to a separate 'On This Day in Art', and only when exact.",
-                      [("366 天", "366 days"), ("106 件", "106 works"), ("编辑排期", "Editorial schedule")]) + """
+                      [("366 天", "366 days"), ("%d 件绘画" % n_works, "%d paintings" % n_works), ("编辑排期", "Editorial schedule")]) + """
 <section class="ph-crumb"><a href="index.html">%s</a> / %s</section>
 <section class="ph-lead">%s</section>
 <p class="ph-calendar-note">%s</p>
 <div class="ph-pill-row">%s</div>
 <section class="ph-section"><div class="ph-calendar">%s</div></section>
-<script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");document.querySelectorAll('.ph-day[data-date="'+md+'"]').forEach(function(el){el.classList.add("today")});})();</script>
+<section class="ph-section" id="art-events"><h2>%s</h2><p class="ph-calendar-note">%s</p><div class="ph-event-list">%s</div></section>
+<script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");document.querySelectorAll('.ph-day[data-date="'+md+'"],.ph-event[data-date="'+md+'"]').forEach(function(el){el.classList.add("today")});})();</script>
 """ % (
         tspan("绘画史", "Painting History"), tspan("日历", "Calendar"),
         tspan("每天一件作品，一年三轮多一点。不是“历史上的今天”，而是“今天可以看什么”。",
               "One work a day, just over three cycles a year. Not 'on this day in history' but 'what can I look at today'."),
-        tspan("排期规则：106 件作品按年代排序，以 37 为步长轮转；48 件出现 4 次，58 件出现 3 次，合计 366 个槽位。所有日期均为编辑排期。",
-              "Schedule: 106 works sorted by date, rotated with a step of 37; 48 works appear four times, 58 three times, totalling 366 slots. All dates are editorial."),
-        month_nav, "".join(month_html))
+        tspan("排期规则：%d 件绘画按年代排序，以 37 为步长轮转；%d 件出现 4 次，%d 件出现 3 次，合计 366 个槽位。所有日期均为编辑排期。"
+              % (n_works, n4, n3),
+              "Schedule: %d paintings sorted by date, rotated with a step of 37; %d works appear four times, %d three times, totalling 366 slots. All dates are editorial."
+              % (n_works, n4, n3)),
+        month_nav, "".join(month_html),
+        tspan("艺术史上的今天", "On This Day in Art"),
+        tspan("只收有确切日期的生卒、开幕与完成记录，共 %d 条；不是每天都有。日期以公历计。" % len(events),
+              "Only exact birth, death, opening and completion dates, %d entries in all; not every day has one. Dates are Gregorian." % len(events)),
+        events_html)
     return page("今日一画 · 366 天", "A painting a day · 366 days", "366 个编辑槽位，每天一件作品。",
                 "366 editorial slots, one work a day.",
                 "calendar.html", body, og_img("vermeer-girl-pearl-earring-1665"),
@@ -759,7 +782,7 @@ def paint_bridge(view):
         href = "../../paint/history/"
     return """<!-- paint-bridge -->
 <section style="max-width:1240px;margin:0 auto 0;padding:0 28px 8px">
-<div style="border:1px solid var(--rule);border-radius:16px;padding:20px 22px;background:linear-gradient(135deg,var(--panel),var(--paper-2));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center">
+<div style="border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:linear-gradient(135deg,var(--surface2),var(--surface));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center">
 <div><p style="font-size:9px;letter-spacing:.22em;color:var(--accent);margin:0 0 7px">PAINTING HISTORY / 400–1930</p>
 <h2 style="font-family:var(--serif);font-weight:400;font-size:clamp(21px,3vw,30px);line-height:1.35;margin:0 0 6px">%s</h2>
 <p style="font-size:12px;line-height:1.8;color:var(--muted);margin:0;max-width:760px">%s</p></div>
@@ -812,7 +835,7 @@ def today_paint_card(md, work_id):
 
 
 def inject_today():
-    slots = ph_calendar.build_slots(WORK_IDS)
+    slots = ph_calendar.build_slots(PAINT_WORK_IDS)
     by_date = {s["date"]: s["work"] for s in slots}
     for path in sorted((DIST / "main" / "today").glob("*.html")):
         if path.name == "index.html":

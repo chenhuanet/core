@@ -893,6 +893,7 @@ def main():
         {"label": "日历", "label_en": "Calendar", "deskLabel": "历史上的今天", "deskLabel_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline"},
         {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
         {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
+        {"label": "绘画史", "label_en": "History", "href": base["paint"] + "history/", "icon": "stories", "site": "paint"},
         {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
     ]
     common = {"home": base["main"], "photoBase": base["photo"],

@@ -142,7 +142,7 @@ def nav_for(kind):
            ("绘画", "Painting", paint), ("搜索", "Search", search),
            ("导航", "Directory", "https://netcn.org/")]
     if kind == "paint":
-        nav.insert(4, ("绘画史", "Painting History", "../history/"))
+        nav.insert(6, ("绘画史", "History", "../history/"))
     return nav
 
 
