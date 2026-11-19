@@ -210,7 +210,7 @@ def load_records():
                 "review_status": fm.get("review_status") or "clean",
                 "review_note": fm.get("review_note") or "",
                 "isLink": collection == "links",
-                "title": fm.get("title") or rid,
+                "title": fm.get("title_zh") or fm.get("title") or rid,
                 "year": fm.get("year"),
                 "date_label": fm.get("date_label"),
                 "era": fm.get("era"),
@@ -222,7 +222,7 @@ def load_records():
                 "period": fm.get("period"),
                 "place": fm.get("place"),
                 "china": fm.get("china"),
-                "creator": fm.get("creator"),
+                "creator": fm.get("creator_zh") or fm.get("creator"),
                 "creator_status": fm.get("creator_status"),
                 "movement": fm.get("movement") or "",
                 "movement_en_raw": fm.get("movement_en") or "",
@@ -264,14 +264,14 @@ def load_records():
                 "decade": preview["decade"] if preview else (
                     fm.get("period") if re.fullmatch(r"\d{4}s", str(fm.get("period") or "")) else ""),
                 "search_text": " ".join(str(x) for x in [
-                    fm.get("title"), fm.get("year"), fm.get("date_label"), fm.get("place"),
+                    fm.get("title_zh"), fm.get("title"), fm.get("title_en"), fm.get("year"), fm.get("date_label"), fm.get("place"),
                     fm.get("creator"), fm.get("movement"), fm.get("topic"), fm.get("theme"), fm.get("region"),
                     fm.get("medium"), fm.get("source_short"), note] if x).lower(),
             }
             tr = RECORD_I18N.get(rid, {}) or {}
             ue = USAGE_EN.get(u["code"], {})
-            rec["title_en"] = tr.get("title") or (fm.get("title") if not re.search(r"[\u4e00-\u9fff]", str(fm.get("title") or "")) else rec["title"])
-            rec["creator_en"] = tr.get("creator") or creator_en(fm.get("creator"))
+            rec["title_en"] = tr.get("title") or fm.get("title_en") or (fm.get("title") if not re.search(r"[\u4e00-\u9fff]", str(fm.get("title") or "")) else rec["title"])
+            rec["creator_en"] = tr.get("creator") or fm.get("creator_en") or creator_en(fm.get("creator"))
             rec["movement_en"] = tr.get("movement") or rec.get("movement_en_raw") or ""
             rec["dimensions_en"] = tr.get("dimensions") or rec.get("dimensions_en_raw") or rec.get("dimensions") or ""
             rec["holding_en"] = tr.get("holding") or rec.get("holding_en_raw") or ""
