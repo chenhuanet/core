@@ -699,7 +699,7 @@ def write_galleries(build_id):
         g_top_nav = (
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
-            '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
+            '<a href="../../dist/main/today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
             '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
             '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
             '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
@@ -708,7 +708,7 @@ def write_galleries(build_id):
             g_home +
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
-            '<a href="../../dist/main/today/"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
+            '<a href="../../dist/main/today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
             '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
             '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
             '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
@@ -792,7 +792,7 @@ def write_404(build_id):
                            ("尘画", "Frame & Grain", "/"),
                            ("主题", "Themes", "/themes/"),
                            ("时间线", "Timeline", "/timeline/"),
-                           ("历史上的今天", "On This Day", "/today/"),
+                           ("日历", "Calendar", "/today/calendar.html"),
                            ("摄影", "Photography", "https://photo.chenhua.net/"),
                            ("绘画", "Painting", "https://paint.chenhua.net/"),
                            ("导航", "Directory", "https://netcn.org/"),
@@ -894,10 +894,10 @@ def main():
             calendar = base["paint"] + "history/calendar.html"
         elif site == "photo":
             timeline = base["photo"] + "timeline/"
-            calendar = base["photo"] + "today/"
+            calendar = base["photo"] + "today/calendar.html"
         else:
             timeline = base["main"] + "timeline/"
-            calendar = base["main"] + "today/"
+            calendar = base["main"] + "today/calendar.html"
         return [
             {"label": "尘画", "label_en": "Frame & Grain", "href": base[site], "icon": "home", "site": site},
             {"label": "主题", "label_en": "Themes", "href": themes, "icon": "stories", "site": site},

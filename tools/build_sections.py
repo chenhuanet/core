@@ -530,6 +530,9 @@ def add_photo_lead(source, kind):
 @media(max-width:900px){.photo-lead{padding:30px 23.5px 8px}.photo-lead h2{font-size:34px}}
 </style></head>""", 1)
     return source
+
+
+def copy_today_css():
     src = CORE / "static" / "today.css"
     dst = DIST / "assets" / "today.css"
     dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
@@ -538,8 +541,8 @@ def add_photo_lead(source, kind):
 def relabel_calendar_pages():
     old_plain = '<a href="../today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
     old_current = '<a href="../today/" aria-current="page"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
-    new_plain = '<a href="../today/"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
-    new_current = '<a href="../today/" aria-current="page"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
+    new_plain = '<a href="../today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
+    new_current = '<a href="../today/calendar.html" aria-current="page"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
     for base, sub in ((MAIN, "themes"), (MAIN, "timeline"), (MAIN, "today"),
                       (PHOTO, "themes"), (PHOTO, "timeline"), (PHOTO, "today")):
         folder = base / sub
@@ -561,7 +564,9 @@ def main():
     patch_today_heroes()
     relabel_calendar_pages()
     copy_today_css()
-    print("sections: photo themes/timeline/today copied; main combined themes/timeline; paint/themes")
+    import build_calendar_index as bci
+    bci.main()
+    print("sections: photo themes/timeline/today copied; main combined themes/timeline; paint/themes; illustrated calendars")
 
 
 if __name__ == "__main__":
