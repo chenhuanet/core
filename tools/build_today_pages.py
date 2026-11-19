@@ -62,21 +62,24 @@ def _tspan(zh, en):
 
 def primary_links():
     return [
-        ("尘画", "Frame & Grain", "../"),
         ("主题", "Themes", "../themes/"),
         ("时间线", "Timeline", "../timeline/"),
         ("历史上的今天", "On This Day", "../today/"),
         ("摄影", "Photography", "../../photo/"),
         ("绘画", "Painting", "../../paint/"),
-        ("搜索", "Search", "../search/"),
         ("导航", "Directory", "https://netcn.org/"),
     ]
 
 
 def footer_links():
     return [
-        ("日历", "Calendar", "../today/") if z == "历史上的今天" else (z, e, h)
-        for z, e, h in primary_links()
+        ("尘画", "Frame & Grain", "../"),
+        ("主题", "Themes", "../themes/"),
+        ("时间线", "Timeline", "../timeline/"),
+        ("日历", "Calendar", "../today/"),
+        ("摄影", "Photography", "../../photo/"),
+        ("绘画", "Painting", "../../paint/"),
+        ("导航", "Directory", "https://netcn.org/"),
     ]
 
 
@@ -147,7 +150,7 @@ def card(story, records):
     label = story.get("date_label") or (story.get("date") or "")
     label_en = story.get("date_label_en") or label
     image_html = (
-        '<img src="%s" alt="%s" loading="lazy">' % (esc(image), esc(title))
+        '<img src="%s" alt="%s" loading="eager">' % (esc(image), esc(title))
         if image
         else '<div class="today-noimg"><span data-l="zh">影像整理中</span><span data-l="en">Image pending</span></div>'
     )
@@ -222,13 +225,12 @@ def page(md, stories, records, days):
 <section class="day-hero">
 <div class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></div>
 <h1><span data-l="zh">{zh}</span><span data-l="en">{en}</span></h1>
-<p><span data-l="zh">这一天有 {count} 个故事。</span><span data-l="en">{count} {story_word} for this day.</span></p>
 </section>
 <section class="today-list">{cards}</section>
 <nav class="today-nav"><a href="{prev_md}.html"><span data-l="zh">← {prev_zh}</span><span data-l="en">← {prev_en}</span></a><a class="center" href="index.html"><span data-l="zh">全年日历</span><span data-l="en">Full calendar</span></a><a href="{next_md}.html"><span data-l="zh">{next_zh} →</span><span data-l="en">{next_en} →</span></a></nav>
 </main>
-{footer}
 </div>
+{footer}
 <script src="../../assets/site.js?v={build}"></script>
 </body></html>
 """.format(
@@ -278,13 +280,13 @@ def index_page(stories_by_day, days, records):
         cover = month_cover(m)
         cover_html = ""
         if cover:
-            cover_html = '<div class="today-month-cover"><img src="%s" alt="" loading="lazy">%s</div>' % (
+            cover_html = '<div class="today-month-cover"><img src="%s" alt="" loading="eager">%s</div>' % (
                 esc(cover), '<span class="today-month-flag"><span data-l="zh">本月</span><span data-l="en">This month</span></span>' if current else "")
         cards.append("""<section class="today-month%s">
-  %s<h2><span data-l="zh">%s</span><span data-l="en">%s</span><span class="today-month-count"><span data-l="zh">%d 个故事</span><span data-l="en">%d stories</span></span></h2>
+  %s<h2><span data-l="zh">%s</span><span data-l="en">%s</span></h2>
   <div class="today-weekdays" aria-hidden="true"><span><span data-l="zh">日</span><span data-l="en">S</span></span><span><span data-l="zh">一</span><span data-l="en">M</span></span><span><span data-l="zh">二</span><span data-l="en">T</span></span><span><span data-l="zh">三</span><span data-l="en">W</span></span><span><span data-l="zh">四</span><span data-l="en">T</span></span><span><span data-l="zh">五</span><span data-l="en">F</span></span><span><span data-l="zh">六</span><span data-l="en">S</span></span></div>
   <div class="today-days">%s</div>
-</section>""" % (current, cover_html, MONTH_ZH[m - 1], MONTH_EN[m - 1], month_stories, month_stories, "".join(cells)))
+</section>""" % (current, cover_html, MONTH_ZH[m - 1], MONTH_EN[m - 1], "".join(cells)))
     today_count = len(stories_by_day.get(TODAY_MD, []))
     # A small visual lead-in: today's image plus the nearest dated images.
     feature = []
@@ -309,7 +311,7 @@ def index_page(stories_by_day, days, records):
         side = feature[1:3]
         if side:
             feature_side = '<div class="today-feature-side">%s</div>' % "".join(
-                '<a href="%s.html"><img src="%s" alt="%s" loading="lazy"><span class="today-feature-label"><span data-l="zh">%s</span><span data-l="en">%s</span></span></a>' % (
+                '<a href="%s.html"><img src="%s" alt="%s" loading="eager"><span class="today-feature-label"><span data-l="zh">%s</span><span data-l="en">%s</span></span></a>' % (
                     md, esc(image), esc(story.get("title") or ""), text(day_title(md)[0]), text(day_title(md)[1]))
                 for md, story, image in side)
     feature_html = '<div class="today-feature">%s%s</div>' % (feature_main, feature_side) if feature_main else ""
@@ -347,15 +349,15 @@ def index_page(stories_by_day, days, records):
     <div>
       <p class="eyebrow"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></p>
       <h1><span data-l="zh">{today_zh}</span><span data-l="en">{today_en}</span></h1>
-      <p class="today-intro-meta"><span data-l="zh">今天有 {today_count} 个故事</span><span data-l="en">{today_count} {story_word} today</span><a href="{today_md}.html"><span data-l="zh">阅读今天的故事 →</span><span data-l="en">Read today's {story_word} →</span></a></p>
+      <p class="today-intro-meta"><a href="{today_md}.html"><span data-l="zh">阅读今天的故事 →</span><span data-l="en">Read today's {story_word} →</span></a></p>
     </div>
   </header>
   {feature}
   <div class="year-head"><h2><span data-l="zh">全年日历</span><span data-l="en">Full calendar</span></h2></div>
   <div class="today-months">{cards}</div>
 </main>
-{footer}
 </div>
+{footer}
 <script src="../../assets/site.js?v={build}"></script>
 </body></html>
 """.format(desc=esc(desc), desc_en=esc(desc_en), site=SITE, build=BUILD_ID,

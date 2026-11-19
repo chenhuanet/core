@@ -136,11 +136,14 @@ def nav_for(kind):
     else:
         home, theme, timeline = "../../main/", "../../main/themes/", "../../main/timeline/"
         session, search, photo, paint = "../../main/today/", "../../main/search/?scope=paintings", "../../photo/", "../"
-    return [("尘画", "Frame & Grain", home), ("主题", "Themes", theme),
-            ("时间线", "Timeline", timeline), ("历史上的今天", "On This Day", session),
-            ("摄影", "Photography", photo),
-            ("绘画", "Painting", paint), ("搜索", "Search", search),
-            ("导航", "Directory", "https://netcn.org/")]
+    nav = [("尘画", "Frame & Grain", home), ("主题", "Themes", theme),
+           ("时间线", "Timeline", timeline), ("历史上的今天", "On This Day", session),
+           ("摄影", "Photography", photo),
+           ("绘画", "Painting", paint), ("搜索", "Search", search),
+           ("导航", "Directory", "https://netcn.org/")]
+    if kind == "paint":
+        nav.insert(4, ("绘画史", "Painting History", "../history/"))
+    return nav
 
 
 def tspan(zh, en):
@@ -238,12 +241,11 @@ def foot(kind="main"):
     nav = "".join('<a href="%s">%s</a>' % (
         h, footer_home_label() if z == "尘画" else tspan(z, e))
         for z, e, h in nav_items)
-    return """<footer class="site-foot">
+    return """</div><footer class="site-foot">
 %s
 <nav class="sf-nav" aria-label="站内导航">%s</nav>
 <div class="sf-right"><a href="../legal/">%s</a></div>
 </footer>
-</div>
 <script src="../../assets/site.js?v=%s"></script>
 </body></html>
 """ % (footer_left(), nav, tspan("免责条款", "Disclaimer"), BUILD_ID)

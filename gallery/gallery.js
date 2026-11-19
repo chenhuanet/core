@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   var CFG = window.GALLERY_CONFIG || {};
-  var state = { items: [], filter: "all", visible: 60, counts: {} };
+  var state = { items: [], filter: "all", visible: 30, counts: {} };
   var masonry = document.getElementById("gMasonry");
   var chips = document.getElementById("gChips");
   var count = document.getElementById("gCount");
@@ -57,7 +57,7 @@
     var p2 = fetch("manifests/paintings.json").then(function (r) { return r.json(); }).catch(function () { return { images: [] }; });
     Promise.all([p1, p2]).then(function (res) {
       state.items = (res[0].images || []).concat(res[1].images || []);
-      state.items.sort(function (a, b) { return (a.year || 0) - (b.year || 0); });
+      state.items.sort(function (a, b) { return (b.year || 0) - (a.year || 0); });
       state.counts = state.items.reduce(function (acc, x) {
         acc[x.collection] = (acc[x.collection] || 0) + 1; return acc;
       }, {});
@@ -69,12 +69,12 @@
     var b = e.target.closest("[data-filter]");
     if (!b) return;
     state.filter = b.getAttribute("data-filter");
-    state.visible = 60;
+    state.visible = 30;
     renderChips();
     render();
   });
   more.addEventListener("click", function () {
-    state.visible += 60;
+    state.visible += 30;
     render();
   });
   document.addEventListener("click", function (e) {

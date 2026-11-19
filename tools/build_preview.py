@@ -693,8 +693,19 @@ def write_galleries(build_id):
         title_en = "%s · Frame & Grain Image Index" % title
         desc_zh = "按世纪浏览尘画影像。完整记录见摄影 / 绘画站。"
         desc_en = "Browse Frame & Grain images by century. Full records are on the Photography and Painting sites."
-        g_nav = (
+        g_home = (
             '<a href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en"><span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span></span></a>'
+        )
+        g_top_nav = (
+            '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
+            '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
+            '<a href="../../dist/main/today/"><span data-l="zh">历史上的今天</span><span data-l="en">On This Day</span></a>'
+            '<a href="../../dist/photo/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
+            '<a href="../../dist/paint/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
+            '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
+        )
+        g_foot_nav = (
+            g_home +
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
             '<a href="../../dist/main/today/"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
@@ -731,7 +742,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 <header class="g-head">
   <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="../../dist/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
   <nav class="g-nav">
-    {g_nav}
+    {g_top_nav}
   </nav>
   <div class="g-tools">
     <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button>
@@ -753,7 +764,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 </main>
 <footer class="site-foot">
   {g_left}
-  <nav class="sf-nav" aria-label="站内导航">{g_nav}</nav>
+  <nav class="sf-nav" aria-label="站内导航">{g_foot_nav}</nav>
   {g_right}
 </footer>
 <script>window.GALLERY_CONFIG = {json.dumps({
@@ -834,12 +845,12 @@ def write_404(build_id):
 <div class="empty empty-leaf"><img class="leaf-mark empty-mark" src="/assets/leaf/surprised.svg" width="120" height="120" alt="" aria-hidden="true" decoding="async"><b><span data-l="zh">页面不存在</span><span data-l="en">Page not found</span></b><p><span data-l="zh">地址可能已变更，或页面尚未收录。</span><span data-l="en">The address may have changed, or the page is not here.</span></p></div>
 <div><a class="btn gold" href="/"><span data-l="zh">返回首页</span><span data-l="en">Back home</span></a><a class="btn" href="/themes/"><span data-l="zh">浏览主题</span><span data-l="en">Browse themes</span></a></div>
 </main>
+</div>
 <footer class="site-foot">
 %s
 <nav class="sf-nav" aria-label="站内导航">%s</nav>
 <div class="sf-right"><a href="/legal/"><span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>
 </footer>
-</div>
 <script src="/assets/site.js?v=%s"></script>
 </body></html>
 """ % (build_id, build_id, nav_links, foot_left, foot_nav_links, build_id)
