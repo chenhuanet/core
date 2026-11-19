@@ -83,7 +83,7 @@ TRAIL_BY_SLUG = {t["slug"]: t for t in trails.TRAILS}
 
 def img_of(rid):
     r = RECORDS.get(rid) or {}
-    return r.get("preview_image") or r.get("image") or ""
+    return r.get("image") or r.get("preview_image") or ""
 
 
 def og_img(rid):
@@ -747,6 +747,7 @@ def calendar_page():
 <section class="ph-section"><div class="ph-calendar">%s</div></section>
 <section class="ph-section" id="art-events"><h2>%s</h2><p class="ph-calendar-note">%s</p><div class="ph-event-list">%s</div></section>
 <script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");document.querySelectorAll('.ph-day[data-date="'+md+'"],.ph-event[data-date="'+md+'"]').forEach(function(el){el.classList.add("today")});})();</script>
+<script>(function(){var imgs=[].slice.call(document.querySelectorAll('.ph-day img'));function load(el){if(el.dataset.phLoaded==="1")return;el.dataset.phLoaded="1";el.loading="eager";var s=el.getAttribute("src");if(s)el.setAttribute("src",s);}if(!("IntersectionObserver" in window)){imgs.forEach(load);return;}var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){load(e.target);io.unobserve(e.target);}});},{rootMargin:"700px 0px"});imgs.forEach(function(i){io.observe(i);});})();</script>
 """ % (
         tspan("绘画史", "Painting History"), tspan("日历", "Calendar"),
         tspan("每天一件作品，一年三轮多一点。不是“历史上的今天”，而是“今天可以看什么”。",
@@ -837,8 +838,8 @@ def today_paint_card(md, work_id):
         return ""
     return """<!-- paint-today -->
 <section class="today-paint">
-<a class="today-paint-img" href="../../paint/painting/%s.html"><img src="%s" alt="%s" loading="lazy"></a>
-<div class="today-paint-copy"><p class="eyebrow">%s</p><h2><a href="../../paint/painting/%s.html">%s</a></h2><p>%s</p><p class="today-paint-note">%s</p><a class="today-more" href="../../paint/history/calendar.html">%s</a></div>
+<a class="today-paint-img" href="https://paint.chenhua.net/painting/%s.html"><img src="%s" alt="%s" loading="lazy"></a>
+<div class="today-paint-copy"><p class="eyebrow">%s</p><h2><a href="https://paint.chenhua.net/painting/%s.html">%s</a></h2><p>%s</p><p class="today-paint-note">%s</p><a class="today-more" href="https://paint.chenhua.net/history/calendar.html">%s</a></div>
 </section>
 <!-- /paint-today -->
 """ % (
