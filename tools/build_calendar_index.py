@@ -60,22 +60,19 @@ for date in BY_DATE:
 
 CAL_CSS = """
 <style>
-.cal-main{max-width:1240px;margin:0 auto;padding:0 0 62px}
-.cal-hero{padding:54px 28px 30px;border-bottom:1px solid var(--line)}
-.cal-kicker{font-family:var(--sans,ui-sans-serif,sans-serif);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
-.cal-hero h1{font-family:var(--serif,"Noto Serif SC",serif);font-weight:400;font-size:clamp(38px,5.8vw,76px);line-height:1.05;letter-spacing:-.03em;margin:0 0 16px;max-width:900px}
-.cal-hero h1 i{font-style:normal;color:var(--accent)}
-.cal-sub{max-width:780px;color:var(--muted);font-size:14px;line-height:1.9;margin:0}
-.cal-meta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:18px;color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
-.cal-meta b{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--text);letter-spacing:0;margin-right:4px}
-.cal-meta a{color:var(--accent);text-decoration:none}
-.cal-jump{display:flex;flex-wrap:wrap;gap:6px;padding:18px 28px 4px}
-.cal-jump a{border:1px solid var(--line);padding:5px 9px;text-decoration:none;color:var(--muted);font-size:10px;line-height:1.2}
-.cal-jump a:hover{border-color:var(--accent);color:var(--text)}
-.cal-month{padding:24px 28px 16px;border-top:1px solid var(--line)}
-.cal-month:first-of-type{border-top:0}
+.cal-main{max-width:none;width:min(100%,1760px);margin:0 auto;padding:16px clamp(18px,3vw,48px) 54px}
+.cal-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.cal-prev,.cal-next{flex:none;width:32px;height:32px;border:1px solid var(--rule);background:var(--panel);color:var(--muted);border-radius:50%;font:16px/1 var(--serif);cursor:pointer}
+.cal-prev:hover,.cal-next:hover{border-color:var(--accent);color:var(--accent)}
+.cal-jump{display:flex;align-items:center;gap:4px;overflow-x:auto;flex:1;padding:0;scrollbar-width:none}
+.cal-jump::-webkit-scrollbar{display:none}
+.cal-jump a{flex:none;border:1px solid transparent;padding:6px 9px;text-decoration:none;color:var(--muted);font-size:10px;line-height:1.2;white-space:nowrap}
+.cal-jump a:hover{color:var(--text)}
+.cal-jump a.is-active{border-color:var(--accent);color:var(--accent)}
+.cal-month{display:none;padding:6px 0 16px;border:0}
+.cal-month.is-active{display:block}
 .cal-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:0 0 12px}
-.cal-head h2{font-family:var(--serif,"Noto Serif SC",serif);font-weight:400;font-size:clamp(26px,3vw,38px);line-height:1.1;margin:0}
+.cal-head h2{font-family:var(--serif,"Noto Serif SC",serif);font-weight:400;font-size:clamp(30px,3.4vw,46px);line-height:1.1;margin:0}
 .cal-head h2 em{font-style:normal;font-size:11px;letter-spacing:.12em;color:var(--muted);margin-left:10px;vertical-align:.35em}
 .cal-head .cal-count{color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
 .cal-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:0 0 5px}
@@ -94,20 +91,17 @@ CAL_CSS = """
 .cal-paint{position:absolute;z-index:3;top:6px;right:6px;width:35%;height:52%;object-fit:cover;border:1px solid rgba(255,255,255,.7);box-shadow:0 2px 10px rgba(0,0,0,.35);background:#0d0c0b}
 .cal-paint-label{position:absolute;z-index:4;top:6px;right:6px;width:35%;text-align:right;font-size:7px;letter-spacing:.08em;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
 .cal-day.is-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.cal-foot{padding:24px 28px 0;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px}
-.cal-foot a{border:1px solid var(--line);padding:7px 11px;text-decoration:none;color:var(--muted);font-size:10px}
-.cal-foot a:hover{border-color:var(--accent);color:var(--text)}
 @media(max-width:900px){
- .cal-hero{padding:32px 20px 22px}.cal-hero h1{font-size:34px}.cal-sub{font-size:12px}
- .cal-jump{padding:12px 20px 2px}.cal-month{padding:19px 20px 10px}
+ .cal-main{padding:14px 20px 34px}.cal-prev,.cal-next{width:30px;height:30px}
  .cal-caption b{font-size:9px;-webkit-line-clamp:1}.cal-caption span{display:none}.cal-num{font-size:12px;top:5px;left:6px}
  .cal-paint{width:30%;height:45%;top:4px;right:4px}.cal-paint-label{display:none}
  .cal-week span{font-size:8px}
 }
 @media(max-width:600px){
- .cal-grid,.cal-week{gap:3px}.cal-month{padding:16px 14px 8px}.cal-hero{padding:26px 14px 18px}
+ .cal-grid,.cal-week{gap:3px}.cal-main{padding:12px 14px 26px}
  .cal-caption{left:5px;right:5px;bottom:4px}.cal-caption b{font-size:8px}.cal-num{font-size:10px}
  .cal-paint{display:none}
+ .cal-head h2{font-size:28px}
 }
 </style>
 """
@@ -178,11 +172,15 @@ def build_calendar(site):
         stats = ('<div class="cal-meta"><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
         combined = False
 
-    body = ['<section class="cal-hero"><p class="cal-kicker">%s</p><h1>%s</h1><p class="cal-sub">%s</p>%s'
-            '<div class="cal-jump">%s</div></section>' % (
-                esc(kicker), h1, sub, stats,
-                "".join('<a href="#month-%02d">%s</a>' % (m, tspan(MONTH_ZH[m - 1][:2], MONTH_EN[m - 1][:3]))
-                        for m in range(1, 13)))]
+    month_links = "".join(
+        '<a href="#month-%02d"%s>%s</a>' % (
+            m, ' class="is-active"' if m == 1 else "",
+            tspan(MONTH_ZH[m - 1][:2], MONTH_EN[m - 1][:3]))
+        for m in range(1, 13))
+    prev_label = "上个月" if site == "main" else "Previous month"
+    next_label = "下个月" if site == "main" else "Next month"
+    body = ['<div class="cal-bar"><button class="cal-prev" type="button" aria-label="%s">‹</button><div class="cal-jump">%s</div><button class="cal-next" type="button" aria-label="%s">›</button></div>' % (
+        prev_label, month_links, next_label)]
     slots = ph_calendar.build_slots(PAINT_IDS)
     painting_by_date = {s["date"]: PAINT_BY_ID.get(s["work"]) for s in slots}
     for month in range(1, 13):
@@ -194,19 +192,17 @@ def build_calendar(site):
             stories = BY_DATE.get(md) or []
             cells.append(day_card(md, stories[0] if stories else None,
                                   painting_by_date.get(md) if combined else None, combined))
-        body.append('<section class="cal-month" id="month-%02d"><div class="cal-head"><h2>%s<em>%s</em></h2>'
+        body.append('<section class="cal-month%s" id="month-%02d"><div class="cal-head"><h2>%s<em>%s</em></h2>'
                     '</div><div class="cal-week">%s</div>'
                     '<div class="cal-grid">%s</div></section>' % (
-                        month, tspan(MONTH_ZH[month - 1], MONTH_EN[month - 1]),
+                        " is-active" if month == 1 else "", month,
+                        tspan(MONTH_ZH[month - 1], MONTH_EN[month - 1]),
                         tspan("2024", "2024"),
                         "".join('<span>%s</span>' % tspan(z, e) for z, e in zip(WEEK_ZH, WEEK_EN)),
                         "".join(cells)))
-    body.append('<div class="cal-foot"><a href="../">%s</a><a href="../timeline/">%s</a>'
-                '<a href="../themes/">%s</a><a href="https://paint.chenhua.net/history/calendar.html">%s</a></div>'
-                % (tspan("回到今天", "Back to today"), tspan("摄影时间线", "Photography timeline"),
-                   tspan("摄影主题", "Photography themes"), tspan("绘画史日历", "Painting calendar")))
+    body.append('<script>(function(){var months=[].slice.call(document.querySelectorAll(".cal-month"));var links=[].slice.call(document.querySelectorAll(".cal-jump a"));var bar=document.querySelector(".cal-bar");var i=0;var hm=location.hash.match(/month-(\\d{2})/);if(hm){i=Math.max(0,Math.min(11,parseInt(hm[1],10)-1));}else{i=new Date().getMonth();}function show(n){i=Math.max(0,Math.min(11,n));months.forEach(function(el,k){el.classList.toggle("is-active",k===i)});links.forEach(function(el,k){el.classList.toggle("is-active",k===i)});var a=links[i];if(a&&a.scrollIntoView){a.scrollIntoView({block:"nearest",inline:"center"})}if(history.replaceState)history.replaceState(null,"","#month-"+String(i+1).padStart(2,"0"));}links.forEach(function(a,k){a.addEventListener("click",function(e){e.preventDefault();show(k)})});var p=bar&&bar.querySelector(".cal-prev"),n=bar&&bar.querySelector(".cal-next");if(p)p.addEventListener("click",function(){show(i-1)});if(n)n.addEventListener("click",function(){show(i+1)});show(i);})();</script>')
     body.append('<script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");var el=document.querySelector(\'.cal-day[data-date="\'+md+\'"]\');if(el)el.classList.add("is-today")})();</script>')
-    body.append('<script>(function(){var imgs=[].slice.call(document.querySelectorAll(".cal-photo"));function load(el){if(el.dataset.calLoaded==="1")return;el.dataset.calLoaded="1";el.loading="eager";var s=el.getAttribute("src");if(s)el.setAttribute("src",s);}function prime(){var vh=window.innerHeight||800;imgs.forEach(function(el){var r=el.getBoundingClientRect();if(r.top<vh+900&&r.bottom>-220)load(el);});}prime();window.addEventListener("scroll",prime,{passive:true});window.addEventListener("resize",prime,{passive:true});setTimeout(prime,700);})();</script>')
+    body.append('<script>(function(){var imgs=[].slice.call(document.querySelectorAll(".cal-photo,.cal-paint"));function load(el){if(el.dataset.calLoaded==="1")return;el.dataset.calLoaded="1";el.loading="eager";var s=el.getAttribute("src");if(s)el.setAttribute("src",s);}function prime(){var vh=window.innerHeight||800;imgs.forEach(function(el){var r=el.getBoundingClientRect();if(r.top<vh+900&&r.bottom>-220)load(el);});}prime();window.addEventListener("scroll",prime,{passive:true});window.addEventListener("resize",prime,{passive:true});setTimeout(prime,700);})();</script>')
 
     page = source.read_text(encoding="utf-8")
     page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % esc(title_zh), page, count=1, flags=re.S)
@@ -219,7 +215,8 @@ def build_calendar(site):
     page = page.replace("https://www.chenhua.net/today/", "https://www.chenhua.net/today/calendar.html")
     page = page.replace("https://photo.chenhua.net/today/", "https://photo.chenhua.net/today/calendar.html")
     page = page.replace("<main class=\"today-main today-index\">", "<main class=\"today-main cal-main\">")
-    page = re.sub(r"<main[^>]*>.*?</main>", "<main class=\"today-main cal-main\">" + "".join(body) + "</main>",
+    page = re.sub(r"<main[^>]*>.*?</main>",
+                  lambda m: "<main class=\"today-main cal-main\">" + "".join(body) + "</main>",
                   page, count=1, flags=re.S)
     page = page.replace("</head>", CAL_CSS + "</head>", 1)
     page = page.replace('href="../today/" aria-current="page"', 'href="../today/calendar.html" aria-current="page"')

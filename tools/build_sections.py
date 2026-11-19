@@ -531,7 +531,7 @@ def relabel_calendar_pages():
 LIBRARY_CSS = """
 <style>
 /* ---------- 主题库：摄影与绘画共用同一种卡片 ---------- */
-.theme-library{max-width:1240px;margin:0 auto;padding:30px 28px 46px}
+.theme-library{max-width:min(100%,1760px);margin:0 auto;padding:28px clamp(18px,3vw,48px) 46px}
 .lib-section{border-top:1px solid var(--rule);padding:23px 0 9px}
 .lib-section:first-of-type{border-top:0;padding-top:4px}
 .lib-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:0 0 14px}
@@ -549,55 +549,69 @@ LIBRARY_CSS = """
 .lib-card h3 span{display:block}
 .lib-card h3 span[data-l="en"]{font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:4px;font-family:var(--sans,ui-sans-serif,sans-serif);text-transform:none}
 .lib-card p{font-size:11px;line-height:1.75;color:var(--muted);margin:0}
-@media(max-width:1050px){.lib-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){.lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lib-thumb img{height:128px}.theme-library{padding:22px 20px 34px}}
+.duo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,2.6vw,42px);align-items:start}
+.duo-col{min-width:0}
+.lib-list{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.lib-list .lib-thumb img{height:clamp(180px,16vw,260px)}
+.lib-list .lib-body{min-height:0;padding:13px 15px 15px}
+.lib-list .lib-card h3{font-size:clamp(22px,2vw,28px)}
+.lib-list .lib-card p{font-size:12px;line-height:1.8}
+.movement-index{margin-top:26px;border-top:1px solid var(--rule);padding-top:15px}
+.mi-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 11px}
+.mi-head h3{font-family:var(--serif);font-weight:400;font-size:19px;margin:0}
+.mi-head span{font-size:9px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.movement-index .movement-links{display:flex;flex-wrap:wrap;gap:7px}
+.movement-index .movement-links a{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--line);padding:6px 9px;text-decoration:none;color:var(--muted);font-size:10px;line-height:1.2}
+.movement-index .movement-links a:hover{border-color:var(--accent);color:var(--text)}
+.movement-index .movement-links a b{font-weight:400;color:var(--text);font-family:var(--serif);font-size:13px}
+@media(max-width:1050px){.lib-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.duo-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}}
+@media(max-width:760px){.lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lib-thumb img{height:128px}.theme-library{padding:22px 20px 34px}.duo-grid{grid-template-columns:1fr}.lib-list .lib-thumb img{height:160px}}
 @media(max-width:460px){.lib-grid{grid-template-columns:1fr}}
 
 /* ---------- 双轨年代轴：左绘画，右摄影 ---------- */
-.dual-timeline{max-width:1240px;margin:0 auto;padding:28px 28px 50px}
-.dual-timeline h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4vw,46px);line-height:1.1;letter-spacing:-.02em;margin:0 0 18px}
-.axis-head{display:grid;grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr);gap:20px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:9px 0}
+.dual-timeline{max-width:none;width:min(100%,1760px);margin:0 auto;padding:18px clamp(18px,3vw,48px) 54px}
+.axis-head{display:grid;grid-template-columns:minmax(0,1fr) clamp(96px,8vw,138px) minmax(0,1fr);gap:clamp(16px,2.4vw,36px);border:0;padding:10px 0 4px}
 .axis-head span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .axis-head span:nth-child(1){text-align:right;color:#b28b5d}
 .axis-head span:nth-child(2){text-align:center}
 .axis-head span:nth-child(3){color:var(--accent)}
 .dual-axis{position:relative}
 .dual-axis:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rule-strong);transform:translateX(-.5px)}
-.axis-row{display:grid;grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr);gap:20px;border-bottom:1px solid var(--rule);padding:17px 0}
-.axis-side{min-width:0;display:flex;flex-direction:column;gap:9px}
-.axis-side.paint{padding-right:8px}
-.axis-side.photo{padding-left:8px}
+.axis-row{display:grid;grid-template-columns:minmax(0,1fr) clamp(96px,8vw,138px) minmax(0,1fr);gap:clamp(16px,2.4vw,36px);border:0;padding:24px 0}
+.axis-side{min-width:0;display:flex;flex-direction:column;gap:14px}
+.axis-side.paint{padding-right:clamp(4px,1vw,16px)}
+.axis-side.photo{padding-left:clamp(4px,1vw,16px)}
 .axis-year{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;padding-top:20px;position:relative;z-index:1}
-.axis-year:before{content:"";position:absolute;top:7px;left:50%;width:7px;height:7px;border-radius:50%;background:var(--accent);transform:translateX(-50%);box-shadow:0 0 0 4px var(--paper);z-index:2}
-.axis-year b{font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.2;white-space:nowrap;background:var(--paper);padding:3px 6px}
-.axis-card{display:grid;grid-template-columns:70px minmax(0,1fr);gap:9px;align-items:center;text-decoration:none;color:var(--ink);min-width:0;padding:5px 0;border-bottom:1px dotted var(--rule)}
-.axis-card:last-child{border-bottom:0}
-.axis-card img{width:70px;height:54px;object-fit:cover;display:block;filter:saturate(.92)}
+.axis-year:before{content:"";position:absolute;top:7px;left:50%;width:9px;height:9px;border-radius:50%;background:var(--accent);transform:translateX(-50%);box-shadow:0 0 0 5px var(--paper);z-index:2}
+.axis-year b{font-family:var(--serif);font-weight:400;font-size:clamp(16px,1.4vw,20px);line-height:1.2;white-space:nowrap;background:var(--paper);padding:3px 8px}
+.axis-card{display:grid;grid-template-columns:minmax(0,44%) minmax(0,1fr);gap:16px;align-items:center;text-decoration:none;color:var(--ink);min-width:0;padding:6px 0;border:0}
+.axis-card img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;display:block;filter:saturate(.92)}
 .axis-card .ac{min-width:0;display:flex;flex-direction:column;justify-content:center}
-.axis-card h3{font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.3;margin:0 0 3px}
-.axis-card h3 span[data-l="en"]{font-size:9px;letter-spacing:.06em;color:var(--muted);font-family:var(--sans,ui-sans-serif,sans-serif);margin-top:2px}
-.axis-card .ac span{font-size:9px;color:var(--muted);line-height:1.45}
-.axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) 70px;text-align:right}
+.axis-card h3{font-family:var(--serif);font-weight:400;font-size:clamp(16px,1.35vw,20px);line-height:1.35;margin:0 0 5px}
+.axis-card h3 span[data-l="en"]{font-size:10.5px;letter-spacing:.06em;color:var(--muted);font-family:var(--sans,ui-sans-serif,sans-serif);margin-top:3px}
+.axis-card .ac span{font-size:11px;color:var(--muted);line-height:1.5}
+.axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) minmax(0,44%);text-align:right}
 .axis-side.paint .axis-card img{grid-column:2;grid-row:1}
 .axis-side.paint .axis-card .ac{grid-column:1;grid-row:1;align-items:flex-end}
 .axis-empty{min-height:1px}
 @media(max-width:860px){
-  .axis-head{grid-template-columns:1fr 82px 1fr;gap:10px}
-  .axis-row{grid-template-columns:1fr 82px 1fr;gap:10px}
-  .axis-card{grid-template-columns:54px minmax(0,1fr)}
-  .axis-card img{width:54px;height:44px}
-  .axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) 54px}
-  .axis-card h3{font-size:14px}
+  .axis-head{grid-template-columns:1fr 86px 1fr;gap:12px}
+  .axis-row{grid-template-columns:1fr 86px 1fr;gap:12px}
+  .axis-card{grid-template-columns:minmax(0,40%) minmax(0,1fr);gap:12px}
+  .axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) minmax(0,40%)}
+  .axis-card h3{font-size:15px}
 }
 @media(max-width:620px){
-  .dual-timeline{padding:22px 20px 34px}
+  .dual-timeline{padding:20px 18px 34px}
   .axis-head{display:none}
-  .dual-axis:before{display:none}
-  .axis-row{grid-template-columns:1fr;gap:0;padding:0 0 14px}
-  .axis-year{align-items:flex-start;text-align:left;padding:12px 0 9px;border-bottom:1px solid var(--rule);margin-bottom:8px}
-  .axis-year b,.axis-year em{background:none;padding:0}
+  .dual-axis:before{display:block;left:8px}
+  .axis-row{grid-template-columns:1fr;gap:0;padding:0 0 20px 28px;position:relative}
+  .axis-row:before{content:"";position:absolute;left:-1px;top:18px;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px var(--paper)}
+  .axis-year{align-items:flex-start;text-align:left;padding:8px 0 10px;border:0;margin-bottom:0}
+  .axis-year:before{display:none}
+  .axis-year b{background:none;padding:0}
   .axis-side{padding:0}
-  .axis-side.paint .axis-card{grid-template-columns:54px minmax(0,1fr);text-align:left}
+  .axis-side.paint .axis-card{grid-template-columns:minmax(0,40%) minmax(0,1fr);text-align:left}
   .axis-side.paint .axis-card img{grid-column:1;grid-row:1}
   .axis-side.paint .axis-card .ac{grid-column:2;grid-row:1;align-items:flex-start}
 }
@@ -638,26 +652,27 @@ def movement_library_card(m):
 def theme_library_body():
     photo_cards = "".join(photo_theme_card(s) for s in SERIES)
     trail_cards = "".join(trail_library_card(t) for t in TRAILS)
-    movement_cards = "".join(movement_library_card(m) for m in MOVEMENTS)
     return """%s
 <main class="theme-library">
-<section class="lib-section" id="photo-themes">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">PHOTOGRAPHY</span></div>
-<div class="lib-grid">%s</div>
+<div class="duo-grid">
+<section class="duo-col" id="photo-themes">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">%s</span></div>
+<div class="lib-list">%s</div>
 </section>
-<section class="lib-section" id="paint-trails">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">PAINTING / TRAILS</span></div>
-<div class="lib-grid">%s</div>
+<section class="duo-col" id="paint-themes">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">%s</span></div>
+<div class="lib-list">%s</div>
+<div class="movement-index">
+<div class="mi-head"><h3>%s</h3><span>%s</span></div>
+<div class="movement-links">%s</div>
+</div>
 </section>
-<section class="lib-section" id="paint-movements">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">PAINTING / MOVEMENTS</span></div>
-<div class="lib-grid">%s</div>
-</section>
+</div>
 </main>""" % (
         LIBRARY_CSS,
-        tspan("摄影", "Photography"), photo_cards,
-        tspan("绘画 · 小径", "Painting · Trails"), trail_cards,
-        tspan("绘画 · 流派", "Painting · Movements"), movement_cards,
+        tspan("摄影", "Photography"), "9 SERIES", photo_cards,
+        tspan("绘画", "Painting"), "8 TRAILS / 15 MOVEMENTS", trail_cards,
+        tspan("绘画 · 流派", "Painting · Movements"), "15 MOVEMENTS", movement_links(),
     )
 
 
@@ -696,13 +711,12 @@ def dual_axis_body():
             photo_cards if photo_cards else '<div class="axis-empty"></div>',
         ))
     return """%s
-<main class="dual-timeline">
-<h1>%s</h1>
+<main class="dual-timeline" aria-label="%s">
 <div class="axis-head"><span>%s</span><span>%s</span><span>%s</span></div>
 <div class="dual-axis">%s</div>
 </main>""" % (
         LIBRARY_CSS,
-        tspan("时间线", "Timeline"),
+        "Timeline",
         tspan("绘画", "Painting"), tspan("年代", "Years"), tspan("摄影", "Photography"),
         "".join(rows),
     )
@@ -755,8 +769,8 @@ def photo_theme_library_body():
     return """%s
 <main class="theme-library">
 <section class="lib-section" id="photo-themes">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">PHOTOGRAPHY</span></div>
-<div class="lib-grid">%s</div>
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">9 SERIES</span></div>
+<div class="lib-list">%s</div>
 </section>
 </main>""" % (LIBRARY_CSS, tspan("摄影主题", "Photography Themes"), cards)
 
@@ -773,10 +787,9 @@ def photo_axis_body():
 <div class="p-grid">%s</div></section>""" % (
             esc(label), cards))
     return """%s%s
-<main class="photo-axis">
-<h1>%s</h1>
+<main class="photo-axis" aria-label="Photography Timeline">
 <div class="p-axis">%s</div>
-</main>""" % (LIBRARY_CSS, PHOTO_AXIS_CSS, tspan("摄影时间线", "Photography Timeline"), "".join(rows))
+</main>""" % (LIBRARY_CSS, PHOTO_AXIS_CSS, "".join(rows))
 
 
 def photo_page(from_path, body, title_zh, title_en):
