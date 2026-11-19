@@ -154,37 +154,28 @@ def build_calendar(site):
     if site == "main":
         source = MAIN / "today" / "index.html"
         target = MAIN / "today" / "calendar.html"
-        title_zh = "366 天 · 摄影与绘画 · 尘画"
-        title_en = "366 Days · Photography & Painting · Frame & Grain"
-        data_zh = "366 天，每天一张照片与一幅画。"
-        data_en = "366 days, each with a photograph and a painting."
-        kicker = "CALENDAR / PHOTOGRAPHY × PAINTING"
-        h1 = tspan("每一天，<br>一张照片，<i>一幅画</i>。",
-                   "Every day,<br>one photograph, <i>one painting</i>.")
+        title_zh = "日历 · 尘画"
+        title_en = "Calendar · Frame & Grain"
+        data_zh = "摄影与绘画的日历。"
+        data_en = "A calendar of photography and painting."
+        kicker = "CALENDAR"
+        h1 = tspan("日历", "Calendar")
         h1 = h1.replace("&lt;br&gt;", "<br>").replace("&lt;i&gt;", "<i>").replace("&lt;/i&gt;", "</i>")
-        sub = tspan("摄影把当天发生的事留在光里，绘画把另一段时间放进同一格。"
-                    "三百六十六天，每天一张事件照片作底，一幅绘画作旁注；点开任何一天，读当天的故事。",
-                    "Photography keeps what happened that day in light; painting places another time in the same square. "
-                    "Three hundred and sixty-six days, each with an event photograph as the ground and a painting as a margin; open any day to read its story.")
-        stats = ('<div class="cal-meta"><span><b>366</b>天</span><span><b>379</b>篇摄影故事</span>'
-                 '<span><b>101</b>件绘画</span><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
+        sub = ""
+        stats = ('<div class="cal-meta"><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
         combined = True
     else:
         source = PHOTO / "today" / "index.html"
         target = PHOTO / "today" / "calendar.html"
-        title_zh = "366 天 · 摄影日历 · 尘画"
-        title_en = "366 Days · Photography Calendar · Frame & Grain"
-        data_zh = "366 天，每天一张照片。"
-        data_en = "366 days, one photograph a day."
+        title_zh = "摄影日历 · 尘画"
+        title_en = "Photography Calendar · Frame & Grain"
+        data_zh = "摄影日历。"
+        data_en = "A photography calendar."
         kicker = "CALENDAR / PHOTOGRAPHY"
-        h1 = tspan("每一天，<br>都有一张照片。", "Every day,<br>a photograph.")
+        h1 = tspan("摄影日历", "Photography Calendar")
         h1 = h1.replace("&lt;br&gt;", "<br>")
-        sub = tspan("三百七十九篇摄影故事落在三百六十六天里。每一天选一张当天事件的影像作背景，"
-                    "点开它，读这一天发生的完整故事。",
-                    "Three hundred and seventy-nine photographic stories fall across three hundred and sixty-six days. "
-                    "Each day has the image of its event as a background; open it to read the full story.")
-        stats = ('<div class="cal-meta"><span><b>366</b>天</span><span><b>379</b>篇故事</span>'
-                 '<span><b>9</b>个摄影主题</span><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
+        sub = ""
+        stats = ('<div class="cal-meta"><span><a href="../">今天</a> / <a href="../timeline/">时间线</a> / <a href="../themes/">主题</a></span></div>')
         combined = False
 
     body = ['<section class="cal-hero"><p class="cal-kicker">%s</p><h1>%s</h1><p class="cal-sub">%s</p>%s'
@@ -204,11 +195,10 @@ def build_calendar(site):
             cells.append(day_card(md, stories[0] if stories else None,
                                   painting_by_date.get(md) if combined else None, combined))
         body.append('<section class="cal-month" id="month-%02d"><div class="cal-head"><h2>%s<em>%s</em></h2>'
-                    '<span class="cal-count">%s</span></div><div class="cal-week">%s</div>'
+                    '</div><div class="cal-week">%s</div>'
                     '<div class="cal-grid">%s</div></section>' % (
                         month, tspan(MONTH_ZH[month - 1], MONTH_EN[month - 1]),
                         tspan("2024", "2024"),
-                        tspan("%d 天" % days, "%d days" % days),
                         "".join('<span>%s</span>' % tspan(z, e) for z, e in zip(WEEK_ZH, WEEK_EN)),
                         "".join(cells)))
     body.append('<div class="cal-foot"><a href="../">%s</a><a href="../timeline/">%s</a>'
@@ -216,6 +206,7 @@ def build_calendar(site):
                 % (tspan("回到今天", "Back to today"), tspan("摄影时间线", "Photography timeline"),
                    tspan("摄影主题", "Photography themes"), tspan("绘画史日历", "Painting calendar")))
     body.append('<script>(function(){var d=new Date();var md=String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");var el=document.querySelector(\'.cal-day[data-date="\'+md+\'"]\');if(el)el.classList.add("is-today")})();</script>')
+    body.append('<script>(function(){var imgs=[].slice.call(document.querySelectorAll(".cal-photo"));function load(el){if(el.dataset.calLoaded==="1")return;el.dataset.calLoaded="1";el.loading="eager";var s=el.getAttribute("src");if(s)el.setAttribute("src",s);}function prime(){var vh=window.innerHeight||800;imgs.forEach(function(el){var r=el.getBoundingClientRect();if(r.top<vh+900&&r.bottom>-220)load(el);});}prime();window.addEventListener("scroll",prime,{passive:true});window.addEventListener("resize",prime,{passive:true});setTimeout(prime,700);})();</script>')
 
     page = source.read_text(encoding="utf-8")
     page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % esc(title_zh), page, count=1, flags=re.S)

@@ -16,6 +16,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
 NEXT = ROOT / "next"
@@ -256,7 +257,7 @@ def photo_series_cards():
         stories = [x for x in PHOTO_STORIES if x.get("theme") == s["name"]]
         cover = stories[0]["img"] if stories else ""
         cards.append("""<a class="trail-card" href="/themes/#%s">
-<img src="%s" alt="%s" loading="lazy">
+<img src="%s" alt="%s" loading="eager">
 <div class="tc-body"><div class="tc-meta"><span>%s</span><span>%d 篇</span></div>
 <h3>%s</h3><div class="tc-en">%s</div>
 <p>%s</p><span class="tc-more">进入主题 →</span></div></a>""" % (
@@ -270,7 +271,7 @@ def paint_trail_cards():
     for t in TRAILS:
         cover = trail_cover(t)
         cards.append("""<a class="trail-card" href="https://paint.chenhua.net/history/trail-%s.html">
-<img src="%s" alt="%s" loading="lazy">
+<img src="%s" alt="%s" loading="eager">
 <div class="tc-body"><div class="tc-meta"><span>PAINTING TRAIL</span><span>%d %s</span></div>
 <h3>%s</h3><div class="tc-en">%s</div>
 <p>%s</p><span class="tc-more">%s</span></div></a>""" % (
@@ -361,7 +362,7 @@ def insert_combined_themes():
 
 def period_card(p):
     return """<a class="ct-paint-card" href="https://paint.chenhua.net/history/period-%s.html">
-<img src="%s" alt="%s" loading="lazy"><div class="cc"><h3>%s</h3><span>%s</span></div></a>""" % (
+<img src="%s" alt="%s" loading="eager"><div class="cc"><h3>%s</h3><span>%s</span></div></a>""" % (
         esc(p["slug"]), esc(period_cover(p)), esc(p.get("title_zh")),
         tspan(p.get("title_zh"), p.get("title_en")), tspan(p.get("sub_zh"), p.get("sub_en")))
 
@@ -369,7 +370,7 @@ def period_card(p):
 def photo_card(s):
     theme_en = SERIES_EN.get(s.get("theme"), s.get("theme") or "")
     return """<a class="ct-photo-card" href="/story/%s.html">
-<img src="%s" alt="%s" loading="lazy"><div class="cc"><h3>%s</h3><span>%s</span></div></a>""" % (
+<img src="%s" alt="%s" loading="eager"><div class="cc"><h3>%s</h3><span>%s</span></div></a>""" % (
         esc(s["id"]), esc(s["img"]), esc(s.get("title")), tspan(s.get("title"), s.get("title_en")),
         tspan("%s · %s" % (s.get("year") or "", s.get("theme") or ""),
               "%s · %s" % (s.get("year") or "", theme_en)))
@@ -411,7 +412,7 @@ def combined_timeline_rows():
             tspan("摄影", "Photography"), ("%d %s" % (len(photo), tspan("篇", "story" if len(photo) == 1 else "stories"))) if photo else "—",
             photo_cards,
             '<a class="ct-more" href="/timeline/#photo-full">%s</a>' % tspan("看摄影完整时间线 →", "See the full photographic timeline →") if photo else "",
-            esc(label), tspan(note, note_en),
+            esc(label),
             tspan("绘画", "Painting"), ("%d %s" % (len(pslugs), tspan("个时期", "period" if len(pslugs) == 1 else "periods"))) if pslugs else "—",
             paint_cards,
             '<a class="ct-more" href="https://paint.chenhua.net/history/timeline.html">%s</a>' % tspan("看绘画完整时间线 →", "See the full painting timeline →") if pslugs else "",
@@ -501,34 +502,6 @@ def patch_today_heroes():
 
 
 def add_photo_lead(source, kind):
-    if 'class="photo-lead"' in source:
-        return source
-    if kind == "themes":
-        kicker = "PHOTOGRAPHY / NINE THEMES"
-        heading = tspan("摄影：九个主题", "Photography: nine themes")
-        intro = tspan("三百七十九篇故事，九个系列，覆盖三百六十六天。每一张照片都从一个具体日子出发，再回到它的年代。",
-                      "Three hundred and seventy-nine stories, nine series, across three hundred and sixty-six days. Each photograph starts from a particular day and returns to its own time.")
-    else:
-        kicker = "PHOTOGRAPHY / FULL TIMELINE"
-        heading = tspan("摄影：完整年代", "Photography: the full span")
-        intro = tspan("从 1800 年代到当代，按年代看摄影如何记录世界。",
-                      "From the 1800s to the present, a decade-by-decade view of how photography recorded the world.")
-    lead = """<section class="photo-lead">
-<p class="photo-kicker">%s</p>
-<h2>%s</h2>
-<p class="photo-intro">%s</p>
-</section>
-""" % (esc(kicker), heading, intro)
-    if '<main class="shell">' in source:
-        source = source.replace('<main class="shell">', '<main class="shell">\n' + lead, 1)
-    if '</head>' in source:
-        source = source.replace('</head>', """<style>
-.photo-lead{max-width:1184px;margin:0 auto;padding:44px 0 10px}
-.photo-kicker{font-family:var(--sans,ui-sans-serif,sans-serif);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#b08a52;margin:0 0 12px}
-.photo-lead h2{font-family:var(--serif,"Noto Serif SC",serif);font-size:clamp(32px,4vw,56px);font-weight:400;line-height:1.15;letter-spacing:-.02em;margin:0 0 14px;color:var(--ink,#e9e1d5)}
-.photo-intro{max-width:760px;font-size:15px;line-height:1.8;color:var(--muted,#a79d8f);margin:0}
-@media(max-width:900px){.photo-lead{padding:30px 23.5px 8px}.photo-lead h2{font-size:34px}}
-</style></head>""", 1)
     return source
 
 
@@ -555,11 +528,297 @@ def relabel_calendar_pages():
                 page.write_text(new, encoding="utf-8", newline="\n")
 
 
+LIBRARY_CSS = """
+<style>
+/* ---------- 主题库：摄影与绘画共用同一种卡片 ---------- */
+.theme-library{max-width:1240px;margin:0 auto;padding:30px 28px 46px}
+.lib-section{border-top:1px solid var(--rule);padding:23px 0 9px}
+.lib-section:first-of-type{border-top:0;padding-top:4px}
+.lib-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:0 0 14px}
+.lib-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(23px,2.8vw,34px);line-height:1.15;letter-spacing:-.01em;margin:0}
+.lib-head .lib-sub{font-size:9px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+.lib-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.lib-card{display:flex;flex-direction:column;min-width:0;background:var(--paper);color:var(--ink);text-decoration:none;overflow:hidden}
+.lib-card:hover{background:var(--panel)}
+.lib-thumb{overflow:hidden;background:var(--panel)}
+.lib-thumb img{width:100%;height:150px;object-fit:cover;display:block;transition:transform .45s ease}
+.lib-card:hover .lib-thumb img{transform:scale(1.025)}
+.lib-body{padding:14px 15px 16px;display:flex;flex-direction:column;min-height:142px}
+.lib-meta{font-size:9px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:8px}
+.lib-card h3{font-family:var(--serif);font-weight:400;font-size:22px;line-height:1.2;margin:0 0 7px}
+.lib-card h3 span{display:block}
+.lib-card h3 span[data-l="en"]{font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:4px;font-family:var(--sans,ui-sans-serif,sans-serif);text-transform:none}
+.lib-card p{font-size:11px;line-height:1.75;color:var(--muted);margin:0}
+@media(max-width:1050px){.lib-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lib-thumb img{height:128px}.theme-library{padding:22px 20px 34px}}
+@media(max-width:460px){.lib-grid{grid-template-columns:1fr}}
+
+/* ---------- 双轨年代轴：左绘画，右摄影 ---------- */
+.dual-timeline{max-width:1240px;margin:0 auto;padding:28px 28px 50px}
+.dual-timeline h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4vw,46px);line-height:1.1;letter-spacing:-.02em;margin:0 0 18px}
+.axis-head{display:grid;grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr);gap:20px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:9px 0}
+.axis-head span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.axis-head span:nth-child(1){text-align:right;color:#b28b5d}
+.axis-head span:nth-child(2){text-align:center}
+.axis-head span:nth-child(3){color:var(--accent)}
+.dual-axis{position:relative}
+.dual-axis:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rule-strong);transform:translateX(-.5px)}
+.axis-row{display:grid;grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr);gap:20px;border-bottom:1px solid var(--rule);padding:17px 0}
+.axis-side{min-width:0;display:flex;flex-direction:column;gap:9px}
+.axis-side.paint{padding-right:8px}
+.axis-side.photo{padding-left:8px}
+.axis-year{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;padding-top:20px;position:relative;z-index:1}
+.axis-year:before{content:"";position:absolute;top:7px;left:50%;width:7px;height:7px;border-radius:50%;background:var(--accent);transform:translateX(-50%);box-shadow:0 0 0 4px var(--paper);z-index:2}
+.axis-year b{font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.2;white-space:nowrap;background:var(--paper);padding:3px 6px}
+.axis-card{display:grid;grid-template-columns:70px minmax(0,1fr);gap:9px;align-items:center;text-decoration:none;color:var(--ink);min-width:0;padding:5px 0;border-bottom:1px dotted var(--rule)}
+.axis-card:last-child{border-bottom:0}
+.axis-card img{width:70px;height:54px;object-fit:cover;display:block;filter:saturate(.92)}
+.axis-card .ac{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.axis-card h3{font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.3;margin:0 0 3px}
+.axis-card h3 span[data-l="en"]{font-size:9px;letter-spacing:.06em;color:var(--muted);font-family:var(--sans,ui-sans-serif,sans-serif);margin-top:2px}
+.axis-card .ac span{font-size:9px;color:var(--muted);line-height:1.45}
+.axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) 70px;text-align:right}
+.axis-side.paint .axis-card img{grid-column:2;grid-row:1}
+.axis-side.paint .axis-card .ac{grid-column:1;grid-row:1;align-items:flex-end}
+.axis-empty{min-height:1px}
+@media(max-width:860px){
+  .axis-head{grid-template-columns:1fr 82px 1fr;gap:10px}
+  .axis-row{grid-template-columns:1fr 82px 1fr;gap:10px}
+  .axis-card{grid-template-columns:54px minmax(0,1fr)}
+  .axis-card img{width:54px;height:44px}
+  .axis-side.paint .axis-card{grid-template-columns:minmax(0,1fr) 54px}
+  .axis-card h3{font-size:14px}
+}
+@media(max-width:620px){
+  .dual-timeline{padding:22px 20px 34px}
+  .axis-head{display:none}
+  .dual-axis:before{display:none}
+  .axis-row{grid-template-columns:1fr;gap:0;padding:0 0 14px}
+  .axis-year{align-items:flex-start;text-align:left;padding:12px 0 9px;border-bottom:1px solid var(--rule);margin-bottom:8px}
+  .axis-year b,.axis-year em{background:none;padding:0}
+  .axis-side{padding:0}
+  .axis-side.paint .axis-card{grid-template-columns:54px minmax(0,1fr);text-align:left}
+  .axis-side.paint .axis-card img{grid-column:1;grid-row:1}
+  .axis-side.paint .axis-card .ac{grid-column:2;grid-row:1;align-items:flex-start}
+}
+</style>
+"""
+
+
+def photo_theme_card(s):
+    stories = [x for x in PHOTO_STORIES if x.get("theme") == s["name"]]
+    cover = stories[0]["img"] if stories else ""
+    search = "https://photo.chenhua.net/search/?q=%s&scope=photos" % quote(s["name"])
+    return """<a class="lib-card" href="%s">
+<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-body"><div class="lib-meta">PHOTOGRAPHY</div>
+<h3>%s</h3><p>%s</p></div></a>""" % (
+        esc(search), esc(cover), esc(s["name"]),
+        tspan(s["name"], s["name_en"]), tspan(s.get("desc"), s.get("desc_en")))
+
+
+def trail_library_card(t):
+    return """<a class="lib-card" href="https://paint.chenhua.net/history/trail-%s.html">
+<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-body"><div class="lib-meta">PAINTING TRAIL</div>
+<h3>%s</h3><p>%s</p></div></a>""" % (
+        esc(t["slug"]), esc(trail_cover(t)), esc(t["zh"]),
+        tspan(t["zh"], t["en"]), tspan(t.get("intro_zh"), t.get("intro_en")))
+
+
+def movement_library_card(m):
+    return """<a class="lib-card" href="%s">
+<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-body"><div class="lib-meta">PAINTING MOVEMENT</div>
+<h3>%s</h3><p>%s</p></div></a>""" % (
+        esc(movement_link(m["slug"])), esc(paint_img(m.get("hero"))), esc(m["zh"]),
+        tspan(m["zh"], m["en"]), tspan(m.get("summary_zh"), m.get("summary_en")))
+
+
+def theme_library_body():
+    photo_cards = "".join(photo_theme_card(s) for s in SERIES)
+    trail_cards = "".join(trail_library_card(t) for t in TRAILS)
+    movement_cards = "".join(movement_library_card(m) for m in MOVEMENTS)
+    return """%s
+<main class="theme-library">
+<section class="lib-section" id="photo-themes">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">PHOTOGRAPHY</span></div>
+<div class="lib-grid">%s</div>
+</section>
+<section class="lib-section" id="paint-trails">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">PAINTING / TRAILS</span></div>
+<div class="lib-grid">%s</div>
+</section>
+<section class="lib-section" id="paint-movements">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">PAINTING / MOVEMENTS</span></div>
+<div class="lib-grid">%s</div>
+</section>
+</main>""" % (
+        LIBRARY_CSS,
+        tspan("摄影", "Photography"), photo_cards,
+        tspan("绘画 · 小径", "Painting · Trails"), trail_cards,
+        tspan("绘画 · 流派", "Painting · Movements"), movement_cards,
+    )
+
+
+def axis_photo_card(s):
+    theme_zh = s.get("theme") or ""
+    theme_en = SERIES_EN.get(theme_zh, theme_zh)
+    meta_zh = "%s · %s" % (s.get("year") or "", theme_zh)
+    meta_en = "%s · %s" % (s.get("year") or "", theme_en)
+    return """<a class="axis-card" href="/story/%s.html">
+<img src="%s" alt="%s" loading="eager"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
+        esc(s["id"]), esc(s["img"]), esc(s.get("title")), tspan(s.get("title"), s.get("title_en")),
+        tspan(meta_zh, meta_en))
+
+
+def axis_paint_card(p):
+    return """<a class="axis-card" href="https://paint.chenhua.net/history/period-%s.html">
+<img src="%s" alt="%s" loading="eager"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
+        esc(p["slug"]), esc(period_cover(p)), esc(p.get("title_zh")),
+        tspan(p.get("title_zh"), p.get("title_en")), tspan(p.get("sub_zh"), p.get("sub_en")))
+
+
+def dual_axis_body():
+    rows = []
+    for start, end, pslugs, label, note, note_en in ERAS:
+        paint_cards = "".join(axis_paint_card(PERIOD_BY_SLUG[x]) for x in pslugs if x in PERIOD_BY_SLUG)
+        photo = [s for s in PHOTO_STORIES if start <= photo_year(s) < end]
+        photo.sort(key=lambda s: (photo_year(s), s.get("date") or ""))
+        photo_cards = "".join(axis_photo_card(s) for s in photo[:4])
+        rows.append("""<div class="axis-row">
+<div class="axis-side paint">%s</div>
+<div class="axis-year"><b>%s</b></div>
+<div class="axis-side photo">%s</div>
+</div>""" % (
+            paint_cards if paint_cards else '<div class="axis-empty"></div>',
+            esc(label),
+            photo_cards if photo_cards else '<div class="axis-empty"></div>',
+        ))
+    return """%s
+<main class="dual-timeline">
+<h1>%s</h1>
+<div class="axis-head"><span>%s</span><span>%s</span><span>%s</span></div>
+<div class="dual-axis">%s</div>
+</main>""" % (
+        LIBRARY_CSS,
+        tspan("时间线", "Timeline"),
+        tspan("绘画", "Painting"), tspan("年代", "Years"), tspan("摄影", "Photography"),
+        "".join(rows),
+    )
+
+
+def shell_page(source_path, body):
+    source = source_path.read_text(encoding="utf-8")
+    header_end = source.index("</header>") + len("</header>")
+    footer_start = source.index('<footer class="site-foot">')
+    footer_end = source.index("</footer>", footer_start) + len("</footer>")
+    script = re.search(r'<script src="../../assets/site\.js[^"]*"></script>', source)
+    script_tag = script.group(0) if script else '<script src="../../assets/site.js"></script>'
+    return source[:header_end] + "\n" + body + "\n" + source[footer_start:footer_end] + "\n</div>\n" + script_tag + "\n</body>\n</html>\n"
+
+
+PHOTO_AXIS_CSS = """
+<style>
+.photo-axis{max-width:1240px;margin:0 auto;padding:28px 28px 50px}
+.photo-axis h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4vw,46px);line-height:1.1;letter-spacing:-.02em;margin:0 0 20px}
+.p-axis{position:relative;padding-left:30px}
+.p-axis:before{content:"";position:absolute;left:8px;top:8px;bottom:8px;width:1px;background:var(--rule-strong)}
+.p-era{position:relative;padding:17px 0 25px;border-bottom:1px solid var(--rule)}
+.p-era:last-child{border-bottom:0}
+.p-era:before{content:"";position:absolute;left:-26px;top:24px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--paper)}
+.p-era-head{display:flex;align-items:baseline;gap:13px;margin:0 0 12px}
+.p-era-head b{font-family:var(--serif);font-weight:400;font-size:22px;line-height:1.2}
+.p-era-head span{font-size:9px;letter-spacing:.1em;color:var(--muted)}
+.p-grid{display:flex;flex-wrap:wrap;gap:1px;background:transparent;border:0}
+.p-grid .lib-card{flex:1 1 270px;min-width:0;border:1px solid var(--rule)}
+@media(max-width:620px){.photo-axis{padding:22px 20px 34px}.p-axis{padding-left:22px}.p-era:before{left:-18px}.p-era-head b{font-size:19px}}
+</style>
+"""
+
+
+def photo_story_library_card(s):
+    theme_zh = s.get("theme") or ""
+    theme_en = SERIES_EN.get(theme_zh, theme_zh)
+    sub_zh = "%s · %s" % (s.get("year") or "", theme_zh)
+    sub_en = "%s · %s" % (s.get("year") or "", theme_en)
+    return """<a class="lib-card" href="https://www.chenhua.net/story/%s.html">
+<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-body"><div class="lib-meta">PHOTOGRAPHY · %s</div>
+<h3>%s</h3><p>%s</p></div></a>""" % (
+        esc(s["id"]), esc(s["img"]), esc(s.get("title")), esc(s.get("year") or ""),
+        tspan(s.get("title"), s.get("title_en")), tspan(sub_zh, sub_en))
+
+
+def photo_theme_library_body():
+    cards = "".join(photo_theme_card(s) for s in SERIES)
+    return """%s
+<main class="theme-library">
+<section class="lib-section" id="photo-themes">
+<div class="lib-head"><h2>%s</h2><span class="lib-sub">PHOTOGRAPHY</span></div>
+<div class="lib-grid">%s</div>
+</section>
+</main>""" % (LIBRARY_CSS, tspan("摄影主题", "Photography Themes"), cards)
+
+
+def photo_axis_body():
+    rows = []
+    for start, end, pslugs, label, note, note_en in ERAS:
+        photo = [s for s in PHOTO_STORIES if start <= photo_year(s) < end]
+        photo.sort(key=lambda s: (photo_year(s), s.get("date") or ""))
+        if not photo:
+            continue
+        cards = "".join(photo_story_library_card(s) for s in photo[:6])
+        rows.append("""<section class="p-era"><div class="p-era-head"><b>%s</b></div>
+<div class="p-grid">%s</div></section>""" % (
+            esc(label), cards))
+    return """%s%s
+<main class="photo-axis">
+<h1>%s</h1>
+<div class="p-axis">%s</div>
+</main>""" % (LIBRARY_CSS, PHOTO_AXIS_CSS, tspan("摄影时间线", "Photography Timeline"), "".join(rows))
+
+
+def photo_page(from_path, body, title_zh, title_en):
+    page = shell_page(from_path, body)
+    page = re.sub(r'data-title-zh="[^"]*"', 'data-title-zh="%s"' % esc(title_zh), page, count=1)
+    page = re.sub(r'data-title-en="[^"]*"', 'data-title-en="%s"' % esc(title_en), page, count=1)
+    page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % esc(title_zh), page, count=1, flags=re.S)
+    page = page.replace("https://www.chenhua.net/themes/", "https://photo.chenhua.net/themes/")
+    page = page.replace("https://www.chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
+    page = page.replace("https://www.chenhua.net/today/", "https://photo.chenhua.net/today/")
+    return page
+
+
+def build_photo_pages():
+    (PHOTO / "themes").mkdir(parents=True, exist_ok=True)
+    (PHOTO / "timeline").mkdir(parents=True, exist_ok=True)
+    (PHOTO / "themes" / "index.html").write_text(
+        photo_page(MAIN / "themes" / "index.html", photo_theme_library_body(), "摄影主题 · 尘画", "Photography Themes · Frame & Grain"),
+        encoding="utf-8", newline="\n")
+    (PHOTO / "timeline" / "index.html").write_text(
+        photo_page(MAIN / "timeline" / "index.html", photo_axis_body(), "摄影时间线 · 尘画", "Photography Timeline · Frame & Grain"),
+        encoding="utf-8", newline="\n")
+    print("photo pages: themes cards, timeline photo-only axis")
+
+
+def build_theme_library():
+    path = MAIN / "themes" / "index.html"
+    path.write_text(shell_page(path, theme_library_body()), encoding="utf-8", newline="\n")
+    print("themes library", path.stat().st_size, "photo", len(SERIES), "trails", len(TRAILS), "movements", len(MOVEMENTS))
+
+
+def build_dual_timeline():
+    path = MAIN / "timeline" / "index.html"
+    path.write_text(shell_page(path, dual_axis_body()), encoding="utf-8", newline="\n")
+    print("timeline axis", path.stat().st_size, "eras", len(ERAS))
+
+
 def main():
-    copy_photo_sections()
     copy_photo_today()
-    insert_combined_themes()
-    insert_combined_timeline()
+    build_theme_library()
+    build_dual_timeline()
+    build_photo_pages()
     build_paint_themes()
     patch_today_heroes()
     relabel_calendar_pages()
