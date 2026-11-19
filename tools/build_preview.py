@@ -886,18 +886,29 @@ def main():
         "main": "/next/dist/main/", "photo": "/next/dist/photo/",
         "paint": "/next/dist/paint/",
     }
-    nav = [
-        {"label": "尘画", "label_en": "Frame & Grain", "href": base["main"], "icon": "home", "site": "main"},
-        {"label": "主题", "label_en": "Themes", "href": base["main"] + "themes/", "icon": "stories"},
-        {"label": "时间线", "label_en": "Timeline", "href": base["main"] + "timeline/", "icon": "timeline"},
-        {"label": "日历", "label_en": "Calendar", "deskLabel": "历史上的今天", "deskLabel_en": "On This Day", "href": base["main"] + "today/", "icon": "timeline"},
-        {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
-        {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
-        {"label": "绘画史", "label_en": "History", "href": base["paint"] + "history/", "icon": "stories", "site": "paint"},
-        {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
-    ]
+
+    def site_nav(site):
+        themes = base[site] + ("themes/" if site in ("main", "photo") else "themes/")
+        if site == "paint":
+            timeline = base["paint"] + "history/timeline.html"
+            calendar = base["paint"] + "history/calendar.html"
+        elif site == "photo":
+            timeline = base["photo"] + "timeline/"
+            calendar = base["photo"] + "today/"
+        else:
+            timeline = base["main"] + "timeline/"
+            calendar = base["main"] + "today/"
+        return [
+            {"label": "尘画", "label_en": "Frame & Grain", "href": base[site], "icon": "home", "site": site},
+            {"label": "主题", "label_en": "Themes", "href": themes, "icon": "stories", "site": site},
+            {"label": "时间线", "label_en": "Timeline", "href": timeline, "icon": "timeline", "site": site},
+            {"label": "日历", "label_en": "Calendar", "href": calendar, "icon": "timeline", "site": site},
+            {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
+            {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
+            {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
+        ]
     common = {"home": base["main"], "photoBase": base["photo"],
-              "paintBase": base["paint"], "nav": nav, "taxonomy": TAXONOMY,
+              "paintBase": base["paint"], "taxonomy": TAXONOMY,
               "leafBase": "/next/dist/assets/leaf/"}
     main_cfg = {
         "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Frame & Grain",
@@ -906,7 +917,7 @@ def main():
         "desc": "尘画：历史摄影与绘画图录。",
         "desc_en": "Frame & Grain: an archive of historical photography and painting.",
         "collections": ["photos", "paintings", "links"],
-        "base": base["main"], **common,
+        "base": base["main"], "nav": site_nav("main"), **common,
     }
     photo_cfg = {
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Frame & Grain",
@@ -915,7 +926,7 @@ def main():
         "desc": "尘画摄影：历史摄影图录。",
         "desc_en": "Frame & Grain Photography: an archive of historical photographs.",
         "collections": ["photos", "links"],
-        "base": base["photo"], **common,
+        "base": base["photo"], "nav": site_nav("photo"), **common,
     }
     paint_cfg = {
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Frame & Grain",
@@ -924,7 +935,7 @@ def main():
         "desc": "尘画绘画：绘画与版画图录。",
         "desc_en": "Frame & Grain Painting: an archive of paintings and prints.",
         "collections": ["paintings"],
-        "base": base["paint"], **common,
+        "base": base["paint"], "nav": site_nav("paint"), **common,
     }
     write_i18n_assets()
     write_bundle(records, stories, stats)

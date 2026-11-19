@@ -203,18 +203,17 @@ def hero_block(rid, kicker_zh, kicker_en, title_zh, title_en, deck_zh, deck_en, 
 
 
 def appbar(current="history"):
+    # 绘画分站自己的六项导航：主题、时间线、日历都在 /paint 下，
+    # 不再把读者送回主站的摄影主题/时间线。
     links = [
-        ("尘画", "Frame & Grain", "../../main/"),
-        ("主题", "Themes", "../../main/themes/"),
-        ("时间线", "Timeline", "../../main/timeline/"),
-        ("绘画史", "Painting History", "../../paint/history/"),
-        ("画廊", "Gallery", "../../paint/gallery/"),
-        ("日历", "Calendar", "../../main/today/"),
-        ("搜索", "Search", "../../main/search/?scope=paintings"),
+        ("主题", "Themes", "../themes/"),
+        ("时间线", "Timeline", "timeline.html"),
+        ("日历", "Calendar", "calendar.html"),
+        ("摄影", "Photography", "https://photo.chenhua.net/"),
+        ("绘画", "Painting", "../"),
+        ("导航", "Directory", "https://netcn.org/"),
     ]
-    nav = "".join('<a href="%s"%s>%s</a>' % (
-        h, ' aria-current="page"' if key == current else "", tspan(z, e))
-        for key, (z, e, h) in zip(("home", "themes", "timeline", "history", "gallery", "calendar", "search"), links))
+    nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in links)
     return """<header class="appbar s-appbar">
 <a class="brand" href="../"><img class="leaf-mark brand-mark" src="../../assets/leaf/proud.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="sub"><span data-l="zh">绘画史 · 400–1930</span><span data-l="en">A History of Painting</span></span></a>
 <nav class="desknav">%s</nav>
@@ -224,13 +223,13 @@ def appbar(current="history"):
 
 def foot():
     nav = [
-        ("尘画", "Frame & Grain", "../../main/"),
-        ("主题", "Themes", "../../main/themes/"),
-        ("时间线", "Timeline", "../../main/timeline/"),
-        ("绘画史", "Painting History", "../../paint/history/"),
-        ("日历", "Calendar", "../../main/today/"),
-        ("摄影", "Photography", "../../photo/"),
-        ("免责条款", "Disclaimer", "../../paint/legal/"),
+        ("尘画", "Frame & Grain", "../"),
+        ("主题", "Themes", "../themes/"),
+        ("时间线", "Timeline", "timeline.html"),
+        ("日历", "Calendar", "calendar.html"),
+        ("摄影", "Photography", "https://photo.chenhua.net/"),
+        ("绘画", "Painting", "../"),
+        ("导航", "Directory", "https://netcn.org/"),
     ]
     links = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav)
     left = ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
@@ -815,6 +814,23 @@ def first_para(text):
     return text.split("\n", 1)[0].strip()
 
 
+def readable_zh_note(r):
+    """Return a truthful Chinese note.
+
+    The legacy catalog accidentally copied the Gu Kaizhi note into every
+    painting record. Prefer the original note when it really belongs to this
+    work; otherwise fall back to the record's own metadata instead of printing
+    a different painting's description.
+    """
+    note = first_para(r.get("note"))
+    title = work_title(r)
+    if note and title and (title in note or note.startswith(title)):
+        return note
+    bits = [title, r.get("creator"), r.get("date_label") or str(r.get("year") or ""),
+            r.get("movement"), r.get("holding")]
+    return "，".join(str(b).strip() for b in bits if str(b or "").strip()) + "。"
+
+
 def today_paint_card(md, work_id):
     r = RECORDS.get(work_id) or {}
     if not r:
@@ -829,7 +845,7 @@ def today_paint_card(md, work_id):
         esc(work_id), esc(img_of(work_id)), esc(work_title(r)),
         tspan("今日一画 / Painting of the Day", "Painting of the Day"),
         esc(work_id), tspan(work_title(r), work_title_en(r)),
-        tspan(first_para(r.get("note")), first_para(r.get("note_en"))),
+        tspan(readable_zh_note(r), first_para(r.get("note_en"))),
         tspan("编辑排期，非创作日期。", "Editorial schedule, not a creation date."),
         tspan("打开 366 天日历", "Open the 366-day calendar"))
 
