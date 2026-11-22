@@ -232,7 +232,7 @@ def main():
             "theme",
             "主题 · 尘画",
             "按主题浏览尘画的历史摄影与绘画故事。",
-            "https://www.chenhua.net/themes/",
+            "https://chenhua.net/themes/",
             "Themes · Frame & Grain",
         ),
         (
@@ -240,7 +240,7 @@ def main():
             "timeline",
             "时间线 · 尘画",
             "按年代浏览尘画的历史摄影与绘画故事。",
-            "https://www.chenhua.net/timeline/",
+            "https://chenhua.net/timeline/",
             "Timeline · Frame & Grain",
         ),
     ]

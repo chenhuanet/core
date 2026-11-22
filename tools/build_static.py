@@ -25,7 +25,7 @@ BUILD_ID = str(int(datetime.datetime.now().timestamp()))
 
 PHOTO_DOMAIN = "https://photo.chenhua.net"
 PAINT_DOMAIN = "https://paint.chenhua.net"
-MAIN_DOMAIN = "https://www.chenhua.net"
+MAIN_DOMAIN = "https://chenhua.net"
 
 STATUS_EN = {"已核验": "Verified", "核验": "Verified", "待核验": "Pending",
              "存疑": "Disputed", "未核验": "Unverified",
@@ -224,10 +224,10 @@ def footer_home_label():
 
 def footer_left():
     return ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<a href="https://chenhua.net">chenhua.net</a></span>'
             '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span>'
             '<span class="sf-brand-short">Frame</span> · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span></div>')
+            '<a href="https://chenhua.net">chenhua.net</a></span></div>')
 
 
 def foot(kind="main"):
@@ -282,10 +282,10 @@ LEGAL_SECTIONS = [
         ("除另有署名外，本站自行创作的文字、策展说明与页面版式采用 "
          '<a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hans" target="_blank" rel="noopener">CC BY 4.0</a>'
          " 许可：可以复制、转载、改编与商用，但须注明来源为“尘画 / Frame & Grain”，"
-         "并链接至 https://www.chenhua.net。历史影像不在此许可范围内，仍按各记录页标注使用。",
+         "并链接至 https://chenhua.net。历史影像不在此许可范围内，仍按各记录页标注使用。",
          "Unless otherwise credited, original text, curatorial notes and page layouts created by Frame & Grain are licensed under "
          '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>'
-         ": reuse, adaptation and commercial use are allowed with credit to “Frame & Grain” and a link to https://www.chenhua.net. "
+         ": reuse, adaptation and commercial use are allowed with credit to “Frame & Grain” and a link to https://chenhua.net. "
          "Historical images are not covered by this licence; their terms are stated on each record page."),
         ("站点代码以 "
          '<a href="https://opensource.org/license/mit" target="_blank" rel="noopener">MIT License</a>'

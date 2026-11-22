@@ -202,7 +202,7 @@ def build_calendar(site):
     page = re.sub(r'data-desc-en="[^"]*"', 'data-desc-en="%s"' % esc(data_en), page, count=1)
     page = re.sub(r'<meta name="description" content="[^"]*">',
                   '<meta name="description" content="%s">' % esc(data_zh), page, count=1)
-    page = page.replace("https://www.chenhua.net/today/", "https://www.chenhua.net/today/calendar.html")
+    page = page.replace("https://chenhua.net/today/", "https://chenhua.net/today/calendar.html")
     page = page.replace("https://photo.chenhua.net/today/", "https://photo.chenhua.net/today/calendar.html")
     page = page.replace("<main class=\"today-main today-index\">", "<main class=\"today-main cal-main\">")
     page = re.sub(r"<main[^>]*>.*?</main>",

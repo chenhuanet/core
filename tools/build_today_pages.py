@@ -17,7 +17,7 @@ DIST = BASE / "dist"
 MAIN = DIST / "main"
 TODAY = MAIN / "today"
 BUNDLE = DIST / "data" / "bundle.js"
-SITE = "https://www.chenhua.net"
+SITE = "https://chenhua.net"
 BUILD_ID = str(int(time.time()))
 
 MONTH_ZH = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
@@ -111,10 +111,10 @@ def footer(prefix="../"):
         links.append('<a href="%s">%s</a>' % (h, label))
     nav = "".join(links)
     left = ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<a href="https://chenhua.net">chenhua.net</a></span>'
             '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span>'
             '<span class="sf-brand-short">Frame</span> · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span></div>')
+            '<a href="https://chenhua.net">chenhua.net</a></span></div>')
     return """<footer class="site-foot">
 {left}
 <nav class="sf-nav" aria-label="站内导航">{nav}</nav>

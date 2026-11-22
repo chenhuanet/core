@@ -442,7 +442,7 @@ def write_bundle(records, stories, stats):
 
 
 DOMAINS = {
-    "main": "https://www.chenhua.net",
+    "main": "https://chenhua.net",
     "photo": "https://photo.chenhua.net",
     "paint": "https://paint.chenhua.net",
 }
@@ -714,8 +714,8 @@ def write_galleries(build_id):
             '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
         )
         g_left = (
-            '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span>'
-            '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://www.chenhua.net">chenhua.net</a></span></div>'
+            '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://chenhua.net">chenhua.net</a></span>'
+            '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://chenhua.net">chenhua.net</a></span></div>'
         )
         g_right = ('<div class="sf-right"><a href="../../dist/main/legal/">'
                    '<span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>')
@@ -808,8 +808,8 @@ def write_404(build_id):
         '<span data-l="en">Calendar</span>'
     )
     foot_left = (
-        '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://www.chenhua.net">chenhua.net</a></span>'
-        '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://www.chenhua.net">chenhua.net</a></span></div>'
+        '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://chenhua.net">chenhua.net</a></span>'
+        '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://chenhua.net">chenhua.net</a></span></div>'
     )
     html = """<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">

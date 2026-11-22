@@ -185,13 +185,13 @@ def remove_bridge(source):
 
 def patch_photo_page(source, kind):
     source = remove_bridge(source)
-    source = source.replace("../story/", "https://www.chenhua.net/story/")
+    source = source.replace("../story/", "https://chenhua.net/story/")
     source = source.replace("../../photo/", "../")
     source = source.replace("../photo/", "../")
     source = source.replace("../../paint/", "https://paint.chenhua.net/")
-    source = source.replace("https://www.chenhua.net/themes/", "https://photo.chenhua.net/themes/")
-    source = source.replace("https://www.chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
-    source = source.replace("https://www.chenhua.net/today/", "https://photo.chenhua.net/today/")
+    source = source.replace("https://chenhua.net/themes/", "https://photo.chenhua.net/themes/")
+    source = source.replace("https://chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
+    source = source.replace("https://chenhua.net/today/", "https://photo.chenhua.net/today/")
     if kind == "themes":
         source = source.replace('data-title-zh="主题 · 尘画"', 'data-title-zh="摄影主题 · 尘画"')
         source = source.replace('data-title-en="Themes · Frame &amp; Grain"', 'data-title-en="Photography Themes · Frame &amp; Grain"')
@@ -215,9 +215,9 @@ def patch_photo_today(source):
     source = re.sub(r"<!-- paint-today -->.*?<!-- /paint-today -->\n?", "", source, flags=re.S)
     source = source.replace("../../photo/", "../")
     source = source.replace("../../paint/", "https://paint.chenhua.net/")
-    source = source.replace("../story/", "https://www.chenhua.net/story/")
-    source = source.replace("https://www.chenhua.net/today/", "https://photo.chenhua.net/today/")
-    source = source.replace("https://www.chenhua.net/search/", "https://photo.chenhua.net/search/")
+    source = source.replace("../story/", "https://chenhua.net/story/")
+    source = source.replace("https://chenhua.net/today/", "https://photo.chenhua.net/today/")
+    source = source.replace("https://chenhua.net/search/", "https://photo.chenhua.net/search/")
     return source
 
 
@@ -756,7 +756,7 @@ def photo_story_library_card(s):
     theme_en = SERIES_EN.get(theme_zh, theme_zh)
     sub_zh = "%s · %s" % (s.get("year") or "", theme_zh)
     sub_en = "%s · %s" % (s.get("year") or "", theme_en)
-    return """<a class="lib-card" href="https://www.chenhua.net/story/%s.html">
+    return """<a class="lib-card" href="https://chenhua.net/story/%s.html">
 <div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
 <div class="lib-body"><div class="lib-meta">PHOTOGRAPHY · %s</div>
 <h3>%s</h3><p>%s</p></div></a>""" % (
@@ -797,9 +797,9 @@ def photo_page(from_path, body, title_zh, title_en):
     page = re.sub(r'data-title-zh="[^"]*"', 'data-title-zh="%s"' % esc(title_zh), page, count=1)
     page = re.sub(r'data-title-en="[^"]*"', 'data-title-en="%s"' % esc(title_en), page, count=1)
     page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % esc(title_zh), page, count=1, flags=re.S)
-    page = page.replace("https://www.chenhua.net/themes/", "https://photo.chenhua.net/themes/")
-    page = page.replace("https://www.chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
-    page = page.replace("https://www.chenhua.net/today/", "https://photo.chenhua.net/today/")
+    page = page.replace("https://chenhua.net/themes/", "https://photo.chenhua.net/themes/")
+    page = page.replace("https://chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
+    page = page.replace("https://chenhua.net/today/", "https://photo.chenhua.net/today/")
     return page
 
 

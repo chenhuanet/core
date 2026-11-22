@@ -6,7 +6,7 @@ Except where otherwise credited, original text, curatorial notes and page layout
 
 - 许可全文 / License: https://creativecommons.org/licenses/by/4.0/
 - 中文说明 / Deed (Chinese): https://creativecommons.org/licenses/by/4.0/deed.zh-hans
-- 署名要求 / Attribution: 注明来源“尘画 / Frame & Grain”，并链接至 https://www.chenhua.net。
+- 署名要求 / Attribution: 注明来源“尘画 / Frame & Grain”，并链接至 https://chenhua.net。
 
 ## 不适用范围 / Exclusions
 

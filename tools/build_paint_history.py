@@ -242,10 +242,10 @@ def foot():
     ]
     links = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav)
     left = ('<div class="sf-left"><span data-l="zh">© 2026 尘画 · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span>'
+            '<a href="https://chenhua.net">chenhua.net</a></span>'
             '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span>'
             '<span class="sf-brand-short">Frame</span> · '
-            '<a href="https://www.chenhua.net">chenhua.net</a></span></div>')
+            '<a href="https://chenhua.net">chenhua.net</a></span></div>')
     return """</div><footer class="site-foot">
 %s
 <nav class="sf-nav" aria-label="站内导航">%s</nav>
