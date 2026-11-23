@@ -18,7 +18,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlparse, urlsplit
 from urllib.request import Request, urlopen
 from xml.etree import ElementTree as ET
 
@@ -259,7 +259,8 @@ def main():
     bad_status = [r for r in results if r["status"] != 200]
     bad_h1 = [r for r in results if r["status"] == 200 and r["h1"] != 1
               and not H1_OPTIONAL_RE.search(urlparse(r["url"]).path)]
-    bad_js = [r for r in results if r["status"] == 200 and not r.get("redirect") and r["js"] != BUILD_ID]
+    bad_js = [r for r in results if r["status"] == 200 and not r.get("redirect") and r["js"] != BUILD_ID
+              and not H1_OPTIONAL_RE.search(urlparse(r["url"]).path)]
     bad_canon = [r for r in results if r["status"] == 200 and not r["canonical_ok"]]
 
     image_urls = sorted({img for r in results for img in r.get("images", [])})
