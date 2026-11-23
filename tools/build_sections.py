@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
-ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
+ROOT = Path(__file__).resolve().parents[2]
 NEXT = ROOT / "next"
 DIST = NEXT / "dist"
 CORE = NEXT / "core"
@@ -64,6 +64,7 @@ SERIES = ATLAS["series"]
 SERIES_EN = {s["name"]: s["name_en"] for s in SERIES}
 PHOTO_STORIES = [s for s in ATLAS["stories"] if s.get("img")]
 PHOTO_STORY_BY_ID = {s["id"]: s for s in PHOTO_STORIES}
+STORY_TRAILS = json.loads((NEXT / "content" / "story-trails.json").read_text(encoding="utf-8"))["trails"]
 
 TRAILS = ph_trails.TRAILS
 MOVEMENTS = ph_movements.MOVEMENTS
@@ -75,6 +76,55 @@ PERIOD_BY_SLUG = {p["slug"]: p for p in PERIODS}
 PHOTO_COUNT = len(ATLAS.get("stories") or [])
 PAINT_COUNT = len(PAINT_WORKS)
 
+# Works with explicit nudity are kept in the archive, but never used as a
+# theme / timeline cover. "尽量" is handled as a curation rule, not a content
+# removal: detail pages and records remain untouched.
+UNSAFE_COVER_IDS = {
+    "giotto-lamentation-1305",
+    "weyden-descent-from-cross-1435",
+    "rubens-descent-from-cross-1614",
+    "masaccio-expulsion-1427",
+    "botticelli-primavera-1480",
+    "botticelli-birth-of-venus-1485",
+    "bosch-garden-earthly-delights-1500",
+    "michelangelo-creation-of-adam-1511",
+    "ingres-grande-odalisque-1814",
+    "goya-saturn-1820",
+    "delacroix-liberty-1830",
+    "courbet-painters-studio-1855",
+    "manet-olympia-1863",
+    "manet-dejeuner-sur-herbe-1863",
+    "gauguin-where-do-we-come-from-1898",
+    "schiele-self-portrait-1912",
+    "moreau-jupiter-semele-1895",
+}
+SAFE_COVER_BY_MOVEMENT = {
+    "早期文艺复兴": "duccio-maesta-1308",
+    "盛期文艺复兴": "leonardo-mona-lisa-1503",
+    "北方文艺复兴": "van-eyck-arnolfini-1434",
+    "矫饰主义": "parmigianino-madonna-long-neck-1535",
+    "巴洛克": "rembrandt-night-watch-1642",
+    "洛可可": "watteau-pilgrimage-cythera-1717",
+    "新古典主义": "david-oath-of-horatii-1784",
+    "浪漫主义": "friedrich-wanderer-1818",
+    "现实主义": "millet-the-gleaners-1857",
+    "印象主义": "monet-impression-sunrise-1872",
+    "后印象主义": "van-gogh-starry-night-1889",
+    "象征主义": "boecklin-isle-of-the-dead-1883",
+    "元代文人山水": "huang-gongwang-fuchun-1350",
+    "浮世绘": "hokusai-great-wave-1831",
+    "表现主义": "kirchner-street-berlin-1913",
+}
+SAFE_COVER_FALLBACK_ID = "klimt-the-kiss-1908"
+PHOTO_THEME_COVERS = {
+    "太空探索": "apollo-11-1969",
+    "灾难与调查": "titanic-1912",
+    "工程与城市": "brooklyn-bridge-1883",
+    "铁路与工业": "auto-ad949d8d",
+    "艺术与图像": "china-1850-1930",
+}
+
+
 
 def paint_img(work_id):
     r = PAINT_BY_ID.get(work_id) or {}
@@ -84,6 +134,28 @@ def paint_img(work_id):
 def paint_meta(work_id):
     r = PAINT_BY_ID.get(work_id) or {}
     return " · ".join(str(x) for x in (r.get("creator"), r.get("date_label") or r.get("year"), r.get("holding")) if x)
+
+
+def _cover_base(value):
+    return (value or "").split("?")[0].rstrip()
+
+
+UNSAFE_COVER_URLS = set()
+for _work in PAINT_WORKS:
+    if _work.get("id") in UNSAFE_COVER_IDS:
+        for _key in ("image", "preview_image"):
+            _u = _cover_base(_work.get(_key))
+            if _u:
+                UNSAFE_COVER_URLS.add(_u)
+
+
+def safe_cover_pool(values, fallback_id=None):
+    pool = [_cover_base(v) for v in unique_images(values)
+            if v and _cover_base(v) not in UNSAFE_COVER_URLS]
+    if pool:
+        return pool
+    return [paint_img(fallback_id or SAFE_COVER_FALLBACK_ID)]
+
 
 
 def photo_year(s):
@@ -103,6 +175,33 @@ def trail_cover(t):
 
 def period_cover(p):
     return paint_img(p.get("hero") or (p.get("works") or [""])[0])
+
+
+def unique_images(values):
+    out = []
+    for value in values:
+        if value and value not in out:
+            out.append(value)
+    return out
+
+
+def movement_year_range(m):
+    years = [int(x) for x in re.findall(r"\d{3,4}", m.get("years_zh") or "")]
+    if not years:
+        return 0, 0
+    return min(years), max(years)
+
+
+def movements_for_era(start, end):
+    out = []
+    for m in MOVEMENTS:
+        a, b = movement_year_range(m)
+        if not a and not b:
+            continue
+        mid = (a + b) / 2.0
+        if start <= mid < end:
+            out.append(m)
+    return out
 
 
 def movement_link(slug):
@@ -479,8 +578,20 @@ def build_paint_themes():
     source = source.replace('data-title-zh="小径索引"', 'data-title-zh="绘画主题 · 尘画"')
     source = source.replace('data-title-en="Trails"', 'data-title-en="Painting Themes · Frame &amp; Grain"')
     source = source.replace("<title>Trails · Frame &amp; Grain</title>", "<title>Painting Themes · Frame &amp; Grain</title>")
-    insert = """<section class="ph-section" id="movements"><h2>%s</h2><div class="movement-links" style="display:flex;flex-wrap:wrap;gap:8px">%s</div></section>""" % (
-        tspan("十五个流派，作为索引", "Fifteen movements, as an index"), movement_links())
+    source = source.replace("8 条横向小径。", "绘画的横向小径。")
+    source = source.replace("Eight lateral trails.", "Lateral trails through painting.")
+    source = source.replace('<meta property="og:title" content="小径索引 · 尘画">', '<meta property="og:title" content="绘画主题 · 尘画">')
+    source = source.replace('"name": "Trails"', '"name": "Painting Themes"')
+    source = re.sub(r'<section class="ph-hero".*?</section>\s*', '', source, count=1, flags=re.S)
+    source = re.sub(r'<span class="ph-pill">.*?</span></span>', '', source, flags=re.S)
+    source = re.sub(r'<section class="ph-section"><div class="ph-trail-grid">.*?</div></section>\s*', '', source, count=1, flags=re.S)
+    trail_cards = "".join(trail_library_card(t) for t in TRAILS)
+    trail_section = """<section class="lib-section" id="trails"><div class="lib-head"><h2>%s</h2></div><div class="lib-grid theme-mosaic">%s</div></section>""" % (
+        tspan("绘画 · 小径", "Painting · Trails"), trail_cards)
+    movement_cards = "".join(movement_library_card(m) for m in MOVEMENTS)
+    randomize = ""
+    insert = """%s%s<section class="lib-section" id="movements"><div class="lib-head"><h2>%s</h2></div><div class="lib-grid theme-mosaic">%s</div></section>%s""" % (
+        LIBRARY_CSS, trail_section, tspan("绘画 · 流派", "Painting · Movements"), movement_cards, randomize)
     if "</main>" in source:
         source = source.replace("</main>", insert + "</main>", 1)
     else:
@@ -556,6 +667,27 @@ LIBRARY_CSS = """
 .lib-list .lib-body{min-height:0;padding:13px 15px 15px}
 .lib-list .lib-card h3{font-size:clamp(22px,2vw,28px)}
 .lib-list .lib-card p{font-size:12px;line-height:1.8}
+.theme-mosaic .lib-thumb img{height:clamp(170px,14vw,230px)}
+.theme-mosaic .lib-body{min-height:150px}
+.index-photo{grid-template-columns:repeat(5,minmax(0,1fr))}
+.story-trails{margin:24px 0 34px;border-top:1px solid var(--ink);padding-top:18px}
+.theme-library .lib-head{align-items:flex-end;flex-wrap:wrap}
+.theme-library .lib-head p{font-size:11px;line-height:1.8;color:var(--muted);margin:0;max-width:52em}
+.story-trails .lib-head p{font-size:11px;line-height:1.8;color:var(--muted);margin:0;max-width:46em}
+.trail-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.story-trail{background:var(--paper);padding:16px 15px 18px;min-width:0}
+.story-trail .lib-meta{margin-bottom:7px}
+.story-trail h3{font-family:var(--serif);font-weight:400;font-size:clamp(19px,1.7vw,24px);line-height:1.2;margin:0 0 6px}
+.story-trail h3 span[data-l="en"]{display:block;font-size:9px;letter-spacing:.12em;color:var(--muted);font-family:var(--sans,ui-sans-serif,sans-serif);margin-top:4px}
+.story-trail p{font-size:11px;line-height:1.75;color:var(--muted);margin:0 0 11px}
+.trail-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.trail-list li{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--rule);padding:7px 0}
+.trail-list li:last-child{border-bottom:0}
+.trail-list a{min-width:0;flex:1;font-size:11px;line-height:1.55;color:var(--ink);text-decoration:none}
+.trail-list a:hover{color:var(--accent)}
+.trail-list span{font-size:9px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:1050px){.trail-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.trail-grid{grid-template-columns:1fr}.story-trails{margin-top:24px}}
 .movement-index{margin-top:26px;border-top:1px solid var(--rule);padding-top:15px}
 .mi-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 11px}
 .mi-head h3{font-family:var(--serif);font-weight:400;font-size:19px;margin:0}
@@ -570,6 +702,9 @@ LIBRARY_CSS = """
 
 /* ---------- 双轨年代轴：左绘画，右摄影 ---------- */
 .dual-timeline{max-width:none;width:min(100%,1760px);margin:0 auto;padding:18px clamp(18px,3vw,48px) 54px}
+.axis-tools{display:flex;justify-content:flex-end;padding:0 0 2px}
+.axis-shuffle{border:0;border-bottom:1px solid var(--line);background:none;color:var(--muted);font:10px/1.4 var(--sans,ui-sans-serif,sans-serif);letter-spacing:.08em;text-transform:uppercase;padding:5px 0;cursor:pointer}
+.axis-shuffle:hover{color:var(--accent);border-color:var(--accent)}
 .axis-head{display:grid;grid-template-columns:minmax(0,1fr) clamp(96px,8vw,138px) minmax(0,1fr);gap:clamp(16px,2.4vw,36px);border:0;padding:10px 0 4px}
 .axis-head span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .axis-head span:nth-child(1){text-align:right;color:#b28b5d}
@@ -621,86 +756,155 @@ LIBRARY_CSS = """
 
 def photo_theme_card(s):
     stories = [x for x in PHOTO_STORIES if x.get("theme") == s["name"]]
-    cover = stories[0]["img"] if stories else ""
+    covers = safe_cover_pool([x.get("img") for x in stories])
+    chosen = PHOTO_STORY_BY_ID.get(PHOTO_THEME_COVERS.get(s["name"], "")) or RECORDS.get(PHOTO_THEME_COVERS.get(s["name"], ""))
+    cover = (chosen or {}).get("img") or (chosen or {}).get("image") or (chosen or {}).get("preview_image") or (covers[0] if covers else "")
+    if cover:
+        covers = [cover]
     search = "https://photo.chenhua.net/search/?q=%s&scope=photos" % quote(s["name"])
     return """<a class="lib-card" href="%s">
-<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-thumb"><img src="%s" data-covers="%s" alt="%s" loading="lazy"></div>
 <div class="lib-body"><div class="lib-meta">PHOTOGRAPHY</div>
 <h3>%s</h3><p>%s</p></div></a>""" % (
-        esc(search), esc(cover), esc(s["name"]),
+        esc(search), esc(cover), esc("|".join(covers)), esc(s["name"]),
         tspan(s["name"], s["name_en"]), tspan(s.get("desc"), s.get("desc_en")))
 
 
 def trail_library_card(t):
+    covers = safe_cover_pool(
+        [paint_img((x or {}).get("work")) for x in (t.get("stops") or [])] + [trail_cover(t)]
+    )
     return """<a class="lib-card" href="https://paint.chenhua.net/history/trail-%s.html">
-<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-thumb"><img src="%s" data-covers="%s" alt="%s" loading="lazy"></div>
 <div class="lib-body"><div class="lib-meta">PAINTING TRAIL</div>
 <h3>%s</h3><p>%s</p></div></a>""" % (
-        esc(t["slug"]), esc(trail_cover(t)), esc(t["zh"]),
+        esc(t["slug"]), esc(covers[0] if covers else ""), esc("|".join(covers)), esc(t["zh"]),
         tspan(t["zh"], t["en"]), tspan(t.get("intro_zh"), t.get("intro_en")))
 
 
 def movement_library_card(m):
+    covers = safe_cover_pool(
+        [paint_img(x) for x in (m.get("works") or [])] + [paint_img(m.get("hero"))],
+        SAFE_COVER_BY_MOVEMENT.get(m.get("zh")),
+    )
     return """<a class="lib-card" href="%s">
-<div class="lib-thumb"><img src="%s" alt="%s" loading="eager"></div>
+<div class="lib-thumb"><img src="%s" data-covers="%s" alt="%s" loading="lazy"></div>
 <div class="lib-body"><div class="lib-meta">PAINTING MOVEMENT</div>
 <h3>%s</h3><p>%s</p></div></a>""" % (
-        esc(movement_link(m["slug"])), esc(paint_img(m.get("hero"))), esc(m["zh"]),
+        esc(movement_link(m["slug"])), esc(covers[0] if covers else ""), esc("|".join(covers)), esc(m["zh"]),
         tspan(m["zh"], m["en"]), tspan(m.get("summary_zh"), m.get("summary_en")))
+
+
+def story_trail_card(t):
+    items = []
+    for sid in t.get("stories") or []:
+        s = PHOTO_STORY_BY_ID.get(sid)
+        if not s:
+            continue
+        year = s.get("year") or "长文"
+        items.append(
+            '<li><a href="https://chenhua.net/story/%s.html">%s</a><span>%s</span></li>' % (
+                esc(sid), esc(s.get("title") or sid), esc(year)))
+    return """<article class="story-trail">
+<div class="lib-meta">%s · %d 篇</div>
+<h3>%s</h3>
+<p>%s</p>
+<ol class="trail-list">%s</ol>
+</article>""" % (
+        esc(t.get("title_en") or t.get("title")), len(items),
+        tspan(t.get("title"), t.get("title_en")), tspan(t.get("intro"), t.get("intro_en") or t.get("intro")),
+        "".join(items))
+
+
+def story_trails_block():
+    for t in STORY_TRAILS:
+        ids = t.get("stories") or []
+        missing = [sid for sid in ids if sid not in PHOTO_STORY_BY_ID]
+        if missing:
+            raise SystemExit("story trail %s missing stories: %s" % (t.get("key"), missing))
+        if not 5 <= len(ids) <= 7:
+            raise SystemExit("story trail %s must have 5-7 stories, got %d" % (t.get("key"), len(ids)))
+    cards = "".join(story_trail_card(t) for t in STORY_TRAILS)
+    return """<section class="story-trails" aria-label="主题串读">
+<div class="lib-head"><h2>%s</h2><p>%s</p></div>
+<div class="trail-grid">%s</div>
+</section>""" % (
+        tspan("编辑串读", "Editor's Trails"),
+        tspan("每个主题先给一条 5—7 篇的入门线；读完这条线，再向下进入完整主题与全部故事。",
+              "Each theme starts with a five-to-seven story trail; follow it first, then continue below to the full theme and archive."),
+        cards)
+
+
+def theme_index_section(zh, en, note_zh, note_en, cards, grid_class=""):
+    return """<section class="lib-section"><div class="lib-head"><h2>%s</h2><p>%s</p></div><div class="lib-grid theme-mosaic %s">%s</div></section>""" % (
+        tspan(zh, en), tspan(note_zh, note_en), grid_class, cards)
 
 
 def theme_library_body():
     photo_cards = "".join(photo_theme_card(s) for s in SERIES)
     trail_cards = "".join(trail_library_card(t) for t in TRAILS)
+    movement_cards = "".join(movement_library_card(m) for m in MOVEMENTS)
     return """%s
 <main class="theme-library">
-<div class="duo-grid">
-<section class="duo-col" id="photo-themes">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">%s</span></div>
-<div class="lib-list">%s</div>
-</section>
-<section class="duo-col" id="paint-themes">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">%s</span></div>
-<div class="lib-list">%s</div>
-<div class="movement-index">
-<div class="mi-head"><h3>%s</h3><span>%s</span></div>
-<div class="movement-links">%s</div>
-</div>
-</section>
-</div>
+<div class="lib-head"><h2>%s</h2><p>%s</p></div>
+%s
+%s
+%s
+%s
 </main>""" % (
         LIBRARY_CSS,
-        tspan("摄影", "Photography"), "9 SERIES", photo_cards,
-        tspan("绘画", "Painting"), "8 TRAILS / 15 MOVEMENTS", trail_cards,
-        tspan("绘画 · 流派", "Painting · Movements"), "15 MOVEMENTS", movement_links(),
+        tspan("主题", "Themes"),
+        tspan("先读五条编辑串读；再按摄影主题、绘画小径与绘画流派进入完整档案。",
+              "Start with five editor's trails; then enter the full archive by photography theme, painting trail and movement."),
+        story_trails_block(),
+        theme_index_section(
+            "摄影主题", "Photography Themes",
+            "%d 个主题：太空探索、灾难与调查、工程与城市、铁路与工业、艺术与图像；点击进入摄影站主题搜索。" % len(SERIES),
+            "%d themes: space, disaster, engineering, rail and art; each card opens the photography search." % len(SERIES),
+            photo_cards, "index-photo"),
+        theme_index_section(
+            "绘画小径", "Painting Trails",
+            "%d 条小径：从光、城市、身体到战争、日常与无名者。" % len(TRAILS),
+            "%d trails: from light, city and body to war, daily life and the unnamed." % len(TRAILS),
+            trail_cards),
+        theme_index_section(
+            "绘画流派", "Painting Movements",
+            "%d 个 A 类流派，按风格与年代进入流派页。" % len(MOVEMENTS),
+            "%d movements; enter each movement page by style and period." % len(MOVEMENTS),
+            movement_cards),
     )
 
 
-def axis_photo_card(s):
+def axis_photo_card(s, era_start):
     theme_zh = s.get("theme") or ""
     theme_en = SERIES_EN.get(theme_zh, theme_zh)
     meta_zh = "%s · %s" % (s.get("year") or "", theme_zh)
     meta_en = "%s · %s" % (s.get("year") or "", theme_en)
-    return """<a class="axis-card" href="/story/%s.html">
-<img src="%s" alt="%s" loading="eager"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
-        esc(s["id"]), esc(s["img"]), esc(s.get("title")), tspan(s.get("title"), s.get("title_en")),
+    return """<a class="axis-card" data-axis-group="photo-%s" href="/story/%s.html">
+<img src="%s" alt="%s" loading="lazy"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
+        esc(era_start), esc(s["id"]), esc(s["img"]), esc(s.get("title")), tspan(s.get("title"), s.get("title_en")),
         tspan(meta_zh, meta_en))
 
 
-def axis_paint_card(p):
-    return """<a class="axis-card" href="https://paint.chenhua.net/history/period-%s.html">
-<img src="%s" alt="%s" loading="eager"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
-        esc(p["slug"]), esc(period_cover(p)), esc(p.get("title_zh")),
-        tspan(p.get("title_zh"), p.get("title_en")), tspan(p.get("sub_zh"), p.get("sub_en")))
+def axis_movement_card(m, era_start):
+    covers = safe_cover_pool(
+        [paint_img(x) for x in (m.get("works") or [])] + [paint_img(m.get("hero"))],
+        SAFE_COVER_BY_MOVEMENT.get(m.get("zh")),
+    )
+    return """<a class="axis-card" data-axis-group="paint-%s" href="%s">
+<img src="%s" alt="%s" loading="lazy"><div class="ac"><h3>%s</h3><span>%s</span></div></a>""" % (
+        esc(era_start), esc(movement_link(m["slug"])), esc(covers[0] if covers else ""),
+        esc(m["zh"]), tspan(m["zh"], m["en"]), tspan(m.get("years_zh"), m.get("years_en")))
 
 
 def dual_axis_body():
     rows = []
     for start, end, pslugs, label, note, note_en in ERAS:
-        paint_cards = "".join(axis_paint_card(PERIOD_BY_SLUG[x]) for x in pslugs if x in PERIOD_BY_SLUG)
+        movs = movements_for_era(start, end)
+        paint_cards = "".join(axis_movement_card(m, start) for m in movs)
         photo = [s for s in PHOTO_STORIES if start <= photo_year(s) < end]
         photo.sort(key=lambda s: (photo_year(s), s.get("date") or ""))
-        photo_cards = "".join(axis_photo_card(s) for s in photo[:4])
+        photo_cards = "".join(axis_photo_card(s, start) for s in photo[:14])
         rows.append("""<div class="axis-row">
 <div class="axis-side paint">%s</div>
 <div class="axis-year"><b>%s</b></div>
@@ -710,15 +914,42 @@ def dual_axis_body():
             esc(label),
             photo_cards if photo_cards else '<div class="axis-empty"></div>',
         ))
+    shuffle = """<script>(function(){
+var cards=[].slice.call(document.querySelectorAll('.axis-card[data-axis-group]'));
+if(!cards.length)return;
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function render(){
+  cards.forEach(function(c){c.style.display='none';});
+  var groups={};
+  cards.forEach(function(c){var g=c.getAttribute('data-axis-group');(groups[g]=groups[g]||[]).push(c);});
+  var used={};
+  Object.keys(groups).sort().forEach(function(g){
+    var want=g.indexOf('paint-')===0?1:2;
+    var pool=shuffle(groups[g].slice());
+    var shown=0;
+    for(var i=0;i<pool.length&&shown<want;i++){
+      var c=pool[i], img=c.querySelector('img');
+      var src=(img&&img.getAttribute('src')||'').split('?')[0];
+      if(!src||used[src])continue;
+      used[src]=1;c.style.display='';shown++;
+    }
+  });
+}
+render();
+var btn=document.querySelector('.axis-shuffle');
+if(btn)btn.addEventListener('click',render);
+})();</script>"""
     return """%s
 <main class="dual-timeline" aria-label="%s">
+<div class="axis-tools"><button class="axis-shuffle" type="button">%s</button></div>
 <div class="axis-head"><span>%s</span><span>%s</span><span>%s</span></div>
 <div class="dual-axis">%s</div>
-</main>""" % (
+</main>%s""" % (
         LIBRARY_CSS,
         "Timeline",
-        tspan("绘画", "Painting"), tspan("年代", "Years"), tspan("摄影", "Photography"),
-        "".join(rows),
+        tspan("换一批", "Shuffle"),
+        tspan("绘画 · 流派", "Painting · Movements"), tspan("年代", "Years"), tspan("摄影", "Photography"),
+        "".join(rows), shuffle,
     )
 
 
@@ -766,13 +997,13 @@ def photo_story_library_card(s):
 
 def photo_theme_library_body():
     cards = "".join(photo_theme_card(s) for s in SERIES)
+    randomize = ""
     return """%s
 <main class="theme-library">
-<section class="lib-section" id="photo-themes">
-<div class="lib-head"><h2>%s</h2><span class="lib-sub">9 SERIES</span></div>
-<div class="lib-list">%s</div>
-</section>
-</main>""" % (LIBRARY_CSS, tspan("摄影主题", "Photography Themes"), cards)
+<div class="lib-head"><h2>%s</h2></div>
+<div class="lib-grid theme-mosaic">%s</div>
+</main>%s""" % (
+        LIBRARY_CSS, tspan("摄影主题", "Photography Themes"), cards, randomize)
 
 
 def photo_axis_body():
@@ -797,9 +1028,6 @@ def photo_page(from_path, body, title_zh, title_en):
     page = re.sub(r'data-title-zh="[^"]*"', 'data-title-zh="%s"' % esc(title_zh), page, count=1)
     page = re.sub(r'data-title-en="[^"]*"', 'data-title-en="%s"' % esc(title_en), page, count=1)
     page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % esc(title_zh), page, count=1, flags=re.S)
-    page = page.replace("https://chenhua.net/themes/", "https://photo.chenhua.net/themes/")
-    page = page.replace("https://chenhua.net/timeline/", "https://photo.chenhua.net/timeline/")
-    page = page.replace("https://chenhua.net/today/", "https://photo.chenhua.net/today/")
     return page
 
 

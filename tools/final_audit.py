@@ -45,6 +45,7 @@ paths = [
     os.path.join(DIST, "main", "legal", "index.html"),
     os.path.join(DIST, "main", "search", "index.html"),
     os.path.join(DIST, "main", "404.html"),
+    os.path.join(NEXT, "images", "pre19century", "index.html"),
     os.path.join(NEXT, "images", "19century", "index.html"),
     os.path.join(NEXT, "images", "20century", "index.html"),
     os.path.join(NEXT, "images", "21century", "index.html"),

@@ -12,7 +12,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
+ROOT = Path(__file__).resolve().parents[2]
 NEXT = ROOT / "next"
 DIST = NEXT / "dist"
 MAIN = DIST / "main"
@@ -182,12 +182,11 @@ def build_calendar(site):
             stories = BY_DATE.get(md) or []
             cells.append(day_card(md, stories[0] if stories else None,
                                   painting_by_date.get(md) if combined else None, combined))
-        body.append('<section class="cal-month%s" id="month-%02d"><div class="cal-head"><h2>%s<em>%s</em></h2>'
+        body.append('<section class="cal-month%s" id="month-%02d"><div class="cal-head"><h2>%s</h2>'
                     '</div><div class="cal-week">%s</div>'
                     '<div class="cal-grid">%s</div></section>' % (
                         " is-active" if month == 1 else "", month,
                         tspan(MONTH_ZH[month - 1], MONTH_EN[month - 1]),
-                        tspan("2024", "2024"),
                         "".join('<span>%s</span>' % tspan(z, e) for z, e in zip(WEEK_ZH, WEEK_EN)),
                         "".join(cells)))
     body.append('<script>(function(){if(history.scrollRestoration)history.scrollRestoration="manual";var months=[].slice.call(document.querySelectorAll(".cal-month"));var links=[].slice.call(document.querySelectorAll(".cal-jump a"));var jump=document.querySelector(".cal-jump");var bar=document.querySelector(".cal-bar");var i=0;var hm=location.hash.match(/month-(\\d{2})/);if(hm){i=Math.max(0,Math.min(11,parseInt(hm[1],10)-1));}else{i=new Date().getMonth();}function show(n){i=Math.max(0,Math.min(11,n));months.forEach(function(el,k){el.classList.toggle("is-active",k===i)});links.forEach(function(el,k){el.classList.toggle("is-active",k===i)});var a=links[i];if(a&&jump){jump.scrollLeft=Math.max(0,a.offsetLeft-(jump.clientWidth-a.offsetWidth)/2)}}links.forEach(function(a,k){a.addEventListener("click",function(e){e.preventDefault();show(k)})});var p=bar&&bar.querySelector(".cal-prev"),n=bar&&bar.querySelector(".cal-next");if(p)p.addEventListener("click",function(){show(i-1)});if(n)n.addEventListener("click",function(){show(i+1)});show(i);setTimeout(function(){window.scrollTo(0,0)},0);})();</script>')

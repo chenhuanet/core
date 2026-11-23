@@ -2,6 +2,8 @@
   "use strict";
   const CFG = window.SITE_CONFIG || {};
   const BUNDLE = window.CHENHUA_BUNDLE || { records: [], stories: [], stats: {} };
+  const NOTES = window.CHENHUA_TODAY_NOTES || {};
+  const SEARCH_INDEX = window.CHENHUA_SEARCH_INDEX || { records: {}, stories: {} };
   const I18N = window.CHENHUA_I18N || { zh: {}, en: {} };
   const app = document.getElementById("app");
   const THEME_KEY = "chenhua-theme";
@@ -79,7 +81,12 @@
   }
   function q(sel, root) { return (root || document).querySelector(sel); }
   function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-  function imgOf(r) { return r.preview_image || r.image || ""; }
+  function imgOf(r) { return r.image || r.preview_image || ""; }
+  function todayNoteHtml(r) {
+    var n = NOTES[r.id] || {};
+    if (isEn()) return esc(n.note_en || n.note || loc(r, "note"));
+    return n.note_html || n.note || r.note_html || "";
+  }
   function recordImage(r) {
     if (r.collection === "paintings" && r.image && /^https?:\/\//.test(r.image)) return r.image;
     return imgOf(r);
@@ -564,7 +571,7 @@
       '<div class="today-inner">' +
         '<div class="today-date">' + esc(date) + " · " + esc(t("brand.name")) + " · " + esc(isPaint ? t("home.todayPainting") : t("home.todayFrame")) + "</div>" +
         "<h1>" + esc(loc(r, "title")) + "</h1>" +
-        '<p class="today-note">' + (isEn() ? esc(loc(r, "note")) : (r.note_html || "")) + "</p>" +
+        '<p class="today-note">' + todayNoteHtml(r) + "</p>" +
         '<div class="today-meta"><span>' + esc(r.year || "") + "</span><span>" + esc(loc(r, "place") || tx("region", r.region)) + "</span><span>" + esc(tx("source_short", r.source_short)) + "</span>" + usageTag(r) + "</div>" +
         '<div class="today-actions"><a class="btn gold" href="' + esc(staticHref(r)) + '">' + esc(isPaint ? t("home.openPainting") : t("home.readFrame")) + '</a><button class="btn" data-lb="' + esc(r.id) + '">' + esc(t("common.zoom")) + '</button><a class="btn" href="' + esc(routeHref("gallery")) + '">' + esc(isPaint ? t("home.enterPaintAxis") : t("home.enterPhotoAxis")) + "</a></div>" +
       "</div></section>" +
@@ -818,7 +825,11 @@
     var terms = qtext.toLowerCase().trim().split(/\s+/).filter(Boolean);
     if (!terms.length) return [];
     var rows = searchRows(scope).filter(function (r) {
-      var txt = String((isEn() ? (r.search_text_en || r.search_text) : r.search_text) || "").toLowerCase();
+      var ix = (SEARCH_INDEX.records || {})[r.id];
+      var txt = String(
+        ix ? (isEn() ? (ix[1] || ix[0]) : ix[0]) :
+          (isEn() ? (r.search_text_en || r.search_text) : r.search_text)
+      ).toLowerCase();
       return terms.every(function (term) { return txt.indexOf(term) >= 0; });
     });
     return rows.map(function (r) {
@@ -839,6 +850,8 @@
       .map(function (x) { return x.r; });
   }
   function themeSearchText(s) {
+    var ix = (SEARCH_INDEX.stories || {})[s.id];
+    if (ix) return String((isEn() ? (ix[1] || ix[0]) : ix[0]) || "").toLowerCase();
     var chapterText = (s.chapters || []).map(function (ch) {
       return loc(ch, "title") + " " + loc(ch, "text");
     }).join(" ");
@@ -974,11 +987,12 @@
       var label = i === 0 ? footerHomeLabel() : esc(navLabel(n));
       return '<a href="' + esc(itemHref(n)) + '">' + label + "</a>";
     }).join("");
+    var library = '<a href="https://chenhua.net/images/">' + (isEn() ? "Image Library" : "图片库") + "</a>";
     var navAria = isEn() ? "Site navigation" : "站内导航";
     return '<footer class="site-foot">' +
       '<div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://chenhua.net">chenhua.net</a></span>' +
       '<span data-l="en">© 2026 <span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span> · <a href="https://chenhua.net">chenhua.net</a></span></div>' +
-      '<nav class="sf-nav" aria-label="' + navAria + '">' + links + "</nav>" +
+      '<nav class="sf-nav" aria-label="' + navAria + '">' + links + library + "</nav>" +
       '<div class="sf-right"><a href="' + esc(routeHref("legal")) + '">' + (isEn() ? "Disclaimer" : "免责条款") + "</a></div>" +
       "</footer>";
   }

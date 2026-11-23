@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Phase 1 预览构建：Markdown 内容 + 世纪图片清单 → 三个站点 + 图片站瀑布页。"""
 import json
+import os
 import pathlib
 import re
 import shutil
 import sys
 import time
+import hashlib
 from collections import Counter
 from html import escape as html_escape
 
@@ -20,8 +22,19 @@ CORE = NEXT / "core"
 DIST = NEXT / "dist"
 IMAGES = NEXT / "images"
 PREVIEW_MAP = json.loads((NEXT / "preview-images.json").read_text(encoding="utf-8"))
+PUBLISH = os.environ.get("CHENHUA_PUBLISH") == "1"
 
 I18N_DIR = CONTENT / "i18n"
+
+
+def preview_url(target):
+    """预览图在图片仓，不在站点仓；把 next/images/<century>/... 转为图片站 URL。"""
+    target = str(target or "").replace("\\", "/").lstrip("/")
+    if target.startswith("next/images/"):
+        parts = target.split("/", 3)
+        if len(parts) == 4 and parts[2]:
+            return "https://%s.chenhua.net/%s" % (parts[2], parts[3])
+    return "/" + target
 
 
 def load_i18n(name, default):
@@ -38,6 +51,17 @@ def load_i18n(name, default):
 TAXONOMY = load_i18n("taxonomy.en.json", {})
 RECORD_I18N = load_i18n("records.en.json", {})
 STORY_I18N = load_i18n("stories.en.json", {})
+CURATION_THEME_EN = {
+    "信仰与图像": "Faith and Image",
+    "山水与自然": "Landscape and Nature",
+    "人物与自我": "Portrait and Self",
+    "城市与日常": "City and Everyday Life",
+    "文字与观看": "Word and Looking",
+    "材料与技法": "Material and Technique",
+}
+STORY_AXES_PATH = CONTENT / "story-axes.json"
+STORY_AXES = (json.loads(STORY_AXES_PATH.read_text(encoding="utf-8")).get("stories") or {}
+               if STORY_AXES_PATH.exists() else {})
 CAPTIONS_I18N = load_i18n("captions.en.json", {})
 UI_I18N = load_i18n("ui.json", {"zh": {}, "en": {}})
 USAGE_EN = TAXONOMY.get("usage", {})
@@ -217,13 +241,22 @@ def load_records():
                 "kind": fm.get("kind"),
                 "theme": fm.get("theme"),
                 "topic": fm.get("topic"),
+                "curation_theme": fm.get("curation_theme"),
                 "region": fm.get("region"),
                 "medium": fm.get("medium"),
+                "medium_detail": fm.get("medium_detail"),
                 "period": fm.get("period"),
                 "place": fm.get("place"),
                 "china": fm.get("china"),
                 "creator": fm.get("creator_zh") or fm.get("creator"),
                 "creator_status": fm.get("creator_status"),
+                "attribution_status": fm.get("attribution_status"),
+                "version_status": fm.get("version_status"),
+                "object_year": fm.get("object_year"),
+                "year_basis": fm.get("year_basis"),
+                "provenance_note": fm.get("provenance_note"),
+                "image_credit": fm.get("image_credit"),
+                "images": fm.get("images") or [],
                 "movement": fm.get("movement") or "",
                 "movement_en_raw": fm.get("movement_en") or "",
                 "dimensions": fm.get("dimensions") or "",
@@ -235,6 +268,7 @@ def load_records():
                 "source_url": fm.get("source_url"),
                 "page_url": fm.get("page_url"),
                 "page_url_basis": fm.get("page_url_basis"),
+                "fetched_at": fm.get("fetched_at"),
                 "license": fm.get("license"),
                 "license_url": fm.get("license_url"),
                 "tier": fm.get("tier"),
@@ -259,8 +293,23 @@ def load_records():
                 "audit": fm.get("audit") if isinstance(fm.get("audit"), dict) else {},
                 "image": fm.get("image"),
                 "image_sha256": fm.get("image_sha256"),
+                "image_original_sha256": fm.get("image_original_sha256"),
+                "image_width": fm.get("image_width"),
+                "image_height": fm.get("image_height"),
+                "image_alt_zh": fm.get("image_alt_zh"),
+                "image_alt_en": fm.get("image_alt_en"),
+                "image_credit_en": fm.get("image_credit_en"),
                 "image_century": fm.get("image_century"),
-                "preview_image": ("/" + preview["target"]) if preview else None,
+                "preview_image": preview_url(preview["target"]) if preview else None,
+                "preview_thumb_image": (
+                    preview_url(preview.get("thumb_target"))
+                    if preview and preview.get("thumb_target")
+                    else (
+                        preview_url(str(preview["target"]).replace(
+                            "/images/%s/" % preview.get("century"), "/images/%s/thumbs/" % preview.get("century"), 1))
+                        if preview and preview.get("target") else None
+                    )
+                ),
                 "decade": preview["decade"] if preview else (
                     fm.get("period") if re.fullmatch(r"\d{4}s", str(fm.get("period") or "")) else ""),
                 "search_text": " ".join(str(x) for x in [
@@ -278,6 +327,7 @@ def load_records():
             rec["medium_en"] = tr.get("medium") or tx("medium", fm.get("medium"))
             rec["place_en"] = tr.get("place") or (TAXONOMY.get("place") or {}).get(fm.get("place")) or tx("region", fm.get("place"))
             rec["theme_en"] = tx("theme", fm.get("theme"))
+            rec["curation_theme_en"] = CURATION_THEME_EN.get(fm.get("curation_theme"), fm.get("curation_theme") or "")
             rec["topic_en"] = tx("topic", fm.get("topic"))
             rec["region_en"] = tx("region", fm.get("region"))
             rec["kind_en"] = tx("kind", fm.get("kind"))
@@ -289,7 +339,7 @@ def load_records():
             rec["usage_desc_en"] = ue.get("desc") or u["desc"]
             rec["usage_obligation_en"] = ue.get("obligation") or u["obligation"]
             rec["usage_credit_en"] = ue.get("credit") or u["credit"]
-            rec["note_en"] = tr.get("note") or note_en_for(rec, None)
+            rec["note_en"] = fm.get("note_en") or tr.get("note") or note_en_for(rec, None)
             credit_parts = [rec["creator_en"], rec["source_short_en"],
                             license_en(fm.get("license"))]
             credit_parts = [p for i, p in enumerate(credit_parts)
@@ -302,6 +352,15 @@ def load_records():
                 rec["medium_en"], rec["source_short_en"], rec["note_en"]] if x).lower()
             rows.append(rec)
     rows.sort(key=lambda r: (r["year"] or 0, r["title"]))
+    dedup_path = CONTENT / "record-dedup.json"
+    if dedup_path.exists():
+        mapping = json.loads(dedup_path.read_text(encoding="utf-8")).get("duplicates") or {}
+        by_id = {r["id"]: r for r in rows}
+        for rid, cid in mapping.items():
+            rec = by_id.get(rid)
+            if rec and cid in by_id:
+                rec["duplicate_of"] = cid
+                rec["canonical_record"] = cid
     return rows
 
 
@@ -358,7 +417,7 @@ def load_story_files(records):
             "status": fm.get("status") or "draft",
             "cover": cover,
             "photo_ids": ids,
-            "themes": fm.get("themes") or [],
+            "themes": [x for x in (fm.get("themes") or []) if x != "历史"],
             "chapters": chapters,
             "count": len(ids),
             "rights_summary": " · ".join("%s %d" % (k, v) for k, v in sorted(usages.items())),
@@ -374,6 +433,27 @@ def load_story_files(records):
         s["intro_en"] = tr.get("intro") or s["intro"]
         s["type_en"] = tr.get("type_en") or STORY_TYPE_EN.get(s["type"], "Story")
         s["themes_en"] = tr.get("themes") or [tx("theme", x) for x in s["themes"]]
+        ax = STORY_AXES.get(s["id"]) or {}
+        if ax:
+            s["series_key"] = ax.get("series_key") or ""
+            s["series"] = ax.get("series") or ""
+            s["series_en"] = ax.get("series_en") or s["series"]
+            s["series_rank"] = int(ax.get("series_rank") or 0)
+            s["axis_decade"] = ax.get("axis_decade") or ""
+            s["axis_mmdd"] = ax.get("axis_mmdd") or ""
+            s["axis_visibility"] = ax.get("axis_visibility") or {
+                "calendar": bool(s["date"]), "timeline": bool(s["axis_decade"]), "theme": True}
+            if not s["themes"]:
+                s["themes"] = [s["series"]]
+                s["themes_en"] = [s["series_en"]]
+        else:
+            s["series_key"] = ""
+            s["series"] = ""
+            s["series_en"] = ""
+            s["series_rank"] = 0
+            s["axis_decade"] = ""
+            s["axis_mmdd"] = ""
+            s["axis_visibility"] = {"calendar": False, "timeline": False, "theme": False}
         s["place_en"] = tx("place", s["place"])
         chapter_tr = tr.get("chapters") or {}
         for idx, ch in enumerate(s["chapters"]):
@@ -386,6 +466,21 @@ def load_story_files(records):
                 it["caption_en"] = (item_tr.get(it["id"])
                                     or CAPTIONS_I18N.get(it["caption"])
                                     or it["caption"])
+    # Keep story covers as a curated set: reuse the same image only when the
+    # story has no other usable frame.  This removes the "same cover on a dozen
+    # date pages" effect without deleting any story.
+    used_cover_images = set()
+    for s in sorted(stories, key=lambda x: (x.get("date") or "9999-99-99", x["id"])):
+        current = (by_id.get(s["cover"]) or {}).get("image") or ""
+        if current and current in used_cover_images:
+            for pid in s["photo_ids"]:
+                img = (by_id.get(pid) or {}).get("image") or ""
+                if img and img not in used_cover_images:
+                    s["cover"] = pid
+                    current = img
+                    break
+        if current:
+            used_cover_images.add(current)
     return stories
 
 
@@ -436,8 +531,110 @@ def write_bundle(records, stories, stats):
     (DIST / "data").mkdir(parents=True, exist_ok=True)
     data = {"records": records, "stories": stories, "stats": stats}
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    (DIST / "data" / "bundle.js").write_text(
+    path = DIST / "data" / "bundle.js"
+    path.write_text(
         "window.CHENHUA_BUNDLE = %s;\n" % payload,
+        encoding="utf-8", newline="\n")
+    meta = {
+        "file": "bundle.js",
+        "records": len(records),
+        "stories": len(stories),
+        "bytes": path.stat().st_size,
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+    (DIST / "data" / "bundle.meta.json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8", newline="\n")
+
+
+# Fields the client shell actually reads.  Everything else (evidence, audit,
+# image hashes, coordinates, rights internals) belongs to the build, not the
+# browser.  Notes and search text are split into route-specific files below.
+CLIENT_RECORD_FIELDS = {
+    "id", "collection", "content_type", "isLink",
+    "title", "title_en", "year", "date_label",
+    "topic", "region", "place", "place_en",
+    "creator", "movement", "movement_en",
+    "source_short", "usage_code", "usage_short",
+    "usage_short_en", "commercial_ok",
+    "image", "preview_image", "themes", "themes_en",
+}
+CLIENT_STORY_FIELDS = {
+    "id", "title", "title_en", "subtitle", "subtitle_en", "intro", "intro_en",
+    "cover", "photo_ids", "date", "date_label", "status", "themes", "themes_en",
+    "type", "type_en", "count",
+}
+
+
+def _write_js(path, name, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "window.%s = %s;\n" % (name, json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")),
+        encoding="utf-8", newline="\n")
+
+
+def write_client_bundle(site, cfg, records, stories, stats):
+    """Write the lean per-site bundle plus route-specific note/search payloads.
+
+    The canonical ``dist/data/bundle.js`` stays complete for the static builders;
+    browsers get only the fields rendered by app.js.
+    """
+    collections = set(cfg.get("collections") or [])
+    site_records = [r for r in records
+                    if r.get("collection") in collections and not r.get("duplicate_of")]
+    site_ids = {r["id"] for r in site_records}
+    site_stories = [
+        s for s in stories
+        if any(i in site_ids for i in (s.get("photo_ids") or []))
+    ]
+    lean_records = [
+        {k: v for k, v in r.items() if k in CLIENT_RECORD_FIELDS}
+        for r in site_records
+    ]
+    lean_stories = [
+        {k: v for k, v in s.items() if k in CLIENT_STORY_FIELDS}
+        for s in site_stories
+    ]
+    lean = {"records": lean_records, "stories": lean_stories, "stats": stats}
+    data_dir = DIST / site / "data"
+    _write_js(data_dir / "client-bundle.js", "CHENHUA_BUNDLE", lean)
+
+    notes = {}
+    for r in site_records:
+        note = {k: r.get(k) for k in ("note", "note_en", "note_html") if r.get(k)}
+        if note:
+            notes[r["id"]] = note
+    _write_js(data_dir / "today-notes.js", "CHENHUA_TODAY_NOTES", notes)
+
+    record_index = {}
+    for r in site_records:
+        record_index[r["id"]] = [r.get("search_text") or "", r.get("search_text_en") or ""]
+    story_index = {}
+    for s in site_stories:
+        zh = [s.get("title") or "", s.get("subtitle") or "", s.get("intro") or ""]
+        en = [s.get("title_en") or "", s.get("subtitle_en") or "", s.get("intro_en") or ""]
+        for ch in (s.get("chapters") or []):
+            zh += [ch.get("title") or "", ch.get("text") or ""]
+            en += [ch.get("title_en") or "", ch.get("text_en") or ""]
+        zh += list(s.get("themes") or [])
+        en += list(s.get("themes_en") or [])
+        story_index[s["id"]] = [" ".join(zh), " ".join(en)]
+    _write_js(data_dir / "search-index.js", "CHENHUA_SEARCH_INDEX",
+              {"records": record_index, "stories": story_index})
+    client = data_dir / "client-bundle.js"
+    meta = {
+        "site": site,
+        "file": "client-bundle.js",
+        "records": len(lean_records),
+        "stories": len(lean_stories),
+        "notes": len(notes),
+        "search_records": len(record_index),
+        "search_stories": len(story_index),
+        "bytes": client.stat().st_size,
+        "sha256": hashlib.sha256(client.read_bytes()).hexdigest(),
+    }
+    (data_dir / "client-bundle.meta.json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8", newline="\n")
 
 
@@ -483,9 +680,80 @@ def write_i18n_assets():
             shutil.copy2(leaf_src / name, leaf_dst / name)
 
 
+def _nav_label(item, lang):
+    return '<span data-l="%s">%s</span>' % (lang, html_escape(item[1 if lang == "zh" else 2]))
+
+
+STATIC_HEAD_NAV = [
+    ("https://chenhua.net/themes/", "主题", "Themes"),
+    ("https://chenhua.net/timeline/", "时间线", "Timeline"),
+    ("https://chenhua.net/today/calendar.html", "日历", "Calendar"),
+    ("https://photo.chenhua.net/", "摄影", "Photography"),
+    ("https://paint.chenhua.net/", "绘画", "Painting"),
+    ("https://netcn.org/", "导航", "Directory"),
+]
+STATIC_FOOT_NAV = [
+    ("https://chenhua.net/", "出尘入画", "Frame & Grain"),
+    ("https://chenhua.net/images/", "图片库", "Image Library"),
+    ("https://chenhua.net/themes/", "主题", "Themes"),
+    ("https://chenhua.net/timeline/", "时间线", "Timeline"),
+    ("https://chenhua.net/today/calendar.html", "日历", "Calendar"),
+    ("https://photo.chenhua.net/", "摄影", "Photography"),
+    ("https://paint.chenhua.net/", "绘画", "Painting"),
+    ("https://netcn.org/", "导航", "Directory"),
+]
+
+
+def _static_nav(items):
+    return "".join(
+        '<a href="%s">%s%s</a>' % (
+            html_escape(item[0]),
+            _nav_label(item, "zh"), _nav_label(item, "en"),
+        )
+        for item in items
+    )
+
+
+def static_shell(cfg):
+    """No-JS shell navigation; audit requires exactly one desknav and one sf-nav."""
+    home = cfg.get("home") or "/"
+    header = (
+        '<header class="appbar static-appbar">'
+        '<a class="brand" href="%s"><img class="leaf-mark brand-mark" '
+        'src="/assets/leaf/surprised.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async">'
+        '<span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span>'
+        '<span class="wm-lite">入</span><span class="wm-strong">画</span></span>'
+        '<span class="sub"><span data-l="zh">尘归尘，画归画</span>'
+        '<span data-l="en">Image as history</span></span></a>'
+        '<nav class="desknav" aria-label="站内导航">%s</nav>'
+        '<div class="right"><button class="langbtn" type="button" data-lang-toggle '
+        'aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button>'
+        '<button class="iconbtn themebtn" type="button" data-themebtn aria-label="切换明暗">'
+        '<svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4'
+        'M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+        '<svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>'
+        '</button></div></header>'
+    ) % (html_escape(home), _static_nav(STATIC_HEAD_NAV))
+    foot = (
+        '<footer class="site-foot"><div class="sf-left"><span data-l="zh">尘归尘，画归画</span>'
+        '<span data-l="en">Image as history</span></div>'
+        '<nav class="sf-nav" aria-label="站内导航">%s</nav>'
+        '<div class="sf-right"><a href="https://chenhua.net/legal/">'
+        '<span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div></footer>'
+    ) % _static_nav(STATIC_FOOT_NAV)
+    return (
+        '<div class="static-splash">%s'
+        '<main class="static-splash-main"><span data-l="zh">正在打开尘画</span>'
+        '<span data-l="en">Opening Frame &amp; Grain</span></main>%s</div>'
+    ) % (header, foot)
+
+
 def write_site(site, cfg, records, stories, stats, build_id):
     out = DIST / site
     out.mkdir(parents=True, exist_ok=True)
+    write_client_bundle(site, cfg, records, stories, stats)
     brand = cfg.get("brand") or "尘画"
     domain = DOMAINS[site]
     routes = ["today", "gallery", "stories", "search"]
@@ -495,7 +763,8 @@ def write_site(site, cfg, records, stories, stats, build_id):
         stale_dir = out / stale
         if stale_dir.exists():
             shutil.rmtree(stale_dir)
-    site_ids = {r["id"] for r in records if r["collection"] in cfg["collections"]}
+    site_ids = {r["id"] for r in records
+                if r["collection"] in cfg["collections"] and not r.get("duplicate_of")}
     has_stories = any(site_ids.intersection(s.get("photo_ids") or []) for s in stories)
     def prefix_leaf(route):
         return ("../" if route == "today" else "../../") + "assets/leaf/"
@@ -503,7 +772,7 @@ def write_site(site, cfg, records, stories, stats, build_id):
     for route in routes:
         root = route == "today"
         page_cfg = dict(cfg)
-        page_cfg["leafBase"] = prefix_leaf(route)
+        page_cfg["leafBase"] = "/assets/leaf/" if PUBLISH else prefix_leaf(route)
         cfg_json = json.dumps(page_cfg, ensure_ascii=False).replace("</", "<\\/")
         title_tpl, desc_tpl = ROUTE_META[route]
         title = cfg["title"] if root else (title_tpl % brand)
@@ -608,6 +877,14 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
                          cfg.get("photoBase") or "", cfg.get("paintBase") or "")
         noscript = ('<div class="seo-fallback"><h1>%s</h1><p>%s</p><nav>%s</nav></div>'
                     % (title, desc, navlinks))
+        static_html = static_shell(cfg)
+        extra_scripts = ""
+        if route == "today":
+            extra_scripts = ('<script src="%sdata/today-notes.js?v=%s"></script>'
+                             % (prefix, build_id))
+        elif route == "search":
+            extra_scripts = ('<script src="%sdata/search-index.js?v=%s"></script>'
+                             % (prefix, build_id))
         ld = ""
         if site == "main" and root:
             ld_data = {
@@ -643,6 +920,7 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
 <meta property="og:title" content="%s">
 <meta property="og:description" content="%s">
 <meta property="og:url" content="%s">
+<link rel="dns-prefetch" href="//pre19century.chenhua.net">
 <link rel="dns-prefetch" href="//19century.chenhua.net">
 <link rel="dns-prefetch" href="//20century.chenhua.net">
 <link rel="dns-prefetch" href="//21century.chenhua.net">
@@ -650,12 +928,14 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
 %s<link rel="stylesheet" href="%sassets/app.css?v=%s">
 </head>
 <body data-title-zh="%s" data-title-en="%s" data-desc-zh="%s" data-desc-en="%s">
-<div id="app" aria-live="polite"></div>
+<div id="app" aria-live="polite">%s</div>
 <noscript>%s</noscript>
 <script>window.SITE_CONFIG = %s;</script>
 <script src="%sassets/i18n.js?v=%s"></script>
-<script src="%sdata/bundle.js?v=%s"></script>
+<script src="%sdata/client-bundle.js?v=%s"></script>
+%s
 <script src="%sassets/app.js?v=%s"></script>
+<script src="%sassets/site.js?v=%s"></script>
 </body>
 </html>
 """ % (html_escape(title, quote=True), html_escape(desc, quote=True), robots, canonical,
@@ -665,8 +945,9 @@ document.documentElement.setAttribute("lang",l==="en"?"en":"zh-CN");}}catch(e){}
        prefix, build_id,
        html_escape(title, quote=True), html_escape(title_en or title, quote=True),
        html_escape(desc, quote=True), html_escape(desc_en or desc, quote=True),
-       noscript, cfg_json,
-       prefix, build_id, prefix, build_id, prefix, build_id)
+       static_html, noscript, cfg_json,
+       prefix, build_id, prefix, build_id, extra_scripts,
+       prefix, build_id, prefix, build_id)
         folder = out if root else out / route
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
@@ -681,18 +962,29 @@ def write_gallery_assets():
 
 
 def write_galleries(build_id):
-    for century in ("19century", "20century", "21century"):
+    labels = {
+        "pre19century": ("19世纪前", "Pre-19th Century",
+                         "1800 年以前的绘画、版画与素描。",
+                         "Paintings, prints and drawings made before 1800."),
+        "19century": ("19世纪", "19th Century",
+                      "1800—1899 年的摄影、绘画与器物。",
+                      "Photography, painting and objects, 1800–1899."),
+        "20century": ("20世纪", "20th Century",
+                      "1900—1999 年的摄影、绘画与器物。",
+                      "Photography, painting and objects, 1900–1999."),
+        "21century": ("21世纪", "21st Century",
+                      "2000—2026 年的摄影与图像。",
+                      "Photography and images, 2000–2026."),
+    }
+    for century in ("pre19century", "19century", "20century", "21century"):
         folder = IMAGES / century
         if not folder.exists():
             continue
         shutil.copy2(CORE / "gallery" / "gallery.css", folder / "gallery.css")
         shutil.copy2(CORE / "gallery" / "gallery.js", folder / "gallery.js")
-        title = {"19century": "19th Century", "20century": "20th Century",
-                 "21century": "21st Century"}[century]
+        title, title_en, desc_zh, desc_en = labels[century]
         title_zh = "%s · 尘画图片索引" % title
-        title_en = "%s · Frame & Grain Image Index" % title
-        desc_zh = "按世纪浏览尘画影像。完整记录见摄影 / 绘画站。"
-        desc_en = "Browse Frame & Grain images by century. Full records are on the Photography and Painting sites."
+        title_en = "%s · Frame & Grain Image Index" % title_en
         g_home = (
             '<a href="../../dist/main/"><span data-l="zh">出尘入画</span><span data-l="en"><span class="sf-brand-long">Frame &amp; Grain</span><span class="sf-brand-short">Frame</span></span></a>'
         )
@@ -706,6 +998,7 @@ def write_galleries(build_id):
         )
         g_foot_nav = (
             g_home +
+            '<a href="../../dist/main/images/"><span data-l="zh">图片库</span><span data-l="en">Image Library</span></a>'
             '<a href="../../dist/main/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
             '<a href="../../dist/main/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
             '<a href="../../dist/main/today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
@@ -719,6 +1012,19 @@ def write_galleries(build_id):
         )
         g_right = ('<div class="sf-right"><a href="../../dist/main/legal/">'
                    '<span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>')
+        early_links = ""
+        if century == "pre19century":
+            items = [
+                ("early-landscape-self", "山水与自我", "Landscape and the Self"),
+                ("early-europe-faith", "信仰与图像", "Faith and Image"),
+                ("early-other-tradition", "另一条传统", "Another Tradition"),
+                ("early-word-scroll", "文字、长卷与观看", "Text, Scroll, and Looking"),
+                ("early-material", "材料与技法", "Material and Method"),
+                ("early-city-daily", "城市与日常", "City and Everyday Life"),
+            ]
+            early_links = '<div class="g-early"><p><span data-l="zh">六个展览 · 从作品进入 1800 年前的绘画</span><span data-l="en">Six exhibitions · enter painting before 1800 through works</span></p><div>%s</div></div>' % "".join(
+                '<a href="https://paint.chenhua.net/history/exhibition-%s.html"><span data-l="zh">%s</span><span data-l="en">%s</span></a>' % (slug, zh, en)
+                for slug, zh, en in items)
         html = f"""<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -729,7 +1035,7 @@ def write_galleries(build_id):
 <title>{title_zh}</title>
 <link rel="alternate" hreflang="zh-CN" href="https://{century}.chenhua.net/">
 <link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/?lang=en">
-<link rel="icon" type="image/svg+xml" href="../../dist/assets/leaf/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="https://chenhua.net/assets/leaf/favicon.svg">
 <link rel="stylesheet" href="gallery.css?v={build_id}">
 <script>
 (function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");
@@ -740,7 +1046,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
 <body data-title-zh="{title_zh}" data-title-en="{title_en}"
       data-desc-zh="{desc_zh}" data-desc-en="{desc_en}">
 <header class="g-head">
-  <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="../../dist/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
+  <a class="g-brand" href="../../dist/main/"><img class="g-mark" src="https://chenhua.net/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
   <nav class="g-nav">
     {g_top_nav}
   </nav>
@@ -757,6 +1063,7 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
     <h1>{title}</h1>
     <p><span data-l="zh">{desc_zh}</span><span data-l="en">{desc_en}</span></p>
   </div>
+  {early_links}
   <div class="g-chips" id="gChips"></div>
   <div class="g-count" id="gCount">—</div>
   <div class="g-masonry" id="gMasonry"></div>
@@ -776,12 +1083,127 @@ var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.mat
             "mainBase": "../../dist/main/",
             "preview": True,
         }, ensure_ascii=False)};</script>
-<script src="../../dist/assets/site.js?v={build_id}"></script>
 <script src="gallery.js?v={build_id}"></script>
 </body>
 </html>
 """
         (folder / "index.html").write_text(html, encoding="utf-8", newline="\n")
+        theme_urls = ""
+        if century == "pre19century":
+            write_theme_pages(folder, build_id)
+            theme_urls = "".join(
+                '<url><loc>https://%s.chenhua.net/themes/%s/</loc></url>\n' % (century, slug)
+                for slug, _, _, _, _ in THEME_PAGES)
+        (folder / "sitemap.xml").write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            '<url><loc>https://%s.chenhua.net/</loc></url>\n'
+            '%s</urlset>\n' % (century, theme_urls),
+            encoding="utf-8", newline="\n")
+        (folder / "robots.txt").write_text(
+            "User-agent: *\nAllow: /\nSitemap: https://%s.chenhua.net/sitemap.xml\n" % century,
+            encoding="utf-8", newline="\n")
+
+
+THEME_PAGES = [
+    ("faith", "信仰与图像", "Faith and Image",
+     "宗教图像、仪式空间与神圣叙事。", "Religious images, ritual space and sacred narrative."),
+    ("landscape", "山水与自然", "Landscape and Nature",
+     "山水、园林、地景与自然。", "Mountains, gardens, land and nature."),
+    ("portrait", "人物与自我", "Portrait and Self",
+     "肖像、供养人、身份与自我。", "Portraits, donors, identity and self."),
+    ("city", "城市与日常", "City and Everyday Life",
+     "市集、街巷、劳动、节庆与宫廷生活。", "Markets, streets, labour, festivals and court life."),
+    ("word", "文字与观看", "Word and Looking",
+     "长卷、题跋、手抄本与版画文字。", "Scrolls, inscriptions, manuscripts and printed words."),
+    ("material", "材料与技法", "Material and Technique",
+     "金箔、矿物颜料、壁画、绢本与版画线。", "Gold, mineral pigments, fresco, silk and print lines."),
+]
+
+
+def write_theme_pages(folder, build_id):
+    for slug, zh, en, desc_zh, desc_en in THEME_PAGES:
+        theme_dir = folder / "themes" / slug
+        theme_dir.mkdir(parents=True, exist_ok=True)
+        canonical = "https://%s.chenhua.net/themes/%s/" % (folder.name, slug)
+        title_zh = "%s · 尘画图片索引" % zh
+        title_en = "%s · Frame & Grain Image Index" % en
+        top = (
+            '<a href="https://chenhua.net/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
+            '<a href="https://chenhua.net/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
+            '<a href="https://chenhua.net/today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
+            '<a href="https://photo.chenhua.net/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
+            '<a href="https://paint.chenhua.net/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
+            '<a href="https://netcn.org/"><span data-l="zh">导航</span><span data-l="en">Directory</span></a>'
+        )
+        foot = (
+            '<a href="https://chenhua.net/"><span data-l="zh">出尘入画</span><span data-l="en">Frame &amp; Grain</span></a>'
+            '<a href="https://chenhua.net/images/"><span data-l="zh">图片库</span><span data-l="en">Image Library</span></a>'
+            '<a href="https://chenhua.net/themes/"><span data-l="zh">主题</span><span data-l="en">Themes</span></a>'
+            '<a href="https://chenhua.net/timeline/"><span data-l="zh">时间线</span><span data-l="en">Timeline</span></a>'
+            '<a href="https://chenhua.net/today/calendar.html"><span data-l="zh">日历</span><span data-l="en">Calendar</span></a>'
+            '<a href="https://photo.chenhua.net/"><span data-l="zh">摄影</span><span data-l="en">Photography</span></a>'
+            '<a href="https://paint.chenhua.net/"><span data-l="zh">绘画</span><span data-l="en">Painting</span></a>'
+        )
+        cfg = {
+            "century": folder.name,
+            "photoBase": "https://photo.chenhua.net/",
+            "paintBase": "https://paint.chenhua.net/",
+            "photoStaticBase": "https://photo.chenhua.net/photo/",
+            "paintStaticBase": "https://paint.chenhua.net/painting/",
+            "mainBase": "https://chenhua.net/",
+            "preview": False,
+            "manifestBase": "../../",
+            "filters": {"theme": zh},
+        }
+        html = f"""<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0c0b">
+<meta name="description" content="{html_escape(desc_zh, quote=True)}">
+<title>{html_escape(title_zh)}</title>
+<link rel="canonical" href="{canonical}">
+<link rel="alternate" hreflang="zh-CN" href="{canonical}">
+<link rel="alternate" hreflang="en" href="{canonical}?lang=en">
+<link rel="icon" type="image/svg+xml" href="https://chenhua.net/assets/leaf/favicon.svg">
+<link rel="stylesheet" href="../../gallery.css?v={build_id}">
+<script>
+(function(){{try{{var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("chenhua-lang");if(l==="en"){{document.documentElement.setAttribute("data-lang","en");
+document.documentElement.setAttribute("lang","en");}}
+var t=localStorage.getItem("chenhua-theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){{document.documentElement.setAttribute("data-theme","light");}}}}catch(e){{}}}})();
+</script>
+</head>
+<body data-title-zh="{html_escape(title_zh, quote=True)}" data-title-en="{html_escape(title_en, quote=True)}">
+<header class="g-head">
+  <a class="g-brand" href="https://chenhua.net/"><img class="g-mark" src="https://chenhua.net/assets/leaf/curious.svg" width="30" height="30" alt="" aria-hidden="true" decoding="async"><span class="wm"><span class="wm-lite">出</span><span class="wm-strong">尘</span><span class="wm-lite">入</span><span class="wm-strong">画</span></span><span class="g-en"><span data-l="zh">尘归尘，画归画</span><span data-l="en">Image as history</span></span></a>
+  <nav class="g-nav">{top}</nav>
+  <div class="g-tools">
+    <button class="g-tool g-lang" type="button" data-lang-toggle aria-label="切换到英文"><span data-l="zh">EN</span><span data-l="en">中文</span></button>
+    <button class="g-tool" type="button" data-themebtn aria-label="切换到浅色"><span class="icon-sun">☀</span><span class="icon-moon">☾</span></button>
+  </div>
+</header>
+<main class="g-wrap">
+  <div class="g-intro"><h1>{html_escape(zh)}</h1>
+    <p><span data-l="zh">{html_escape(desc_zh)}</span><span data-l="en">{html_escape(desc_en)}</span></p>
+  </div>
+  <div class="g-chips" id="gChips"></div>
+  <div class="g-count" id="gCount">—</div>
+  <div class="g-masonry" id="gMasonry"></div>
+  <div class="g-more"><button id="gMore" type="button"><span data-l="zh">加载更多</span><span data-l="en">Load more</span></button></div>
+</main>
+<footer class="site-foot">
+  <div class="sf-left"><span data-l="zh">© 2026 尘画 · <a href="https://chenhua.net">chenhua.net</a></span><span data-l="en">© 2026 Frame &amp; Grain · <a href="https://chenhua.net">chenhua.net</a></span></div>
+  <nav class="sf-nav" aria-label="站内导航">{foot}</nav>
+  <div class="sf-right"><a href="https://chenhua.net/legal/"><span data-l="zh">免责条款</span><span data-l="en">Disclaimer</span></a></div>
+</footer>
+<script>window.GALLERY_CONFIG = {json.dumps(cfg, ensure_ascii=False)};</script>
+<script src="../../gallery.js?v={build_id}"></script>
+</body>
+</html>
+"""
+        (theme_dir / "index.html").write_text(html, encoding="utf-8", newline="\n")
 
 
 def write_404(build_id):
@@ -858,7 +1280,7 @@ def write_404(build_id):
 
 
 def main():
-    build_id = str(int(time.time()))
+    build_id = "20261123c"
     records = load_records()
     real_stories = load_story_files(records)
     samples = build_stories(records)
@@ -882,34 +1304,43 @@ def main():
     for name in ("app.css", "app.js"):
         shutil.copy2(CORE / "assets" / name, DIST / "assets" / name)
 
-    base = {
-        "main": "/next/dist/main/", "photo": "/next/dist/photo/",
-        "paint": "/next/dist/paint/",
-    }
+    if PUBLISH:
+        base = {
+            "main": "https://chenhua.net/", "photo": "https://photo.chenhua.net/",
+            "paint": "https://paint.chenhua.net/",
+        }
+        leaf_base = "/assets/leaf/"
+    else:
+        base = {
+            "main": "/next/dist/main/", "photo": "/next/dist/photo/",
+            "paint": "/next/dist/paint/",
+        }
+        leaf_base = "/next/dist/assets/leaf/"
 
     def site_nav(site):
-        themes = base[site] + ("themes/" if site in ("main", "photo") else "themes/")
-        if site == "paint":
-            timeline = base["paint"] + "history/timeline.html"
-            calendar = base["paint"] + "history/calendar.html"
-        elif site == "photo":
-            timeline = base["photo"] + "timeline/"
-            calendar = base["photo"] + "today/calendar.html"
-        else:
-            timeline = base["main"] + "timeline/"
-            calendar = base["main"] + "today/calendar.html"
+        themes = base["main"] + "themes/"
+        timeline = base["main"] + "timeline/"
+        calendar = base["main"] + "today/calendar.html"
         return [
-            {"label": "尘画", "label_en": "Frame & Grain", "href": base[site], "icon": "home", "site": site},
-            {"label": "主题", "label_en": "Themes", "href": themes, "icon": "stories", "site": site},
-            {"label": "时间线", "label_en": "Timeline", "href": timeline, "icon": "timeline", "site": site},
-            {"label": "日历", "label_en": "Calendar", "href": calendar, "icon": "timeline", "site": site},
+            {"label": "尘画", "label_en": "Frame & Grain", "href": base["main"], "icon": "home", "site": "main"},
+            {"label": "主题", "label_en": "Themes", "href": themes, "icon": "stories", "site": "main"},
+            {"label": "时间线", "label_en": "Timeline", "href": timeline, "icon": "timeline", "site": "main"},
+            {"label": "日历", "label_en": "Calendar", "href": calendar, "icon": "timeline", "site": "main"},
             {"label": "摄影", "label_en": "Photography", "href": base["photo"], "icon": "photo", "site": "photo"},
             {"label": "绘画", "label_en": "Painting", "href": base["paint"], "icon": "paint", "site": "paint"},
             {"label": "导航", "label_en": "Directory", "href": "https://netcn.org/", "icon": "compass", "site": "netcn"},
         ]
     common = {"home": base["main"], "photoBase": base["photo"],
               "paintBase": base["paint"], "taxonomy": TAXONOMY,
-              "leafBase": "/next/dist/assets/leaf/"}
+              "leafBase": leaf_base}
+    static_base = {}
+    if PUBLISH:
+        static_base = {
+            "base": "/",
+            "staticPhotoBase": "https://photo.chenhua.net/photo/",
+            "staticPaintBase": "https://paint.chenhua.net/painting/",
+            "staticStoryBase": "https://chenhua.net/story/",
+        }
     main_cfg = {
         "site": "main", "title": "尘画 · 出尘入画", "brand": "尘画", "brand_en": "Frame & Grain",
         "title_en": "Frame & Grain · Out of dust, into the image",
@@ -917,7 +1348,7 @@ def main():
         "desc": "尘画：历史摄影与绘画图录。",
         "desc_en": "Frame & Grain: an archive of historical photography and painting.",
         "collections": ["photos", "paintings", "links"],
-        "base": base["main"], "nav": site_nav("main"), **common,
+        "base": base["main"], "nav": site_nav("main"), **common, **static_base,
     }
     photo_cfg = {
         "site": "photo", "title": "尘画 · 摄影", "brand": "尘画", "brand_en": "Frame & Grain",
@@ -926,7 +1357,7 @@ def main():
         "desc": "尘画摄影：历史摄影图录。",
         "desc_en": "Frame & Grain Photography: an archive of historical photographs.",
         "collections": ["photos", "links"],
-        "base": base["photo"], "nav": site_nav("photo"), **common,
+        "base": base["photo"], "nav": site_nav("photo"), **common, **static_base,
     }
     paint_cfg = {
         "site": "paint", "title": "尘画 · 绘画", "brand": "尘画", "brand_en": "Frame & Grain",
@@ -935,7 +1366,7 @@ def main():
         "desc": "尘画绘画：绘画与版画图录。",
         "desc_en": "Frame & Grain Painting: an archive of paintings and prints.",
         "collections": ["paintings"],
-        "base": base["paint"], "nav": site_nav("paint"), **common,
+        "base": base["paint"], "nav": site_nav("paint"), **common, **static_base,
     }
     write_i18n_assets()
     write_bundle(records, stories, stats)
@@ -945,7 +1376,7 @@ def main():
     write_404(build_id)
     write_galleries(build_id)
 
-    print("预览构建完成：records %d · stories %d · 站点 main/photo/paint · 图片站 19/20/21century"
+    print("预览构建完成：records %d · stories %d · 站点 main/photo/paint · 图片站 pre19/19/20/21century"
           % (len(records), len(stories)))
     print("统计：" + json.dumps(stats, ensure_ascii=False))
 

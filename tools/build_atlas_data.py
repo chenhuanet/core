@@ -5,29 +5,35 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
+ROOT = Path(__file__).resolve().parents[2]
 BUNDLE = ROOT / "next" / "dist" / "data" / "bundle.js"
 
 SERIES = [
     {"key": "space", "name": "太空探索", "name_en": "Space Exploration", "color": "#234c5d", "glyph": "轨",
      "desc": "火箭、卫星与深空探测器。", "desc_en": "Rockets, satellites and deep-space probes."},
     {"key": "disaster", "name": "灾难与调查", "name_en": "Disaster & Investigation", "color": "#a64227", "glyph": "灾",
-     "desc": "火灾、空难、地震与事故调查。", "desc_en": "Fires, air disasters, earthquakes and investigations."},
-    {"key": "war", "name": "战争与冲突", "name_en": "War & Conflict", "color": "#7a2f26", "glyph": "战",
-     "desc": "战线、战后与战争影像。", "desc_en": "Front lines, aftermath and the imagery of war."},
-    {"key": "politics", "name": "政治与制度", "name_en": "Politics & Institutions", "color": "#3f4a60", "glyph": "政",
-     "desc": "总统、议会、法院与街头政治。", "desc_en": "Presidents, parliaments, courts and street politics."},
-    {"key": "science", "name": "科学与技术", "name_en": "Science & Technology", "color": "#2f5f57", "glyph": "科",
-     "desc": "实验室、计算机、飞机与发明。", "desc_en": "Laboratories, computers, aircraft and invention."},
+     "desc": "火灾、空难、地震、战争与事故调查。", "desc_en": "Fires, air disasters, earthquakes, war and investigations."},
     {"key": "city", "name": "工程与城市", "name_en": "Engineering & City", "color": "#6b5b3e", "glyph": "构",
-     "desc": "桥梁、隧道、铁塔与城市天际线。", "desc_en": "Bridges, tunnels, towers and city skylines."},
+     "desc": "桥梁、隧道、铁塔、城市天际线与技术系统。", "desc_en": "Bridges, tunnels, towers, skylines and technical systems."},
     {"key": "rail", "name": "铁路与工业", "name_en": "Rail & Industry", "color": "#4e4b47", "glyph": "轨",
-     "desc": "蒸汽、钢轨与工厂。", "desc_en": "Steam, steel rails and factories."},
+     "desc": "蒸汽、钢轨、工厂与机械。", "desc_en": "Steam, steel rails, factories and machines."},
     {"key": "art", "name": "艺术与图像", "name_en": "Art & Image", "color": "#7a4a5a", "glyph": "像",
-     "desc": "摄影家、画家与美术馆。", "desc_en": "Photographers, painters and museums."},
-    {"key": "world", "name": "社会与日常", "name_en": "Society & Everyday", "color": "#4b5964", "glyph": "世",
-     "desc": "城市生活、教育、宗教、体育与普通人的日常。", "desc_en": "City life, education, religion, sport and ordinary days."},
+     "desc": "摄影家、画家、电影、音乐与美术馆。", "desc_en": "Photographers, painters, film, music and museums."},
 ]
+
+# Legacy taxonomy keys are folded into the five curated series.
+LEGACY_SERIES = {
+    "space": "space",
+    "disaster": "disaster",
+    "war": "disaster",
+    "politics": "disaster",
+    "city": "city",
+    "science": "city",
+    "rail": "rail",
+    "art": "art",
+    "world": "art",
+}
+
 
 # Explicit overrides for the 13 prototype stories; keep their curated series stable.
 OVERRIDES = {
@@ -171,7 +177,9 @@ def build_data():
         mmdd = date[5:10] if date else ""
         year = int(date[:4]) if date else None
         decade = ("pre1900" if year < 1900 else f"{(year // 10) * 10}s") if year else ""
-        series_key = OVERRIDES.get(sid) or classify(s.get("title", ""), s.get("subtitle", ""), s.get("themes") or [])
+        series_key = s.get("series_key") or LEGACY_SERIES.get(
+            OVERRIDES.get(sid) or classify(s.get("title", ""), s.get("subtitle", ""), s.get("themes") or []),
+            "art")
         cover = records.get(s.get("cover"))
         image = (cover or {}).get("image") or ""
         if not image:
@@ -196,6 +204,11 @@ def build_data():
             "decade": decade,
             "theme": series["name"],
             "series_key": series_key,
+            "series_rank": s.get("series_rank") or 0,
+            "axis_decade": s.get("axis_decade") or decade,
+            "axis_mmdd": s.get("axis_mmdd") or mmdd,
+            "axis_visibility": s.get("axis_visibility") or {
+                "calendar": bool(mmdd), "timeline": bool(decade), "theme": True},
             "place": place,
             "place_en": place_en,
             "themes": s.get("themes") or [],

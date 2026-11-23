@@ -20,7 +20,7 @@ PAINT = DIST / "paint"
 HIST = PAINT / "history"
 BUNDLE = DIST / "data" / "bundle.js"
 DOMAIN = "https://paint.chenhua.net"
-BUILD_ID = str(int(time.time()))
+BUILD_ID = "20261123c"
 
 sys.path.insert(0, str(NEXT / "content" / "paint-history"))
 import chapters  # noqa: E402
@@ -233,6 +233,7 @@ def appbar(current="history"):
 def foot():
     nav = [
         ("尘画", "Frame & Grain", "../"),
+        ("图片库", "Image Library", "https://chenhua.net/images/"),
         ("主题", "Themes", "../themes/"),
         ("时间线", "Timeline", "timeline.html"),
         ("日历", "Calendar", "calendar.html"),
@@ -249,7 +250,7 @@ def foot():
     return """</div><footer class="site-foot">
 %s
 <nav class="sf-nav" aria-label="站内导航">%s</nav>
-<div class="sf-right"><a href="../../paint/legal/">%s</a></div>
+<div class="sf-right"><a href="../legal/">%s</a></div>
 </footer>
 <script src="../../assets/site.js?v=%s"></script>
 </body></html>""" % (left, links, tspan("免责条款", "Disclaimer"), BUILD_ID)
@@ -350,54 +351,47 @@ def index_page():
 
     lead = tspan("先读章节，再读作品。章节回答“为什么这样画”，作品回答“它凭什么重要”。",
                  "Read chapters first, then works. Chapters answer why painting changed; works answer why they matter.")
-    stats = [tspan("作品", "works"), tspan("艺术家", "artists"),
-             tspan("A 类流派", "movement pages"), tspan("时期", "periods")]
     entries = [
-        tspan("章节", "Chapters"), tspan("14 个章节，从线的觉醒到新大陆的寓言。", "14 chapters, from the awakening of line to a New World fable."),
-        tspan("流派", "Movements"), tspan("15 个可读的 A 类页，另有 15 个 B 类条目。", "15 readable A-pages, plus 15 B-entries."),
-        tspan("艺术家", "Artists"), tspan("24 位核心画家，先看人，再看画。", "24 core painters: the person before the picture."),
-        tspan("时间", "Time"), tspan("8 个时期与一条独立的绘画时间轴。", "8 periods and a separate painting timeline."),
+        tspan("章节", "Chapters"), tspan("从线的觉醒到新大陆的寓言。", "From the awakening of line to a New World fable."),
+        tspan("流派", "Movements"), tspan("从早期文艺复兴到表现主义。", "Movement pages and entries."),
+        tspan("艺术家", "Artists"), tspan("先看这些名字；完整名单在下一页。", "A selection here; the full list is on the next page."),
+        tspan("时间", "Time"), tspan("一条独立的绘画时间轴。", "Periods and a separate painting timeline."),
     ]
-    chapter_block = [tspan("十四章节", "Fourteen chapters"),
+    chapter_block = [tspan("章节", "Chapters"),
                      tspan("按叙事顺序读，不按年代排序。", "Read in narrative order, not chronological order."), "".join(chapters_html)]
-    movement_block = [tspan("十五个流派", "Fifteen movements"),
+    movement_block = [tspan("流派", "Movements"),
                       tspan("从早期文艺复兴到表现主义。", "From Early Renaissance to Expressionism."),
                       mov_html, tspan("打开流派索引", "Open the movement index")]
-    artist_block = [tspan("三十六位艺术家", "Thirty-six artists"),
-                    tspan("先看二十四位；完整名单在下一页。", "Twenty-four here; the full list is on the next page."),
+    artist_block = [tspan("艺术家", "Artists"),
+                    tspan("先看这些名字；完整名单在下一页。", "A selection here; the full list is on the next page."),
                     artists_html, tspan("打开艺术家索引", "Open the artist index")]
-    timeline_block = [tspan("八个时期", "Eight periods"), periods_html]
-    trail_block = [tspan("八条小径", "Eight trails"),
+    timeline_block = [tspan("时期", "Periods"), periods_html]
+    trail_block = [tspan("小径", "Trails"),
                    tspan("光、身体、城市、自然、信仰、战争、肖像、日常。",
                          "Light, body, city, nature, faith, war, portrait, everyday."), trails_html]
-    tech_block = [tspan("十二种技法", "Twelve techniques"),
+    tech_block = [tspan("技法", "Techniques"),
                   tspan("媒介与手法，解释“怎么画出来”。", "Media and methods: how the picture was made."), techniques_html]
-    final_block = [tspan("两条时间入口", "Two time entries"),
-                   tspan("一条章节时间轴，一份 366 天日历。", "A chapter timeline and a 366-day calendar."),
+    final_block = [tspan("时间入口", "Time Entries"),
+                   tspan("一条章节时间轴，一份日历。", "A chapter timeline and a 366-day calendar."),
                    tspan("进入时间轴", "Open the timeline"), tspan("进入日历", "Open the calendar")]
-    args = (lead,) + tuple(stats) + tuple(entries) + tuple(chapter_block) + \
+    args = (lead,) + tuple(entries) + (early_exhibitions_section(),) + tuple(chapter_block) + \
         tuple(movement_block) + tuple(artist_block) + tuple(timeline_block) + \
         tuple(trail_block) + tuple(tech_block) + tuple(final_block)
     body = hero_block(
         hero, "PAINTING HISTORY / 400–1930", "PAINTING HISTORY / 400–1930",
         "绘画史：把作品串成一条可以走的路",
-        "A History of Painting: 105 works, one walkable path",
-        "不是 105 张孤立的杰作，而是 14 个章节、15 个流派页、36 位艺术家、8 个时期、12 种技法、8 条小径。先看“为什么重要”，再看“怎么读”，最后看“什么时候”。",
-        "Not 105 isolated masterpieces, but 14 chapters, 15 movement pages, 36 artists, 8 periods, 12 techniques and 8 trails. First ask why it matters, then how to read it, then when it happened.",
-        [("105 件作品", "105 works"), ("14 章", "14 chapters"), ("400–1930", "400–1930")]) + """
+        "A History of Painting: A Walkable Path",
+        "从 400 年到 1930 年，沿着作品、流派与时期，读一条可以走进去的绘画史。",
+        "From 400 to 1930, a walkable history through works, movements and periods.",
+        [("400–1930", "400–1930")]) + """
 <section class="ph-lead">%s</section>
-<div class="ph-stat-grid">
-<div class="ph-stat"><b>105</b><span>%s</span></div>
-<div class="ph-stat"><b>36</b><span>%s</span></div>
-<div class="ph-stat"><b>15</b><span>%s</span></div>
-<div class="ph-stat"><b>8</b><span>%s</span></div>
-</div>
 <div class="ph-entry-grid">
 <a class="ph-entry" href="#chapters"><div class="n">01 / READ</div><h3>%s</h3><p>%s</p></a>
 <a class="ph-entry" href="movements.html"><div class="n">02 / STYLE</div><h3>%s</h3><p>%s</p></a>
 <a class="ph-entry" href="artists.html"><div class="n">03 / PEOPLE</div><h3>%s</h3><p>%s</p></a>
 <a class="ph-entry" href="timeline.html"><div class="n">04 / TIME</div><h3>%s</h3><p>%s</p></a>
 </div>
+%s
 <section class="ph-section" id="chapters"><h2>%s</h2><p>%s</p><div class="ph-chapter-grid">%s</div></section>
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-index-grid">%s</div><div class="ph-actions"><a class="ph-btn" href="movements.html">%s</a></div></section>
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-artist-grid">%s</div><div class="ph-actions"><a class="ph-btn" href="artists.html">%s</a></div></section>
@@ -406,9 +400,9 @@ def index_page():
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-pill-row">%s</div></section>
 <section class="ph-section"><h2>%s</h2><p>%s</p><div class="ph-actions"><a class="ph-btn gold" href="timeline.html">%s</a><a class="ph-btn" href="calendar.html">%s</a></div></section>
 """ % args
-    return page("绘画史", "A History of Painting", "从 400 到 1930，105 件作品、14 个章节、15 个流派页、36 位艺术家。",
-                "From 400 to 1930: 105 works, 14 chapters, 15 movement pages and 36 artists.",
-                "index.html", body, og_img(hero), collection_ld("A History of Painting", "105 works, 14 chapters, 15 movements.", DOMAIN + "/history/"))
+    return page("绘画史", "A History of Painting", "从 400 到 1930，一条关于绘画如何变化的路。",
+                "From 400 to 1930: a path through painting.",
+                "index.html", body, og_img(hero), collection_ld("A History of Painting", "A path through painting.", DOMAIN + "/history/"))
 
 
 def chapter_page(c):
@@ -582,13 +576,145 @@ def trail_page(t):
                            DOMAIN + "/history/trail-%s.html" % t["slug"], og_img(t["hero"])))
 
 
+EARLY_EXHIBITIONS = [
+    {
+        "slug": "early-landscape-self",
+        "title_zh": "山水与自我：中国绘画 4—18 世纪",
+        "title_en": "Landscape and the Self: Chinese Painting, 4th–18th Century",
+        "intro_zh": "从佛教石窟的残片到文人长卷，中国绘画把自然、身体与文字放在同一张绢或纸上。这里不按朝代排队，而是看山水如何成为一个人可以走进去的空间。",
+        "intro_en": "From a Buddhist cave fragment to a scholar's handscroll, Chinese painting puts nature, body and text on the same silk or paper. This exhibition does not queue dynasties; it asks how landscape became a space a person could enter.",
+        "regions": ["中国"],
+        "themes": ["山水与自然", "人物与自我", "文字与观看"],
+        "n": 14,
+    },
+    {
+        "slug": "early-europe-faith",
+        "title_zh": "信仰与图像：欧洲 5—15 世纪",
+        "title_en": "Faith and Image: Europe, 5th–15th Century",
+        "intro_zh": "中世纪的图像不是窗，而是一套要被人读懂的句子。祭坛、手抄本与壁画把神圣故事拆成手势、器物和边框，让观看成为一次缓慢的辨认。",
+        "intro_en": "The medieval image was not a window but a sentence to be read. Altarpieces, manuscripts and murals break the sacred story into gestures, objects and borders, making looking a slow act of recognition.",
+        "regions": ["欧洲"],
+        "max_year": 1500,
+        "themes": ["信仰与图像"],
+        "n": 14,
+    },
+    {
+        "slug": "early-other-tradition",
+        "title_zh": "另一条传统：伊斯兰与南亚",
+        "title_en": "Another Tradition: Islamic and South Asian Painting",
+        "intro_zh": "细密画把文字、边框和人物放进同一页。莫卧儿的宫廷、波斯的诗集与耆那教的手抄本，让我们看到另一种“观看的组织方式”。",
+        "intro_en": "Miniatures put text, border and figure on one page. Mughal courts, Persian poetry and Jain manuscripts show another way of organising looking.",
+        "regions": ["南亚", "西亚·北非", "跨地域"],
+        "themes": ["文字与观看", "人物与自我", "信仰与图像"],
+        "n": 14,
+    },
+    {
+        "slug": "early-word-scroll",
+        "title_zh": "文字、长卷与观看",
+        "title_en": "Text, Scroll, and Looking",
+        "intro_zh": "在长卷与册页里，文字不是说明，而是画面的一部分。阅读的顺序、留白的节奏、印章与边框，共同决定你什么时候停、在哪里看。",
+        "intro_en": "In handscrolls and albums, text is not a caption but part of the picture. The order of reading, the rhythm of blank space, seals and borders decide when you stop and where you look.",
+        "themes": ["文字与观看"],
+        "n": 14,
+    },
+    {
+        "slug": "early-material",
+        "title_zh": "材料与技法：金、墨、壁画",
+        "title_en": "Material and Method: Gold, Ink, Mural",
+        "intro_zh": "金箔反光，墨会渗进纸里，湿壁画必须趁灰泥未干画完。材料不是背景条件，它直接决定线条、颜色和光在画面上的走法。",
+        "intro_en": "Gold leaf reflects, ink sinks into paper, fresco must be painted before the plaster dries. Material is not a background condition; it decides how line, colour and light travel across the surface.",
+        "themes": ["材料与技法"],
+        "n": 14,
+    },
+    {
+        "slug": "early-city-daily",
+        "title_zh": "早期世界的城市与日常",
+        "title_en": "City and Everyday Life in the Early World",
+        "intro_zh": "市场、宫廷、厨房与节庆，把“日常生活”变成可以观看的图像。人物在做什么、手里拿着什么，往往比故事本身更能说明一个时代。",
+        "intro_en": "Markets, courts, kitchens and festivals turn everyday life into an image. What people do and what they hold often says more about a period than the story itself.",
+        "themes": ["城市与日常"],
+        "n": 14,
+    },
+]
+
+
+def early_works(e):
+    max_year = e.get("max_year", 1800)
+    regions = e.get("regions") or []
+    themes = e.get("themes") or []
+    rows = []
+    for rid in WORK_IDS:
+        r = RECORDS.get(rid) or {}
+        if (r.get("year") or 0) >= max_year:
+            continue
+        if regions and r.get("region") not in regions:
+            continue
+        if themes and r.get("curation_theme") not in themes:
+            continue
+        rows.append(rid)
+    if len(rows) < 8:
+        rows = [rid for rid in WORK_IDS
+                if (RECORDS.get(rid, {}).get("year") or 0) < max_year
+                and (not regions or RECORDS.get(rid, {}).get("region") in regions)]
+    if len(rows) < 8:
+        rows = [rid for rid in WORK_IDS if (RECORDS.get(rid, {}).get("year") or 0) < 1800]
+    return rows[:e.get("n", 14)]
+
+
+def early_exhibition_page(e):
+    works = early_works(e)
+    if not works:
+        return ""
+    hero = works[0]
+    cards = "".join(work_link(rid) for rid in works)
+    first = "".join(work_link(rid) for rid in works[:3])
+    rest = "".join(work_link(rid) for rid in works[3:])
+    body = hero_block(
+        hero, "EARLY PAINTING / %s" % e["title_en"].split(":")[0].upper(),
+        "EARLY PAINTING / %s" % e["title_en"].split(":")[0].upper(),
+        e["title_zh"], e["title_en"], e["intro_zh"], e["intro_en"],
+        [("%d 件" % len(works), "%d works" % len(works)), ("1800 年前", "Before 1800")]) + """
+<div class="ph-crumb"><a href="index.html">%s</a> / <a href="https://chenhua.net/images/">%s</a></div>
+<section class="ph-lead">%s</section>
+<section class="ph-section"><h2>%s</h2><div class="ph-index-grid">%s</div></section>
+<section class="ph-section"><h2>%s</h2><div class="ph-index-grid">%s</div></section>
+<section class="ph-section"><div class="ph-actions"><a class="ph-btn gold" href="https://chenhua.net/images/">%s</a><a class="ph-btn" href="https://chenhua.net/themes/">%s</a></div></section>
+""" % (
+        tspan("绘画史", "Painting History"), tspan("图片库", "Image Library"),
+        tspan("这个展览从 1800 年前的作品里选出一条线索；作品说明保留馆藏信息，不把单件作品硬写成整部艺术史。",
+              "This exhibition selects one thread from works before 1800; captions keep the collection record and do not inflate a single work into a whole history."),
+        tspan("先看三件", "Start with three"), first,
+        tspan("继续看", "Continue"), rest,
+        tspan("进入图片库", "Open image library"), tspan("回到主题", "Back to themes"))
+    return page(e["title_zh"], e["title_en"], e["intro_zh"][:180], e["intro_en"][:180],
+                "exhibition-%s.html" % e["slug"], body, og_img(hero),
+                collection_ld(e["title_en"], e["intro_en"][:180],
+                              DOMAIN + "/history/exhibition-%s.html" % e["slug"]))
+
+
+def early_exhibitions_section():
+    cards = []
+    for e in EARLY_EXHIBITIONS:
+        works = early_works(e)
+        cards.append("""<a class="ph-index-card" href="exhibition-%s.html"><div class="top"><h3>%s</h3><span class="count">%s</span></div><p>%s</p><div class="ph-thumbs">%s</div></a>""" % (
+            esc(e["slug"]), tspan(e["title_zh"], e["title_en"]),
+            tspan("%d 件" % len(works), "%d works" % len(works)),
+            tspan(e["intro_zh"], e["intro_en"]), "".join(
+                '<img src="%s" alt="%s" loading="lazy">' % (esc(img_of(rid)), esc(work_title(RECORDS.get(rid, {})))) for rid in works[:3])))
+    return """<section class="ph-section" id="early-exhibitions"><h2>%s</h2><p>%s</p><div class="ph-index-grid">%s</div></section>""" % (
+        tspan("1800 年前的六个展览", "Six exhibitions before 1800"),
+        tspan("不是按世纪切块，而是按问题重排：山水、信仰、另一条传统、文字、材料与日常。",
+              "Not centuries in boxes, but questions rearranged: landscape, faith, another tradition, text, material and everyday life."),
+        "".join(cards))
+
+
 def movements_index():
     rows = "".join("""<div class="ph-index-card" id="%s"><div class="top"><h3>%s</h3><span class="count">%s</span></div><p>%s</p><div class="ph-pill-row"><a class="ph-pill" href="%s">%s</a></div></div>""" % (
         esc(m["slug"]), tspan(m["zh"], m["en"]), tspan(m["years_zh"], m["years_en"]),
         tspan(m["summary_zh"], m["summary_en"]), movement_link(m["slug"]), tspan("打开", "Open"))
         for m in movements.MOVEMENTS)
-    brows = "".join("""<a class="ph-index-card" href="%s"><div class="top"><h3>%s</h3><span class="count">%s</span></div><p>%s</p></a>""" % (
-        movement_link(m["slug"]), tspan(m["zh"], m["en"]), tspan("条目", "Entry"), tspan(m["note_zh"], m["note_en"]))
+    brows = "".join("""<a class="ph-index-card" id="%s" href="%s"><div class="top"><h3>%s</h3><span class="count">%s</span></div><p>%s</p></a>""" % (
+        esc(m["slug"]), movement_link(m["slug"]), tspan(m["zh"], m["en"]), tspan("条目", "Entry"), tspan(m["note_zh"], m["note_en"]))
         for m in movements.MOVEMENTS_B)
     body = hero_block("kandinsky-composition-vii-1913", "INDEX / MOVEMENTS", "INDEX / MOVEMENTS",
                       "流派：十五个可读页，十五个条目", "Movements: fifteen pages, fifteen entries",
@@ -920,6 +1046,11 @@ def main():
     write("trails.html", trails_index()); pages.append("trails.html")
     write("timeline.html", timeline_page()); pages.append("timeline.html")
     write("calendar.html", calendar_page()); pages.append("calendar.html")
+    for e in EARLY_EXHIBITIONS:
+        html_page = early_exhibition_page(e)
+        if html_page:
+            write("exhibition-%s.html" % e["slug"], html_page)
+            pages.append("exhibition-%s.html" % e["slug"])
 
     inject_atlas()
     inject_today()

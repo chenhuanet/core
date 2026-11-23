@@ -21,7 +21,7 @@ DIST = ROOT / "next" / "dist"
 CORE = ROOT / "next" / "core"
 REMOTE = os.environ.get("CHENHUA_REMOTE") == "1"
 TODAY = datetime.date.today().isoformat()
-BUILD_ID = str(int(datetime.datetime.now().timestamp()))
+BUILD_ID = "20261123c"
 
 PHOTO_DOMAIN = "https://photo.chenhua.net"
 PAINT_DOMAIN = "https://paint.chenhua.net"
@@ -88,9 +88,10 @@ def static_rel(r):
 
 
 def canonical(r):
+    rid = r.get("duplicate_of") or r["id"]
     if is_paint(r):
-        return "%s/painting/%s.html" % (PAINT_DOMAIN, r["id"])
-    return "%s/photo/%s.html" % (PHOTO_DOMAIN, r["id"])
+        return "%s/painting/%s.html" % (PAINT_DOMAIN, rid)
+    return "%s/photo/%s.html" % (PHOTO_DOMAIN, rid)
 
 
 def type_label_zh(r):
@@ -169,12 +170,14 @@ SUN = '<svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColo
 MOON = '<svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>'
 
 
-def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
+def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld="", canonical_alias=""):
     nav = "".join('<a href="%s">%s</a>' % (h, tspan(z, e)) for z, e, h in nav_for(kind))
     og = ""
     if image:
         og = ('<meta property="og:image" content="%s">\n'
               '<meta name="twitter:image" content="%s">\n') % (esc(image), esc(image))
+    alias_meta = ('<meta name="chenhua-duplicate-of" content="%s">\n' % esc(canonical_alias)
+                  if canonical_alias else "")
     return """<!doctype html>
 <html lang="zh-CN" data-theme="dark" data-lang="zh">
 <head>
@@ -184,7 +187,7 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
 <title>%s · 尘画</title>
 <meta name="description" content="%s">
 <link rel="canonical" href="%s">
-<link rel="alternate" hreflang="zh-CN" href="%s">
+%s<link rel="alternate" hreflang="zh-CN" href="%s">
 <link rel="alternate" hreflang="en" href="%s?lang=en">
 <link rel="icon" type="image/svg+xml" href="../../assets/leaf/favicon.svg">
 <meta property="og:type" content="article">
@@ -208,7 +211,7 @@ def head(title_zh, title_en, desc_zh, desc_en, url, image, kind, extra_ld=""):
 <button class="iconbtn themebtn" type="button" data-themebtn aria-label="切换明暗">%s%s</button>
 </div>
 </header>
-""" % (esc(title_zh), esc(desc_zh), esc(url), esc(url), esc(url),
+""" % (esc(title_zh), esc(desc_zh), esc(url), alias_meta, esc(url), esc(url),
        esc(title_zh), esc(desc_zh), esc(url), og,
        BUILD_ID, BUILD_ID, extra_ld,
        esc(title_zh), esc(title_en), esc(desc_zh), esc(desc_en),
@@ -238,6 +241,7 @@ def foot(kind="main"):
         if z == "历史上的今天":
             z, e = "日历", "Calendar"
         nav_items.append((z, e, h))
+    nav_items.insert(1, ("图片库", "Image Library", MAIN_DOMAIN + "/images/"))
     nav = "".join('<a href="%s">%s</a>' % (
         h, footer_home_label() if z == "尘画" else tspan(z, e))
         for z, e, h in nav_items)
@@ -410,11 +414,37 @@ def photo_page(r, all_records):
     if src:
         caption_zh = "%s · %s" % (r.get("credit_line") or "", r.get("medium") or "")
         caption_en = "%s · %s" % (r.get("credit_line_en") or "", r.get("medium_en") or "")
-        figure = ('<figure class="s-figure"><a href="%s" target="_blank" rel="noopener">'
+        alt_zh = r.get("image_alt_zh") or title_zh
+        alt_en = r.get("image_alt_en") or title_en
+        wide = ""
+        try:
+            if r.get("image_width") and r.get("image_height"):
+                wide = " is-wide" if float(r["image_width"]) / float(r["image_height"]) > 2.2 else ""
+        except Exception:
+            wide = ""
+        figure = ('<figure class="s-figure%s"><a href="%s" target="_blank" rel="noopener">'
                   '<img src="%s" alt="%s" data-alt-zh="%s" data-alt-en="%s"></a>'
                   '<figcaption>%s</figcaption></figure>') % (
-                      esc(src), esc(src), esc(title_zh), esc(title_zh), esc(title_en),
+                      wide, esc(src), esc(src), esc(alt_zh), esc(alt_zh), esc(alt_en),
                       tspan(caption_zh, caption_en))
+        details = []
+        for item in (r.get("images") or []):
+            if not isinstance(item, dict) or not item.get("path"):
+                continue
+            if item.get("role") == "hero":
+                continue
+            details.append(
+                '<figure class="s-detail"><a href="%s" target="_blank" rel="noopener">'
+                '<img src="%s" alt="%s" data-alt-zh="%s" data-alt-en="%s" loading="lazy"></a>'
+                '<figcaption>%s</figcaption></figure>' % (
+                    esc(item["path"]), esc(item["path"]),
+                    esc(item.get("alt_zh") or alt_zh),
+                    esc(item.get("alt_zh") or alt_zh),
+                    esc(item.get("alt_en") or alt_en),
+                    tspan(item.get("caption_zh") or "", item.get("caption_en") or "")))
+        if details:
+            figure += '<div class="s-details" aria-label="%s">%s</div>' % (
+                esc("细节"), "".join(details))
 
     ev = r.get("evidence") if isinstance(r.get("evidence"), dict) else {}
     creator_zh = r.get("creator") or "不详"
@@ -426,8 +456,20 @@ def photo_page(r, all_records):
     usage_en = r.get("usage_label_en") or r.get("usage_label") or r.get("usage_code") or ""
     date_zh = r.get("date_label") or r.get("year") or ""
     date_en = r.get("date_label_en") or bp.english_date(date_zh)
+    attr_zh = {"confirmed": "确认", "attributed": "传", "workshop": "工作坊",
+               "circle": "圈内", "copy": "摹本", "uncertain": "归属存疑"}.get(
+                   r.get("attribution_status"), "")
+    attr_en = {"confirmed": "Confirmed", "attributed": "Attributed", "workshop": "Workshop",
+               "circle": "Circle of", "copy": "Copy", "uncertain": "Uncertain"}.get(
+                   r.get("attribution_status"), "")
+    ver_zh = {"original": "原作", "copy": "摹本", "later-version": "后世纪念本",
+              "unknown": "版本待考"}.get(r.get("version_status"), "")
+    ver_en = {"original": "Original", "copy": "Copy", "later-version": "Later version",
+              "unknown": "Unknown version"}.get(r.get("version_status"), "")
     rows = [
         (tspan("作者", "Creator"), tspan(creator_zh, r.get("creator_en") or bp.creator_en(creator_zh))),
+        (tspan("归属", "Attribution"), tspan(attr_zh, attr_en) if attr_zh else "—"),
+        (tspan("版本", "Version"), tspan(ver_zh, ver_en) if ver_zh else "—"),
         (tspan("流派", "Movement"), tspan(r.get("movement") or "", r.get("movement_en") or "")),
         (tspan("馆藏", "Collection"), tspan(r.get("holding") or "", r.get("holding_en") or "")),
         (tspan("尺寸", "Dimensions"), tspan(r.get("dimensions") or "", r.get("dimensions_en") or "")),
@@ -440,6 +482,7 @@ def photo_page(r, all_records):
                type_label_en(r) + (" / " + r["medium_en"] if r.get("medium_en") and r["medium_en"] != type_label_en(r) else ""))),
         (tspan("主题", "Theme"), tspan(theme_zh, theme_en)),
         (tspan("许可", "Licence"), tspan(r.get("license") or "", bp.license_en(r.get("license")))),
+        (tspan("图像来源", "Image credit"), tspan(r.get("image_credit") or "", r.get("image_credit_en") or r.get("image_credit") or "")),
         (tspan("使用性质", "Usage"), tspan(usage_zh, usage_en)),
         (tspan("馆藏编号", "Catalog ID"), tspan(ev.get("catalog_id") or "", ev.get("catalog_id") or "")),
         (tspan("抓取时间", "Retrieved"), tspan(r.get("fetched_at") or "", r.get("fetched_at") or "")),
@@ -503,14 +546,15 @@ def photo_page(r, all_records):
                esc(x.get("year") or ""))
             for x in related) + "</div></section>"
 
-    html_out = head(title_zh, title_en, desc_zh, desc_en, url, r.get("image") or src, kind, ld_json)
+    html_out = head(title_zh, title_en, desc_zh, desc_en, url, r.get("image") or src, kind, ld_json,
+                    canonical_alias=url if r.get("duplicate_of") else "")
     html_out += '<div class="s-kicker">%s</div><h1 class="s-title">%s</h1>' % (
         tspan("%s记录 · %s" % (type_label_zh(r), r.get("year") or ""),
               "%s record · %s" % (type_label_en(r), r.get("year") or "")),
         tspan(title_zh, title_en))
     html_out += '<div class="s-sub"><span>%s</span><span>·</span><span>%s</span>' % (
         tspan(r.get("place") or r.get("region") or "", r.get("place_en") or region_en or ""),
-        tspan(r.get("medium") or "", r.get("medium_en") or ""))
+        tspan(r.get("medium_detail") or r.get("medium") or "", r.get("medium_detail") or r.get("medium_en") or ""))
     html_out += '<span class="tag">%s</span><span class="tag">%s</span></div>' % (
         tspan(r.get("usage_label") or "", r.get("usage_label_en") or r.get("usage_label") or ""),
         tspan(type_label_zh(r), type_label_en(r)))
@@ -635,6 +679,54 @@ def sitemap(site, urls):
         encoding="utf-8", newline="\n")
 
 
+def images_hub_page():
+    url = MAIN_DOMAIN + "/images/"
+    title_zh = "图片库 · 尘画"
+    title_en = "Image Library · Frame & Grain"
+    desc_zh = "按世纪进入四个图片站：19 世纪前、19 世纪、20 世纪、21 世纪。"
+    desc_en = "Enter the four image archives by century: before 1800, 19th, 20th and 21st."
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": title_en,
+        "alternateName": title_zh,
+        "description": desc_en,
+        "url": url,
+        "isPartOf": MAIN_DOMAIN + "/",
+    }
+    ld_json = '<script type="application/ld+json">%s</script>' % json.dumps(
+        ld, ensure_ascii=False).replace("</", "<\\/")
+    cards = [
+        ("https://pre19century.chenhua.net/", "19世纪前", "Pre-19th Century",
+         "1800 年以前的绘画、版画与素描。", "Paintings, prints and drawings before 1800.",
+         "19世纪前", "Before 1800", "约 300 件"),
+        ("https://19century.chenhua.net/", "19世纪", "19th Century",
+         "1800—1899 年的摄影、绘画与器物。", "Photography, painting and objects, 1800–1899.",
+         "19世纪", "19th century", "773 张"),
+        ("https://20century.chenhua.net/", "20世纪", "20th Century",
+         "1900—1999 年的摄影、绘画与器物。", "Photography, painting and objects, 1900–1999.",
+         "20世纪", "20th century", "1,058 张"),
+        ("https://21century.chenhua.net/", "21世纪", "21st Century",
+         "2000—2026 年的摄影与图像。", "Photography and images, 2000–2026.",
+         "21世纪", "21st century", "67 张"),
+    ]
+    html_out = head(title_zh, title_en, desc_zh, desc_en, url, "", "main", ld_json)
+    html_out += '<div class="s-kicker">%s</div><h1 class="s-title">%s</h1>' % (
+        tspan("四个图片站", "Four image archives"),
+        tspan("图片库", "Image Library"))
+    html_out += '<div class="s-note"><div data-l="zh"><p>图片站只放图，详情页在摄影站和绘画站。按世纪进入，或回到主站的主题与时间线。</p></div>' \
+                '<div data-l="en"><p>The image archives hold images only; full records live on the Photography and Painting sites. Browse by century, or return to Themes and Timeline.</p></div></div>'
+    html_out += '<section class="s-grid">' + "".join(
+        '<a class="s-card hub-card" href="%s"><div class="c"><b>%s</b><span>%s</span><small>%s · %s</small></div></a>' % (
+            esc(href), tspan(zh, en), tspan(desc_zh, desc_en), tspan(range_zh, range_en), tspan(count, count))
+        for href, zh, en, desc_zh, desc_en, range_zh, range_en, count in cards
+    ) + "</section>"
+    html_out += '<div class="s-actions"><a class="s-btn" href="%s/themes/">%s</a><a class="s-btn" href="%s/timeline/">%s</a></div>' % (
+        MAIN_DOMAIN, tspan("主题", "Themes"), MAIN_DOMAIN, tspan("时间线", "Timeline"))
+    html_out += foot("main")
+    return html_out
+
+
 def main():
     records = bp.load_records()
     stories = bp.load_story_files(records)
@@ -663,6 +755,9 @@ def main():
         legal = DIST / site / "legal"
         legal.mkdir(parents=True, exist_ok=True)
         (legal / "index.html").write_text(legal_page(kind), encoding="utf-8", newline="\n")
+    images_dir = DIST / "main" / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    (images_dir / "index.html").write_text(images_hub_page(), encoding="utf-8", newline="\n")
 
     sitemap("photo", [PHOTO_DOMAIN + "/", PHOTO_DOMAIN + "/gallery/",
                       PHOTO_DOMAIN + "/stories/",
@@ -671,6 +766,7 @@ def main():
                       PAINT_DOMAIN + "/legal/"] + [canonical(r) for r in paints])
     sitemap("main", [MAIN_DOMAIN + "/", MAIN_DOMAIN + "/themes/",
                      MAIN_DOMAIN + "/timeline/", MAIN_DOMAIN + "/gallery/",
+                     MAIN_DOMAIN + "/images/",
                      MAIN_DOMAIN + "/today/",
                      MAIN_DOMAIN + "/legal/"] +
             ["%s/story/%s.html" % (MAIN_DOMAIN, s["id"]) for s in stories] +

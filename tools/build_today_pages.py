@@ -12,13 +12,13 @@ import time
 from pathlib import Path
 from datetime import date
 
-BASE = Path(r"C:\Users\chenhua\Desktop\chenhua\next")
+BASE = Path(__file__).resolve().parents[1]
 DIST = BASE / "dist"
 MAIN = DIST / "main"
 TODAY = MAIN / "today"
 BUNDLE = DIST / "data" / "bundle.js"
 SITE = "https://chenhua.net"
-BUILD_ID = str(int(time.time()))
+BUILD_ID = "20261123c"
 
 MONTH_ZH = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
 MONTH_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -65,8 +65,8 @@ def primary_links():
         ("主题", "Themes", "../themes/"),
         ("时间线", "Timeline", "../timeline/"),
         ("历史上的今天", "On This Day", "../today/"),
-        ("摄影", "Photography", "../../photo/"),
-        ("绘画", "Painting", "../../paint/"),
+        ("摄影", "Photography", "https://photo.chenhua.net/"),
+        ("绘画", "Painting", "https://paint.chenhua.net/"),
         ("导航", "Directory", "https://netcn.org/"),
     ]
 
@@ -77,8 +77,8 @@ def footer_links():
         ("主题", "Themes", "../themes/"),
         ("时间线", "Timeline", "../timeline/"),
         ("日历", "Calendar", "../today/"),
-        ("摄影", "Photography", "../../photo/"),
-        ("绘画", "Painting", "../../paint/"),
+        ("摄影", "Photography", "https://photo.chenhua.net/"),
+        ("绘画", "Painting", "https://paint.chenhua.net/"),
         ("导航", "Directory", "https://netcn.org/"),
     ]
 
@@ -280,7 +280,7 @@ def index_page(stories_by_day, days, records):
         cover = month_cover(m)
         cover_html = ""
         if cover:
-            cover_html = '<div class="today-month-cover"><img src="%s" alt="" loading="eager">%s</div>' % (
+            cover_html = '<div class="today-month-cover" aria-hidden="true"><img src="%s" alt="" loading="eager">%s</div>' % (
                 esc(cover), '<span class="today-month-flag"><span data-l="zh">本月</span><span data-l="en">This month</span></span>' if current else "")
         cards.append("""<section class="today-month%s">
   %s<h2><span data-l="zh">%s</span><span data-l="en">%s</span></h2>

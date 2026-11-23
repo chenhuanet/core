@@ -2,14 +2,15 @@
 """Generate the real-content Atlas page from the existing bundle."""
 import json
 import sys
-import time
 from pathlib import Path
 
-TOOLS = Path(r"C:\Users\chenhua\Desktop\chenhua\next\tools")
+TOOLS = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TOOLS))
 import build_atlas_data as data_builder
 
-ROOT = Path(r"C:\Users\chenhua\Desktop\chenhua")
+BUILD_ID = "20261123c"
+# ROOT resolved above from the script location.
 SOURCE = ROOT / "三轴融合原型" / "三轴融合原型.html"
 MAIN = ROOT / "next" / "dist" / "main"
 OUT_DIR = MAIN / "themes"
@@ -258,7 +259,7 @@ def main():
         # split_repos.py rewrites this to ../assets for the published repo root.
         page = page.replace('href="/assets/', 'href="../../assets/').replace('src="/assets/', 'src="../../assets/')
         page = page.replace('href="/', 'href="../').replace('src="/', 'src="../')
-        page = page.replace('src="../../assets/site.js"', 'src="../../assets/site.js?v=%s"' % int(time.time()))
+        page = page.replace('src="../../assets/site.js"', 'src="../../assets/site.js?v=%s"' % BUILD_ID)
         active_href = "../themes/" if view == "theme" else "../timeline/"
         page = page.replace('<a href="%s">' % active_href, '<a href="%s" aria-current="page">' % active_href, 1)
         path.parent.mkdir(parents=True, exist_ok=True)
