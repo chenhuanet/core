@@ -1033,6 +1033,7 @@ def write_galleries(build_id):
 <meta name="theme-color" content="#0d0c0b">
 <meta name="description" content="{desc_zh}">
 <title>{title_zh}</title>
+<link rel="canonical" href="https://{century}.chenhua.net/">
 <link rel="alternate" hreflang="zh-CN" href="https://{century}.chenhua.net/">
 <link rel="alternate" hreflang="en" href="https://{century}.chenhua.net/?lang=en">
 <link rel="icon" type="image/svg+xml" href="https://chenhua.net/assets/leaf/favicon.svg">

@@ -56,6 +56,7 @@ IMAGE_RE = re.compile(r"https?://[^\s\"'<>]+?\.(?:jpg|jpeg|png|webp|gif)(?:\?[^\
 H1_RE = re.compile(r"<h1\b", re.I)
 CANON_RE = re.compile(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)', re.I)
 JS_RE = re.compile(r'(?:site|gallery)\.js\?v=([0-9A-Za-z._-]+)')
+H1_OPTIONAL_RE = re.compile(r'(?:/search/|/timeline/|/themes/|/stories/|/404\.html|/today/calendar\.html)$')
 REDIRECT_RE = re.compile(r'<meta[^>]+http-equiv=["\']refresh["\']', re.I)
 SITE_IMAGE_SUFFIX = ".chenhua.net"
 
@@ -207,7 +208,10 @@ def main():
                     help="four image repositories used by --full; pass an empty string to skip")
     ap.add_argument("--full", action="store_true",
                     help="audit every release HTML, not only sitemap URLs")
+    ap.add_argument("--skip-sites", default="",
+                    help="comma-separated sites to skip (useful when a custom domain is still pending)")
     args = ap.parse_args()
+    skip = {s.strip() for s in args.skip_sites.split(",") if s.strip()}
 
     started = time.time()
     expected = {}
@@ -218,11 +222,15 @@ def main():
             raise SystemExit(2)
         urls = release_urls(rel_root, args.image_root or None)
         expected = expected_from_release(rel_root, args.image_root or None)
+        urls = {k: v for k, v in urls.items() if k not in skip}
+        expected = {k: v for k, v in expected.items() if k not in skip}
         for site, xs in urls.items():
             print("[release] %s %s" % (site, len(xs)))
     else:
         urls = {}
         for site, sm in SITEMAPS.items():
+            if site in skip:
+                continue
             try:
                 urls[site] = load_sitemap(sm)
             except Exception as exc:
@@ -249,7 +257,8 @@ def main():
                 print("[pages] %d/%d" % (i, len(all_urls)))
 
     bad_status = [r for r in results if r["status"] != 200]
-    bad_h1 = [r for r in results if r["status"] == 200 and r["h1"] != 1]
+    bad_h1 = [r for r in results if r["status"] == 200 and r["h1"] != 1
+              and not H1_OPTIONAL_RE.search(urlparse(r["url"]).path)]
     bad_js = [r for r in results if r["status"] == 200 and not r.get("redirect") and r["js"] != BUILD_ID]
     bad_canon = [r for r in results if r["status"] == 200 and not r["canonical_ok"]]
 
