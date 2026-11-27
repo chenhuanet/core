@@ -1,11 +1,12 @@
 (function () {
   "use strict";
   var CFG = window.GALLERY_CONFIG || {};
-  var state = { items: [], filters: { collection: "all", theme: "all", region: "all", decade: "all" }, visible: 30 };
+  var state = { items: [], filters: { collection: "all", theme: "all", region: "all", decade: "all", from: null, to: null }, visible: 30 };
   var masonry = document.getElementById("gMasonry");
   var chips = document.getElementById("gChips");
   var count = document.getElementById("gCount");
   var more = document.getElementById("gMore");
+  var hasGallery = !!(masonry && chips && count && more);
 
   var THEME_EN = {
     "信仰与图像": "Faith & Image", "山水与自然": "Landscape & Nature",
@@ -49,7 +50,9 @@
       return (state.filters.collection === "all" || x.collection === state.filters.collection) &&
         (state.filters.theme === "all" || x.curation_theme === state.filters.theme) &&
         (state.filters.region === "all" || x.region === state.filters.region) &&
-        (state.filters.decade === "all" || x.decade === state.filters.decade);
+        (state.filters.decade === "all" || x.decade === state.filters.decade) &&
+        (state.filters.from === null || (x.year != null && Number(x.year) >= state.filters.from)) &&
+        (state.filters.to === null || (x.year != null && Number(x.year) <= state.filters.to));
     });
   }
   function values(field) {
@@ -117,29 +120,33 @@
         if (q.get(k)) state.filters[k] = q.get(k);
         else if (cfg[k]) state.filters[k] = cfg[k];
       });
+      if (q.get("from")) state.filters.from = parseInt(q.get("from"), 10);
+      if (q.get("to")) state.filters.to = parseInt(q.get("to"), 10);
       renderChips();
       render();
     });
   }
-  chips.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-kind]");
-    if (!b) return;
-    state.filters[b.getAttribute("data-kind")] = b.getAttribute("data-value");
-    state.visible = 30;
-    renderChips();
-    render();
-  });
-  more.addEventListener("click", function () {
-    state.visible += 30;
-    render();
-  });
+  if (hasGallery) {
+    chips.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-kind]");
+      if (!b) return;
+      state.filters[b.getAttribute("data-kind")] = b.getAttribute("data-value");
+      state.visible = 30;
+      renderChips();
+      render();
+    });
+    more.addEventListener("click", function () {
+      state.visible += 30;
+      render();
+    });
+  }
   document.addEventListener("click", function (e) {
     if (e.target.closest("[data-lang-toggle]")) {
       var nextLang = lang() === "en" ? "zh" : "en";
       document.documentElement.setAttribute("data-lang", nextLang);
       document.documentElement.setAttribute("lang", nextLang === "en" ? "en" : "zh-CN");
       try { localStorage.setItem("chenhua-lang", nextLang); } catch (err) {}
-      setTimeout(function () { renderChips(); render(); }, 0);
+      if (hasGallery) setTimeout(function () { renderChips(); render(); }, 0);
     }
     if (e.target.closest("[data-themebtn]")) {
       var light = document.documentElement.getAttribute("data-theme") === "light";
@@ -147,5 +154,5 @@
       try { localStorage.setItem("chenhua-theme", light ? "dark" : "light"); } catch (err2) {}
     }
   });
-  load();
+  if (hasGallery) load();
 })();

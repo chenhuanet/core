@@ -1,0 +1,54 @@
+{
+  "version": "v3.2",
+  "build_id": "20261126e",
+  "nav": [
+    {"key": "main", "zh": "主站", "en": "Home", "url": "https://chenhua.net/"},
+    {"key": "paint", "zh": "绘画史", "en": "Painting History", "url": "https://paint.chenhua.net/"},
+    {"key": "painting", "zh": "学习绘画", "en": "Learn Painting", "url": "https://painting.chenhua.net/"},
+    {"key": "photo", "zh": "摄影史", "en": "Photography History", "url": "https://photo.chenhua.net/"},
+    {"key": "photography", "zh": "学习摄影", "en": "Learn Photography", "url": "https://photography.chenhua.net/"},
+    {"key": "ai", "zh": "AI 图像", "en": "AI Images", "url": "https://ai.chenhua.net/"},
+    {"key": "images", "zh": "图片库", "en": "Image Library", "url": "https://chenhua.net/images/"},
+    {"key": "directory", "zh": "导航", "en": "Directory", "url": "https://netcn.org/"}
+  ],
+  "footer": [
+    {"key": "main", "zh": "主站", "en": "Home", "url": "https://chenhua.net/"},
+    {"key": "paint", "zh": "绘画史", "en": "Painting History", "url": "https://paint.chenhua.net/"},
+    {"key": "painting", "zh": "学习绘画", "en": "Learn Painting", "url": "https://painting.chenhua.net/"},
+    {"key": "photo", "zh": "摄影史", "en": "Photography History", "url": "https://photo.chenhua.net/"},
+    {"key": "photography", "zh": "学习摄影", "en": "Learn Photography", "url": "https://photography.chenhua.net/"},
+    {"key": "ai", "zh": "AI 图像", "en": "AI Images", "url": "https://ai.chenhua.net/"},
+    {"key": "images", "zh": "图片库", "en": "Image Library", "url": "https://chenhua.net/images/"},
+    {"key": "directory", "zh": "导航", "en": "Directory", "url": "https://netcn.org/"}
+  ],
+  "tabbar": [
+    {"key": "main", "zh": "主站", "en": "Home", "url": "https://chenhua.net/"},
+    {"key": "paint", "zh": "绘画史", "en": "Painting", "url": "https://paint.chenhua.net/"},
+    {"key": "painting", "zh": "学习绘画", "en": "Learn", "url": "https://painting.chenhua.net/"},
+    {"key": "photo", "zh": "摄影史", "en": "Photo Hist.", "url": "https://photo.chenhua.net/"},
+    {"key": "photography", "zh": "学习摄影", "en": "Photo Learn", "url": "https://photography.chenhua.net/"},
+    {"key": "ai", "zh": "AI 图像", "en": "AI", "url": "https://ai.chenhua.net/"},
+    {"key": "images", "zh": "图片库", "en": "Images", "url": "https://chenhua.net/images/"},
+    {"key": "directory", "zh": "导航", "en": "Directory", "url": "https://netcn.org/"}
+  ],
+  "sites": {
+    "main": {"zh": "尘画", "en": "Frame & Grain", "tagline_zh": "尘归尘，画归画", "tagline_en": "Image as history", "domain": "chenhua.net"},
+    "paint": {"zh": "绘画史", "en": "Painting History", "tagline_zh": "从线到光", "tagline_en": "From line to light", "domain": "paint.chenhua.net"},
+    "painting": {"zh": "学习绘画", "en": "Learn Painting", "tagline_zh": "材料、技法与观看", "tagline_en": "Materials, craft and looking", "domain": "painting.chenhua.net"},
+    "photo": {"zh": "摄影史", "en": "Photography History", "tagline_zh": "光写下的历史", "tagline_en": "History written in light", "domain": "photo.chenhua.net"},
+    "photography": {"zh": "学习摄影", "en": "Learn Photography", "tagline_zh": "工艺、曝光与色彩", "tagline_en": "Process, exposure and colour", "domain": "photography.chenhua.net"},
+    "ai": {"zh": "AI 图像", "en": "AI Images", "tagline_zh": "生成、方法与声明", "tagline_en": "Generation, methods and disclosure", "domain": "ai.chenhua.net"},
+    "pre19century": {"zh": "19 世纪前影像", "en": "Pre-19th-Century Images", "tagline_zh": "1800 年前的绘画与器物", "tagline_en": "Painting and objects before 1800", "domain": "pre19century.chenhua.net"},
+    "19century": {"zh": "19 世纪影像", "en": "19th-Century Images", "tagline_zh": "1800–1899", "tagline_en": "1800–1899", "domain": "19century.chenhua.net"},
+    "20century": {"zh": "20 世纪影像", "en": "20th-Century Images", "tagline_zh": "1900–1999", "tagline_en": "1900–1999", "domain": "20century.chenhua.net"},
+    "21century": {"zh": "21 世纪影像", "en": "21st-Century Images", "tagline_zh": "2000–2026", "tagline_en": "2000–2026", "domain": "21century.chenhua.net"},
+    "aiera": {"zh": "AI 影像库", "en": "AI Image Archive", "tagline_zh": "生成图像与配方", "tagline_en": "Generated images and recipes", "domain": "aiera.chenhua.net"}
+  },
+  "assets": [
+    "assets/app.css",
+    "assets/site.js",
+    "assets/leaf/favicon.svg",
+    "static/static.css",
+    "static/history.css"
+  ]
+}
